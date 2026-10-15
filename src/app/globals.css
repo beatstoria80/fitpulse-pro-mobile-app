@@ -1957,6 +1957,496 @@ body.fullscreen-mode .app-frame {
   color: white;
 }
 
+/* ================= PPG HEART RATE MONITOR ================= */
+.ppg-monitor-card {
+  overflow: hidden;
+}
+
+.ppg-status-area {
+  padding: 16px 0;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ppg-not-supported {
+  text-align: center;
+  color: var(--text-tertiary);
+  padding: 20px;
+}
+.ppg-not-supported i {
+  font-size: 32px;
+  margin-bottom: 8px;
+  display: block;
+  color: var(--status-warning);
+}
+.ppg-not-supported p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ppg-idle-prompt {
+  text-align: center;
+  padding: 16px;
+}
+
+.ppg-heart-icon {
+  font-size: 40px;
+  color: #FF512F;
+  margin-bottom: 12px;
+  animation: heartGlow 2s ease-in-out infinite;
+}
+.ppg-heart-icon.result {
+  animation: heartBounce 0.6s ease-out;
+  color: #38EF7D;
+}
+
+@keyframes heartGlow {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+@keyframes heartBounce {
+  0% { transform: scale(0.5); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+.ppg-instruction {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 260px;
+  margin: 0 auto;
+}
+
+.ppg-result-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.ppg-result-bpm {
+  font-family: 'Outfit', sans-serif;
+  font-size: 48px;
+  font-weight: 800;
+  background: var(--fire-burn-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+.ppg-result-unit {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+.ppg-result-zone {
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+/* Active Measurement Display */
+.ppg-active-display {
+  width: 100%;
+}
+
+.ppg-waveform-container {
+  position: relative;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-md);
+  padding: 8px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 81, 47, 0.15);
+}
+
+.ppg-waveform-canvas {
+  width: 100%;
+  height: 80px;
+  display: block;
+}
+
+.ppg-live-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.ppg-bpm-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ppg-bpm-icon {
+  font-size: 24px;
+  color: #FF512F;
+}
+.ppg-bpm-icon.beating {
+  animation: ppgBeat 0.8s ease-in-out infinite;
+}
+
+@keyframes ppgBeat {
+  0%, 100% { transform: scale(1); }
+  15% { transform: scale(1.3); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.15); }
+}
+
+.ppg-bpm-value {
+  font-family: 'Outfit', sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  background: var(--fire-burn-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+.ppg-bpm-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.ppg-meta-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.ppg-status-badge {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.ppg-status-badge.initializing {
+  background: rgba(245, 158, 11, 0.15);
+  color: #F59E0B;
+}
+.ppg-status-badge.measuring {
+  background: rgba(0, 242, 254, 0.1);
+  color: var(--primary-cyan);
+}
+.ppg-status-badge.stable {
+  background: rgba(16, 185, 129, 0.15);
+  color: #38EF7D;
+}
+.ppg-status-badge.finger_missing {
+  background: rgba(239, 68, 68, 0.15);
+  color: #F87171;
+}
+
+.ppg-confidence {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.ppg-zone-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border: 1px solid;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.03);
+  margin-top: 4px;
+}
+
+.zone-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* PPG Action Button */
+.ppg-action-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--fire-burn-gradient);
+  color: white;
+  margin-top: 12px;
+}
+.ppg-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-glow-fire);
+}
+.ppg-action-btn.active {
+  background: rgba(239, 68, 68, 0.2);
+  color: #F87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.ppg-action-btn.active:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+/* Zone Legend */
+.ppg-zone-legend {
+  margin-top: 12px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.zone-legend-title {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.zone-legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.zone-leg-item {
+  font-size: 10px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.zd {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.z1-d { background: #38EF7D; }
+.z2-d { background: #4FACFE; }
+.z3-d { background: #00F2FE; }
+.z4-d { background: #FF8008; }
+.z5-d { background: #FF512F; }
+
+/* ================= PEDOMETER / STEP COUNTER ================= */
+.pedometer-card {
+  overflow: hidden;
+}
+
+.ped-activity-tag {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.3s;
+}
+.ped-activity-tag.active {
+  background: rgba(56, 239, 125, 0.1);
+}
+
+.ped-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 12px 0;
+}
+
+.ped-stat-main {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(56, 239, 125, 0.06);
+  border: 1px solid rgba(56, 239, 125, 0.15);
+  border-radius: var(--radius-lg);
+}
+
+.ped-stat-icon-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.ped-stat-icon-circle.steps {
+  background: var(--emerald-gradient);
+  color: white;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+}
+
+.ped-stat-data {
+  display: flex;
+  flex-direction: column;
+}
+
+.ped-stat-value {
+  font-family: 'Outfit', sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+  background: var(--emerald-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ped-stat-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.ped-stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.ped-stat-ico {
+  font-size: 16px;
+  color: var(--text-secondary);
+}
+.ped-stat-ico.color-fire {
+  color: #FF512F;
+}
+
+.ped-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.ped-unit {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ped-warning, .ped-info-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.ped-warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.ped-info-tip {
+  background: rgba(59, 130, 246, 0.08);
+  color: var(--text-secondary);
+  border: 1px solid rgba(59, 130, 246, 0.15);
+}
+.ped-info-tip i {
+  color: #3B82F6;
+}
+
+/* Pedometer Action Button */
+.ped-action-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--emerald-gradient);
+  color: white;
+  margin-top: 8px;
+}
+.ped-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+}
+.ped-action-btn.active {
+  background: rgba(239, 68, 68, 0.2);
+  color: #F87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.ped-action-btn.active:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+/* ================= SENSOR TAB SECTION HEADER ================= */
+.sensor-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16px 0 8px;
+}
+
+.sensor-section-header h3 {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sensor-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(239, 68, 68, 0.15);
+  color: #F87171;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sensor-live-badge .live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #EF4444;
+  animation: livePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
 /* ================= RESPONSIVE ADJUSTMENTS ================= */
 @media (max-width: 600px) {
   .desktop-bar {

@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import { initialFitnessData } from '../lib/initialData';
 import { AppFitnessData, ActivityLog, NutritionLog, HydrationLog, UserProfile } from '../types/fitness';
+import HeartRateMonitor from '../components/HeartRateMonitor';
+import StepCounter from '../components/StepCounter';
 import {
   initSupabase,
   getSupabaseConfig,
@@ -782,51 +784,41 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Heart Rate & Intensity Zones Widget */}
-              <div className="glass-card hr-zones-card">
-                <div className="card-header-clean">
-                  <div className="card-title-group">
-                    <span className="badge-mini badge-rose">Sensor Detak Jantung</span>
-                    <h3>Zona Detak Jantung Hari Ini</h3>
-                  </div>
-                  <span className="hr-max-tag">Max Est: ~174 bpm (Usia 46)</span>
-                </div>
-
-                <div className="zones-bar-list">
-                  <div className="zone-row">
-                    <div className="zone-meta">
-                      <span className="zone-name">Zona 1 (Warm Up / Pemulihan)</span>
-                      <span className="zone-range">90 - 105 bpm</span>
-                    </div>
-                    <div className="zone-bar-track">
-                      <div className="zone-bar-fill z1" style={{ width: '40%' }}></div>
-                    </div>
-                    <span className="zone-time">30 mnt (Power Walking)</span>
-                  </div>
-
-                  <div className="zone-row">
-                    <div className="zone-meta">
-                      <span className="zone-name">Zona 2 (Fat Burn & Aerobik)</span>
-                      <span className="zone-range">105 - 125 bpm</span>
-                    </div>
-                    <div className="zone-bar-track">
-                      <div className="zone-bar-fill z2" style={{ width: '60%' }}></div>
-                    </div>
-                    <span className="zone-time">45 mnt (Skateboard)</span>
-                  </div>
-
-                  <div className="zone-row">
-                    <div className="zone-meta">
-                      <span className="zone-name">Zona 3 (Kardio Intensif)</span>
-                      <span className="zone-range">125 - 145 bpm</span>
-                    </div>
-                    <div className="zone-bar-track">
-                      <div className="zone-bar-fill z3" style={{ width: '10%' }}></div>
-                    </div>
-                    <span className="zone-time">Puncak Skateboard</span>
-                  </div>
-                </div>
+              {/* Real-Time Sensor Section Header */}
+              <div className="sensor-section-header">
+                <h3>
+                  <i className="fa-solid fa-satellite-dish"></i> Sensor Real-Time
+                </h3>
+                <span className="sensor-live-badge">
+                  <span className="live-dot"></span> LIVE
+                </span>
               </div>
+
+              {/* Camera PPG Heart Rate Monitor (REAL-TIME) */}
+              <HeartRateMonitor
+                userAge={data.user_profile.demographics.age}
+                onMeasurementComplete={(bpm, confidence) => {
+                  showToast(`Detak jantung terukur: ${bpm} BPM (Akurasi: ${confidence}%)`);
+                }}
+              />
+
+              {/* Step Counter / Pedometer (REAL-TIME) */}
+              <StepCounter
+                weightKg={data.user_profile.biometrics.weight_kg}
+                heightCm={data.user_profile.biometrics.height_cm}
+                onStepUpdate={(steps, calories, distance) => {
+                  // Update daily summary with real step data
+                  const updated = {
+                    ...data,
+                    daily_summary: {
+                      ...data.daily_summary,
+                      calories_burned: data.daily_summary.calories_burned + calories
+                    }
+                  };
+                  saveUpdatedData(updated);
+                  showToast(`Sesi berjalan: ${steps} langkah, ${calories} kkal, ${(distance/1000).toFixed(2)} km`);
+                }}
+              />
 
               {/* Full List of Activities */}
               <h3 className="subheading-list">Riwayat Sesi Latihan</h3>
