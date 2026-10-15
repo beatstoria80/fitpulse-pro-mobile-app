@@ -1,49 +1,79 @@
-# FitPulse Pro • Mobile Health, Nutrition & Fitness Tracker
+# ⚡ FitPulse Pro • Mobile Health & Fitness Tracker (Next.js 16)
 
-Aplikasi Web Mobile interaktif dan responsif berdesain **Cyber-Athletic Obsidian Glass** yang dibangun khusus untuk melacak biometrik, nutrisi, dan aktivitas harian **Pak Nandang (USR-4616069)**.
+A high-precision, Cyber-Athletic mobile health and fitness tracker web application built with **Next.js 16 (App Router)**, **TypeScript**, **React 19**, and **Supabase Cloud Database**.
 
----
-
-## 📱 Fitur Utama Aplikasi
-
-1. **Dashboard & Calorie Engine**:
-   - **Hero Energy Ring**: Indikator cincin SVG dinamis (Target 1.800 kkal, Sisa 1.495 kkal, Terbakar 430 kkal).
-   - **Macro Breakdown**: Pelacak *Protein (35g / 135g)*, *Karbohidrat (28g / 180g)*, dan *Lemak (4.5g / 50g)*.
-   - **Biometrik Tile**: Pemantauan Berat Badan (69.0 kg ➔ 58.5 kg), Estimasi Lemak Tubuh (26.7% ➔ 22.0%), dan status BMI.
-   - **Interactive Hydration Tracker**: Tambah cepat +250 ml (Gelas) / +500 ml (Botol) dengan animasi ketinggian air.
-   - **Dynamic Island**: Menampilkan status pembakaran kalori aktif secara real-time.
-
-2. **Aktivitas Fisik & Heart Rate Zones**:
-   - Log sesi latihan (Skateboard 45 mnt, Power Walking 30 mnt).
-   - Sensor detak jantung & visualisasi Zona Latihan (Zone 1 Warmup, Zone 2 Fat Burn, Zone 3 Cardio).
-   - Formulir pencatatan aktivitas baru dengan kalkulator pembakaran energi berbasis rumus **METs** dan bobot tubuh 69 kg.
-
-3. **Nutrisi & Pencatat Makanan**:
-   - Rincian per waktu makan: Sarapan (Breakfast), Makan Siang (Lunch), Camilan (Snack), Makan Malam (Dinner).
-   - Preset makanan sehat Indonesia (Ikan Kembung Bakar, Dada Ayam Panggang, Nasi Merah, Sayur Bayam, Tempe Kukus, Telur Rebus).
-   - Tombol pintar: Rekomendasi Menu Siang Sehat Otomatis.
-
-4. **Roadmap & Proyeksi Penurunan Berat Badan**:
-   - Jalur penurunan aman (~0.4 - 0.5 kg/minggu) menuju berat ideal 58.5 kg (~21–24 minggu).
-   - Strategi komposisi tubuh untuk memangkas lemak dari 26.7% ke 22.0% di usia 46 tahun seraya melindungi massa otot.
-   - Live JSON Data Inspector & Tombol **Ekspor / Salin JSON**.
-
-5. **Pilihan Tampilan (Desktop Simulator Bar)**:
-   - **Mode HP**: Menampilkan frame bezel iPhone dengan notch dynamic island.
-   - **Layar Penuh**: Tampilan responsif penuh layar untuk tablet atau desktop.
+![FitPulse Pro Banner](https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=1200&auto=format&fit=crop&q=80)
 
 ---
 
-## 🚀 Cara Menjalankan Aplikasi
+## 🌟 Key Features
 
-Aplikasi ini menggunakan teknologi murni **Vanilla HTML5, CSS3, dan ES6 JavaScript** tanpa ketergantungan paket berat, sehingga dapat dibuka langsung di browser:
+- **📱 Mobile Cyber-Athletic Experience**: Sleek obsidian glassmorphism UI with responsive mobile simulator and fullscreen toggle.
+- **🎯 Intelligent Target Weight Tracking**:
+  - Initial: 72.0 kg | Current: **69.0 kg** | Target: **58.5 kg**
+  - Live BMI calculation (**26.95**) & Body Fat Percentage (**26.7%** &rarr; **22.0%** target).
+- **🔥 Physical Activity Logging**:
+  - Pre-loaded with **Skateboard session** (45 mins, 280 kcal, 125 bpm).
+  - Auto calorie burn calculation based on MET values and workout intensity.
+- **🥗 Nutrition & Macro Tracker**:
+  - Real-time Protein (120g target), Carbs (180g target), and Fat (50g target) breakdown.
+  - **Healthy Lunch Recommender**: One-click balanced Indonesian high-protein lunch suggestion (+485 kcal, 38g Protein).
+- **💧 Hydration Tracker**:
+  - Interactive water meter tracking daily goal (2500 ml).
+  - Quick-add buttons: `+250 ml`, `+500 ml`, `+750 ml` and custom input.
+- **☁️ Supabase Cloud Database Integration**:
+  - Automated PostgreSQL cloud synchronization for profiles, activities, nutrition, and water intake.
+  - Complete SQL migration script provided in `schema.sql`.
+- **📥 JSON Data Export**: Instant backup and export of all health metrics.
 
-### Opsi 1: Menjalankan Server Lokal (Disarankan)
-Buka terminal PowerShell pada direktori ini, lalu jalankan:
-```powershell
-python -m http.server 4321
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js 16](https://nextjs.org) (App Router, Turbopack / Webpack)
+- **Library**: [React 19](https://react.dev)
+- **Language**: [TypeScript](https://www.typescriptlang.org)
+- **Database**: [Supabase](https://supabase.com) (PostgreSQL)
+- **Styling**: Modern CSS Design System (Glassmorphism & Cyber-Athletic Dark Mode)
+- **Icons & Effects**: [Lucide React](https://lucide.dev) & [Canvas Confetti](https://github.com/catdad/canvas-confetti)
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone & Install
+```bash
+git clone https://github.com/beatstoria80/fitpulse-pro-mobile-app.git
+cd fitpulse-pro-mobile-app
+npm install --legacy-peer-deps
 ```
-Buka browser di: [http://localhost:4321](http://localhost:4321)
 
-### Opsi 2: Buka Langsung File HTML
-Buka file `index.html` langsung dengan klik dua kali atau melalui browser (Chrome, Edge, Safari).
+### 2. Run Locally
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### 3. Build for Production
+```bash
+npm run build
+npm start
+```
+
+---
+
+## 🗄️ Database Setup (Supabase)
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. Go to **SQL Editor** &rarr; run the contents of [`schema.sql`](./schema.sql).
+3. Copy your **Project URL** and **Anon Key** from **Settings &rarr; API**.
+4. In the app, open the **Supabase** modal or go to the **Profil** tab, paste credentials, and click **Sambungkan**.
+
+---
+
+## 🌐 Deploy to Vercel
+
+The fastest way to deploy this Next.js 16 app is with Vercel:
+1. Go to [vercel.com/new](https://vercel.com/new).
+2. Import `beatstoria80/fitpulse-pro-mobile-app`.
+3. Click **Deploy**. Vercel will automatically detect Next.js 16!
