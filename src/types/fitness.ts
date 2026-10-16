@@ -34,6 +34,8 @@ export interface ActivityMetrics {
   calories_burned: number;
   average_heart_rate?: number | null;
   steps_counted?: number | null;
+  distance_meters?: number | null;
+  elevation_gain_m?: number | null;
 }
 
 export interface ActivityLog {
