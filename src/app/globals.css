@@ -739,6 +739,48 @@ body.fullscreen-mode .app-frame {
   background: rgba(139, 92, 246, 0.15);
   color: #A78BFA;
 }
+.stat-icon-circle.orange {
+  background: rgba(255, 128, 8, 0.15);
+  color: #FF8008;
+  border: 1px solid rgba(255, 128, 8, 0.25);
+}
+
+/* Stat Strip Tile (Full width biometrics row) */
+.stat-strip-tile {
+  padding: 12px 14px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.2s ease;
+}
+.stat-strip-tile:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.stat-strip-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.stat-strip-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.stat-strip-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.stat-strip-title-row .title {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.stat-strip-title-row .title strong {
+  color: var(--text-main);
+  font-weight: 700;
+}
 
 .stat-big-num {
   font-size: 26px;
@@ -780,6 +822,17 @@ body.fullscreen-mode .app-frame {
   font-size: 10px;
   color: var(--text-tertiary);
   display: block;
+}
+
+/* Color & Text Utilities */
+.color-orange, .text-orange { color: #FF8008 !important; }
+.text-cyan { color: var(--primary-cyan) !important; }
+.text-green { color: #10B981 !important; }
+.text-fire { color: #FF5E62 !important; }
+.badge-orange {
+  background: rgba(255, 128, 8, 0.15) !important;
+  color: #FF8008 !important;
+  border: 1px solid rgba(255, 128, 8, 0.3) !important;
 }
 
 /* ================= HYDRATION WATER TRACKER ================= */
@@ -1658,7 +1711,8 @@ body.fullscreen-mode .app-frame {
   transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.modal-backdrop.open {
+.modal-backdrop.open,
+.modal-backdrop.active {
   opacity: 1;
   pointer-events: auto;
 }
@@ -1677,7 +1731,8 @@ body.fullscreen-mode .app-frame {
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8);
 }
 
-.modal-backdrop.open .modal-sheet {
+.modal-backdrop.open .modal-sheet,
+.modal-backdrop.active .modal-sheet {
   transform: translateY(0);
 }
 
@@ -1779,6 +1834,67 @@ body.fullscreen-mode .app-frame {
 .calorie-estimate-box strong, .bmi-recalc-banner strong {
   color: var(--primary-cyan);
   font-size: 15px;
+}
+
+/* Profile Live Feedback Grid */
+.profile-live-preview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.preview-chip {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.preview-chip .lbl {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.preview-chip strong {
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.preview-chip strong small {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.highlight-inputs-row {
+  background: rgba(255, 128, 8, 0.06);
+  border: 1px solid rgba(255, 128, 8, 0.22);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin-bottom: 4px;
+}
+
+.highlight-inputs-row label {
+  color: #FFA726;
+  font-weight: 700;
+}
+
+.input-hint-small {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+  display: block;
+  font-weight: 500;
 }
 
 .quick-food-tags {

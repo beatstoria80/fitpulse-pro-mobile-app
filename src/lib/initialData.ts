@@ -13,6 +13,10 @@ export const initialFitnessData: AppFitnessData = {
     biometrics: {
       height_cm: 160.0,
       weight_kg: 69.0,
+      waist_circumference_cm: 88.0,
+      target_waist_cm: 78.0,
+      waist_status: "Batas Waspada (Standar Pria <90 cm)",
+      whtr: 0.55,
       estimated_body_fat_percentage: 26.7,
       target_body_fat_percentage: 22.0,
       bmi: 26.95,

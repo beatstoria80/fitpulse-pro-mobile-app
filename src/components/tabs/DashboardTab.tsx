@@ -204,7 +204,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         </div>
       </div>
 
-      {/* Goal Progress Duo: Weight & Body Fat Target Cards */}
+      {/* Goal Progress Duo: Weight & Waist Circumference Target Cards */}
       <div className="two-col-grid">
         {/* Weight Card */}
         <div className="glass-card stat-tile" onClick={onOpenProfileModal} style={{ cursor: 'pointer' }}>
@@ -227,24 +227,46 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           </div>
         </div>
 
-        {/* Body Fat Card */}
+        {/* Waist Circumference Card (Lingkar Perut) */}
         <div className="glass-card stat-tile" onClick={onOpenProfileModal} style={{ cursor: 'pointer' }}>
           <div className="stat-tile-head">
-            <div className="stat-icon-circle purple">
-              <i className="fa-solid fa-chart-pie"></i>
+            <div className="stat-icon-circle orange">
+              <i className="fa-solid fa-ruler-horizontal"></i>
             </div>
-            <span className="badge-pill">Target {data.user_profile.biometrics.target_body_fat_percentage}%</span>
+            <span className="badge-pill">
+              Target -{Math.max(0, (data.user_profile.biometrics.waist_circumference_cm || 88) - (data.user_profile.biometrics.target_waist_cm || 78)).toFixed(1)} cm
+            </span>
           </div>
           <div className="stat-tile-body">
             <div className="stat-big-num">
-              <span>{data.user_profile.biometrics.estimated_body_fat_percentage}</span>
-              <small>%</small>
+              <span>{data.user_profile.biometrics.waist_circumference_cm || 88}</span>
+              <small>cm</small>
             </div>
-            <p className="stat-subtext">Est. Lemak Tubuh</p>
+            <p className="stat-subtext">Target: <strong>{data.user_profile.biometrics.target_waist_cm || 78} cm</strong></p>
+            <div className="mini-progress-bar">
+              <div className="progress-fill fill-carbs" style={{ width: '35%' }}></div>
+            </div>
+            <span className="stat-footnote">
+              Rasio WHtR: {(Number(data.user_profile.biometrics.waist_circumference_cm || 88) / data.user_profile.biometrics.height_cm).toFixed(2)} • Standar {data.user_profile.demographics.gender === 'male' ? '<90 cm' : '<80 cm'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Body Fat & Health Status Strip */}
+      <div className="glass-card stat-strip-tile" onClick={onOpenProfileModal} style={{ cursor: 'pointer', marginBottom: '16px' }}>
+        <div className="stat-strip-content">
+          <div className="stat-icon-circle purple">
+            <i className="fa-solid fa-chart-pie"></i>
+          </div>
+          <div className="stat-strip-info">
+            <div className="stat-strip-title-row">
+              <span className="title">Est. Lemak Tubuh: <strong>{data.user_profile.biometrics.estimated_body_fat_percentage}%</strong></span>
+              <span className="badge-pill">Target {data.user_profile.biometrics.target_body_fat_percentage}% (-{(data.user_profile.biometrics.estimated_body_fat_percentage - data.user_profile.biometrics.target_body_fat_percentage).toFixed(1)}%)</span>
+            </div>
             <div className="mini-progress-bar">
               <div className="progress-fill fill-purple" style={{ width: '45%' }}></div>
             </div>
-            <span className="stat-footnote">Selisih: <strong>-{(data.user_profile.biometrics.estimated_body_fat_percentage - data.user_profile.biometrics.target_body_fat_percentage).toFixed(1)}%</strong> lagi</span>
           </div>
         </div>
       </div>
