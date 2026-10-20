@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { HeartPulse, Camera, CheckCircle2, Loader2, Hand, Hourglass, Play, Square } from 'lucide-react';
 import { HeartRatePPG, PPGReading } from '../lib/heartRatePPG';
 
 interface HeartRateMonitorProps {
@@ -137,7 +138,7 @@ export default function HeartRateMonitor({ userAge, onMeasurementComplete }: Hea
       <div className="card-header-clean">
         <div className="card-title-group">
           <span className="badge-mini badge-rose">
-            <i className="fa-solid fa-heart-pulse"></i> Sensor Real-Time
+            <HeartPulse size={14} /> Sensor Real-Time
           </span>
           <h3>Monitor Detak Jantung</h3>
         </div>
@@ -148,13 +149,13 @@ export default function HeartRateMonitor({ userAge, onMeasurementComplete }: Hea
       <div className="ppg-status-area">
         {!isSupported ? (
           <div className="ppg-not-supported">
-            <i className="fa-solid fa-camera-rotate"></i>
+            <Camera size={32} />
             <p>Kamera tidak didukung di browser ini. Gunakan Chrome/Safari di HP.</p>
           </div>
         ) : !isActive ? (
           <div className="ppg-idle-prompt">
             <div className={`ppg-heart-icon ${showResult ? 'result' : ''}`}>
-              <i className="fa-solid fa-heart-pulse"></i>
+              <HeartPulse size={36} />
             </div>
             {showResult && avgBpm > 0 ? (
               <div className="ppg-result-display">
@@ -185,7 +186,7 @@ export default function HeartRateMonitor({ userAge, onMeasurementComplete }: Hea
             {/* Live BPM */}
             <div className="ppg-live-stats">
               <div className="ppg-bpm-display">
-                <i className={`fa-solid fa-heart-pulse ppg-bpm-icon ${reading?.bpm ? 'beating' : ''}`}></i>
+                <HeartPulse size={24} className={`ppg-bpm-icon ${reading?.bpm ? 'beating' : ''}`} />
                 <span className="ppg-bpm-value">
                   {reading?.bpm || '--'}
                 </span>
@@ -194,10 +195,10 @@ export default function HeartRateMonitor({ userAge, onMeasurementComplete }: Hea
 
               <div className="ppg-meta-row">
                 <span className={`ppg-status-badge ${reading?.status || 'initializing'}`}>
-                  {reading?.status === 'stable' && <i className="fa-solid fa-check-circle"></i>}
-                  {reading?.status === 'measuring' && <i className="fa-solid fa-spinner fa-spin"></i>}
-                  {reading?.status === 'finger_missing' && <i className="fa-solid fa-hand-pointer"></i>}
-                  {reading?.status === 'initializing' && <i className="fa-solid fa-hourglass-half"></i>}
+                  {reading?.status === 'stable' && <CheckCircle2 size={13} />}
+                  {reading?.status === 'measuring' && <Loader2 size={13} className="spin-animate" />}
+                  {reading?.status === 'finger_missing' && <Hand size={13} />}
+                  {reading?.status === 'initializing' && <Hourglass size={13} />}
                   {' '}{reading?.message || 'Memulai...'}
                 </span>
                 {reading?.confidence ? (
@@ -224,7 +225,7 @@ export default function HeartRateMonitor({ userAge, onMeasurementComplete }: Hea
           className={`ppg-action-btn ${isActive ? 'active' : ''}`}
           onClick={handleStart}
         >
-          <i className={`fa-solid ${isActive ? 'fa-stop' : 'fa-play'}`}></i>
+          {isActive ? <Square size={16} /> : <Play size={16} />}
           {isActive ? 'Hentikan Pengukuran' : 'Mulai Ukur Detak Jantung'}
         </button>
       )}

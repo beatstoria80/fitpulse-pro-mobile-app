@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "src/lib/UI_UX_Intruction_&_Animation_for_Next.js",
+    "src/lib/Agent Developement",
   ]),
 ]);
 

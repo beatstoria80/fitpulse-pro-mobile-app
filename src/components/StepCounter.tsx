@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { Footprints, MapPin, Flame, Activity, Timer, AlertTriangle, Info, Play, Square } from 'lucide-react';
 import { Pedometer, StepReading } from '../lib/pedometer';
 
 interface StepCounterProps {
@@ -93,7 +94,7 @@ export default function StepCounter({ weightKg, heightCm, onStepUpdate }: StepCo
       <div className="card-header-clean">
         <div className="card-title-group">
           <span className="badge-mini badge-green">
-            <i className="fa-solid fa-shoe-prints"></i> Sensor Real-Time
+            <Footprints size={14} /> Sensor Real-Time
           </span>
           <h3>Penghitung Langkah</h3>
         </div>
@@ -107,7 +108,7 @@ export default function StepCounter({ weightKg, heightCm, onStepUpdate }: StepCo
         {/* Steps */}
         <div className="ped-stat-main">
           <div className="ped-stat-icon-circle steps">
-            <i className="fa-solid fa-shoe-prints"></i>
+            <Footprints size={24} />
           </div>
           <div className="ped-stat-data">
             <span className="ped-stat-value">{reading?.totalSteps || 0}</span>
@@ -117,28 +118,28 @@ export default function StepCounter({ weightKg, heightCm, onStepUpdate }: StepCo
 
         {/* Distance */}
         <div className="ped-stat-box">
-          <i className="fa-solid fa-route ped-stat-ico"></i>
+          <MapPin size={16} className="ped-stat-ico" />
           <span className="ped-val">{reading ? (reading.distanceMeters / 1000).toFixed(2) : '0.00'}</span>
           <span className="ped-unit">km</span>
         </div>
 
         {/* Calories */}
         <div className="ped-stat-box">
-          <i className="fa-solid fa-fire-flame-curved ped-stat-ico color-fire"></i>
+          <Flame size={16} className="ped-stat-ico color-fire" />
           <span className="ped-val">{reading?.caloriesBurned || 0}</span>
           <span className="ped-unit">kkal</span>
         </div>
 
         {/* Cadence */}
         <div className="ped-stat-box">
-          <i className="fa-solid fa-gauge-high ped-stat-ico"></i>
+          <Activity size={16} className="ped-stat-ico" />
           <span className="ped-val">{reading?.cadence || 0}</span>
           <span className="ped-unit">langkah/mnt</span>
         </div>
 
         {/* Timer */}
         <div className="ped-stat-box">
-          <i className="fa-solid fa-stopwatch ped-stat-ico"></i>
+          <Timer size={16} className="ped-stat-ico" />
           <span className="ped-val">{elapsed}</span>
           <span className="ped-unit">durasi</span>
         </div>
@@ -147,14 +148,14 @@ export default function StepCounter({ weightKg, heightCm, onStepUpdate }: StepCo
       {/* Status Message */}
       {reading?.status === 'not_supported' && (
         <div className="ped-warning">
-          <i className="fa-solid fa-triangle-exclamation"></i>
+          <AlertTriangle size={16} />
           <span>Sensor gerak tidak tersedia. Fitur ini bekerja di HP, bukan desktop.</span>
         </div>
       )}
 
       {!isSupported && !isActive && (
         <div className="ped-info-tip">
-          <i className="fa-solid fa-circle-info"></i>
+          <Info size={16} />
           <span>Buka halaman ini di <strong>HP Anda</strong> untuk mengaktifkan sensor langkah real-time.</span>
         </div>
       )}
@@ -164,7 +165,7 @@ export default function StepCounter({ weightKg, heightCm, onStepUpdate }: StepCo
         className={`ped-action-btn ${isActive ? 'active' : ''}`}
         onClick={handleToggle}
       >
-        <i className={`fa-solid ${isActive ? 'fa-stop' : 'fa-play'}`}></i>
+        {isActive ? <Square size={16} /> : <Play size={16} />}
         {isActive ? 'Hentikan Pedometer' : 'Mulai Hitung Langkah'}
       </button>
     </div>

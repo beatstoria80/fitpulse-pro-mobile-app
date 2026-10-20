@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Droplet, Plus, Clock, CheckCircle2 } from 'lucide-react';
+import { Droplet, Plus } from 'lucide-react';
 import { HydrationLog, FitnessGoals } from '../types/fitness';
 
 interface HydrationTabProps {

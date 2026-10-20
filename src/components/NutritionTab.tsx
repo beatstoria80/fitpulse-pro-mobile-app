@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Utensils, Plus, Sparkles, PieChart } from 'lucide-react';
+import { Plus, Sparkles } from 'lucide-react';
 import { NutritionLog } from '../types/fitness';
 
 interface NutritionTabProps {
@@ -18,7 +18,6 @@ export const NutritionTab: React.FC<NutritionTabProps> = ({
   const totalProtein = nutritionLogs.reduce((sum, n) => sum + (n.protein_g || 0), 0);
   const totalCarbs = nutritionLogs.reduce((sum, n) => sum + (n.carbs_g || 0), 0);
   const totalFat = nutritionLogs.reduce((sum, n) => sum + (n.fat_g || 0), 0);
-  const totalCal = nutritionLogs.reduce((sum, n) => sum + (n.calories || 0), 0);
 
   const targetProtein = 120; // 120g
   const targetCarbs = 180;   // 180g

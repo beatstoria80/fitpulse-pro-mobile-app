@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { User, Database, ShieldCheck, Check, ExternalLink, RefreshCw, Key, Globe } from 'lucide-react';
+import { User, Database, ShieldCheck, Check, RefreshCw, Key, Globe } from 'lucide-react';
 import { UserProfile } from '../types/fitness';
 
 interface ProfileTabProps {
@@ -22,8 +22,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
   isCloudSync,
   isSyncing,
   onSaveSupabaseConfig,
-  onSyncNow,
-  onUpdateProfile
+  onSyncNow
 }) => {
   const [urlInput, setUrlInput] = useState(supabaseUrl);
   const [keyInput, setKeyInput] = useState(supabaseKey);

@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Flame, Droplet, Utensils, TrendingUp } from 'lucide-react';
+import { Flame, Droplet, Utensils } from 'lucide-react';
 import { DailySummary, FitnessGoals } from '../types/fitness';
 
 interface MetricCardsProps {

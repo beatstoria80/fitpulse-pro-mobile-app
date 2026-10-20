@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { AppFitnessData, ActivityLog, NutritionLog, HydrationLog, UserProfile } from '../types/fitness';
+import { ActivityLog, NutritionLog, UserProfile } from '../types/fitness';
 
 let supabaseClient: SupabaseClient | null = null;
 
@@ -67,6 +67,7 @@ export const syncProfileToCloud = async (client: SupabaseClient, profile: UserPr
 export const syncActivityToCloud = async (client: SupabaseClient, userId: string, act: ActivityLog) => {
   const { error } = await client.from('activity_logs').insert({
     user_id: userId,
+    activity_log_id: act.activity_log_id,
     activity_type: act.activity_type,
     duration_minutes: act.metrics.duration_minutes,
     intensity_level: act.metrics.intensity_level,
@@ -80,42 +81,117 @@ export const syncActivityToCloud = async (client: SupabaseClient, userId: string
   if (error) throw error;
 };
 
+// Fixed: column names now match schema.sql (nutrition_log_id, log_date, meal_time, food_items JSONB, total_calories, carbohydrates_g, protein_g, fat_g)
 export const syncNutritionToCloud = async (client: SupabaseClient, userId: string, nut: NutritionLog) => {
+  const foodItemsJsonb = nut.food_items.map((item) => {
+    if (typeof item === 'string') {
+      return { food_name: item, calories: nut.calories };
+    }
+    return item;
+  });
+
   const { error } = await client.from('nutrition_logs').insert({
     user_id: userId,
-    meal_type: nut.meal_type,
-    calories: nut.calories,
-    food_items: nut.food_items,
+    nutrition_log_id: nut.nutrition_log_id,
+    log_date: new Date().toISOString().slice(0, 10),
+    meal_time: nut.meal_type,
+    food_items: foodItemsJsonb,
+    total_calories: nut.calories,
+    carbohydrates_g: nut.carbs_g,
     protein_g: nut.protein_g,
-    carbs_g: nut.carbs_g,
-    fat_g: nut.fat_g,
-    logged_at: new Date().toISOString()
+    fat_g: nut.fat_g
   });
   if (error) throw error;
 };
 
-export const syncHydrationToCloud = async (client: SupabaseClient, userId: string, amountMl: number) => {
-  const { error } = await client.from('hydration_logs').insert({
+// Fixed: uses water_logs table (not hydration_logs), columns: consumed_ml, target_ml, log_date
+export const syncHydrationToCloud = async (client: SupabaseClient, userId: string, amountMl: number, targetMl: number = 2500) => {
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Upsert into water_logs — the schema has UNIQUE (user_id, log_date)
+  const { data: existing } = await client
+    .from('water_logs')
+    .select('consumed_ml')
+    .eq('user_id', userId)
+    .eq('log_date', today)
+    .maybeSingle();
+
+  const newTotal = (existing?.consumed_ml || 0) + amountMl;
+
+  const { error } = await client.from('water_logs').upsert({
     user_id: userId,
-    volume_ml: amountMl,
-    beverage_type: 'Air Mineral',
-    logged_at: new Date().toISOString()
-  });
+    log_date: today,
+    consumed_ml: newTotal,
+    target_ml: targetMl,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'user_id,log_date' });
+
   if (error) throw error;
 };
 
+// Fixed: uses water_logs table, correct column ordering
 export const fetchAllFromCloud = async (client: SupabaseClient, userId: string) => {
-  const [pRes, aRes, nRes, hRes] = await Promise.all([
+  const today = new Date().toISOString().slice(0, 10);
+
+  const [pRes, aRes, nRes, wRes] = await Promise.all([
     client.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
     client.from('activity_logs').select('*').eq('user_id', userId).order('timestamp_start', { ascending: false }),
-    client.from('nutrition_logs').select('*').eq('user_id', userId).order('logged_at', { ascending: false }),
-    client.from('hydration_logs').select('*').eq('user_id', userId).order('logged_at', { ascending: false })
+    client.from('nutrition_logs').select('*').eq('user_id', userId).eq('log_date', today).order('created_at', { ascending: false }),
+    client.from('water_logs').select('*').eq('user_id', userId).eq('log_date', today).maybeSingle()
   ]);
 
   return {
     profile: pRes.data,
     activities: aRes.data || [],
     nutritions: nRes.data || [],
-    hydrations: hRes.data || []
+    waterLog: wRes.data || null
   };
+};
+
+// Transform cloud nutrition data back to app format
+export const mapCloudNutritionToApp = (cloudNutrition: Record<string, unknown>): NutritionLog => {
+  const foodItems = Array.isArray(cloudNutrition.food_items)
+    ? (cloudNutrition.food_items as Array<{ food_name?: string }>).map((fi) => fi.food_name || 'Makanan')
+    : [];
+
+  return {
+    nutrition_log_id: cloudNutrition.nutrition_log_id as string,
+    meal_type: (cloudNutrition.meal_time as NutritionLog['meal_type']) || 'lunch',
+    time: cloudNutrition.created_at
+      ? new Date(cloudNutrition.created_at as string).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+      : '00:00',
+    calories: Number(cloudNutrition.total_calories) || 0,
+    food_items: foodItems,
+    protein_g: Number(cloudNutrition.protein_g) || 0,
+    carbs_g: Number(cloudNutrition.carbohydrates_g) || 0,
+    fat_g: Number(cloudNutrition.fat_g) || 0
+  };
+};
+
+// Transform cloud activity data back to app format
+export const mapCloudActivityToApp = (cloudAct: Record<string, unknown>): ActivityLog => {
+  return {
+    activity_log_id: cloudAct.activity_log_id as string,
+    activity_type: cloudAct.activity_type as string,
+    timestamp_start: cloudAct.timestamp_start as string,
+    timestamp_end: (cloudAct.timestamp_end as string) || null,
+    metrics: {
+      duration_minutes: Number(cloudAct.duration_minutes) || 0,
+      intensity_level: (cloudAct.intensity_level as ActivityLog['metrics']['intensity_level']) || 'medium',
+      calories_burned: Number(cloudAct.calories_burned) || 0,
+      average_heart_rate: cloudAct.average_heart_rate ? Number(cloudAct.average_heart_rate) : null,
+      steps_counted: cloudAct.steps_counted ? Number(cloudAct.steps_counted) : null
+    },
+    device_source: (cloudAct.device_source as string) || 'FitPulse Pro'
+  };
+};
+
+export const deleteActivityFromCloud = async (client: SupabaseClient, activityLogId: string) => {
+  const { error } = await client.from('activity_logs').delete().eq('activity_log_id', activityLogId);
+  if (error) throw error;
+};
+
+export const deleteNutritionFromCloud = async (client: SupabaseClient, nutritionLogId: string) => {
+  const { error } = await client.from('nutrition_logs').delete().eq('nutrition_log_id', nutritionLogId);
+  if (error) throw error;
 };

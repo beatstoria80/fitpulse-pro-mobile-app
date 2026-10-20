@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Target, Award, ArrowDownRight, Scale } from 'lucide-react';
+import { Target, ArrowDownRight } from 'lucide-react';
 import { Biometrics, FitnessGoals } from '../types/fitness';
 
 interface WeightGoalCardProps {

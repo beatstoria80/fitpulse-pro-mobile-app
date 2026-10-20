@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Activity, Plus, Heart, Clock, Footprints, Flame } from 'lucide-react';
+import { Plus, Heart, Clock, Footprints, Flame } from 'lucide-react';
 import { ActivityLog } from '../types/fitness';
 
 interface ActivitiesTabProps {

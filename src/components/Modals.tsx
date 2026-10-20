@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { X, Flame, Utensils, Droplet, Database, Check, ShieldCheck, Heart, Clock, Footprints } from 'lucide-react';
+import { X, Flame, Utensils, Droplet, Database } from 'lucide-react';
 
 /* ---------------- ACTIVITY MODAL ---------------- */
 interface ActivityModalProps {
@@ -107,7 +107,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({ isOpen, onClose, o
               <select
                 className="form-select"
                 value={intensity}
-                onChange={(e) => setIntensity(e.target.value as any)}
+                onChange={(e) => setIntensity(e.target.value as 'low' | 'medium' | 'high' | 'vigorous')}
               >
                 <option value="low">Rendah (Santai)</option>
                 <option value="medium">Sedang (Standar)</option>
@@ -213,7 +213,7 @@ export const NutritionModal: React.FC<NutritionModalProps> = ({ isOpen, onClose,
             <select
               className="form-select"
               value={mealType}
-              onChange={(e) => setMealType(e.target.value as any)}
+              onChange={(e) => setMealType(e.target.value as 'breakfast' | 'lunch' | 'dinner' | 'snack')}
             >
               <option value="breakfast">🥣 Sarapan Pagi</option>
               <option value="lunch">🥗 Makan Siang</option>
@@ -373,9 +373,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
   supabaseUrl,
   supabaseKey,
   isCloudSync,
-  isSyncing,
-  onSave,
-  onSyncNow
+  onSave
 }) => {
   const [url, setUrl] = useState(supabaseUrl);
   const [key, setKey] = useState(supabaseKey);

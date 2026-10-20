@@ -26,11 +26,14 @@ export const Header: React.FC<HeaderProps> = ({
   const [greeting, setGreeting] = useState('Selamat Pagi');
 
   useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 11) setGreeting('Selamat Pagi');
-    else if (hour < 15) setGreeting('Selamat Siang');
-    else if (hour < 18) setGreeting('Selamat Sore');
-    else setGreeting('Selamat Malam');
+    const timer = setTimeout(() => {
+      const hour = new Date().getHours();
+      if (hour < 11) setGreeting('Selamat Pagi');
+      else if (hour < 15) setGreeting('Selamat Siang');
+      else if (hour < 18) setGreeting('Selamat Sore');
+      else setGreeting('Selamat Malam');
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
