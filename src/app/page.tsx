@@ -680,7 +680,7 @@ export default function Home() {
               <div className="user-greeting-card">
                 <div className="greeting-info">
                   <span className="greeting-sub">{todayFormatted}</span>
-                  <h1 className="greeting-name">Halo, Pak {data.user_profile.name || 'Pengguna'} 👋</h1>
+                  <h1 className="greeting-name">Halo, {data.user_profile.name || 'Pengguna'}</h1>
                   <div className="header-tags-row">
                     <div className="bmi-pill-tag">
                       <span className="status-dot warning"></span>
