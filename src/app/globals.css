@@ -2387,7 +2387,7 @@ body.fullscreen-mode .app-frame {
   100% { transform: translateY(0); opacity: 1; }
 }
 
-/* ================= OPENING VIDEO OVERLAY ================= */
+/* ================= OPENING VIDEO & CINEMATIC SHOWCASE ================= */
 
 /* Full-screen white overlay — sits above everything, z-index 10000 */
 .opening-overlay {
@@ -2401,9 +2401,7 @@ body.fullscreen-mode .app-frame {
   opacity: 1;
   transition-property: opacity;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  /* transitionDuration is set inline from the component */
-  /* Safe-area padding for notch & gesture bar */
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  overflow: hidden;
 }
 
 .opening-overlay.opening-fade-out {
@@ -2411,50 +2409,631 @@ body.fullscreen-mode .app-frame {
   pointer-events: none;
 }
 
-/* Video element: fill viewport, centered, no crop of character */
+/* Video element: centered, no crop of mascot character */
 .opening-video {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain; /* contain prevents cropping the character */
+  object-fit: contain;
   object-position: center center;
-  background: #FFFFFF; /* blend edges into white */
+  background: #FFFFFF;
+  z-index: 0;
 }
 
-/* "Lewati" (Skip) pill button — top-right, safe-area aware */
+/* Stage container: locks width to mobile phone aspect ratio (max 440px) */
+.opening-stage {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 440px;
+  height: 100%;
+  max-height: 920px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: calc(14px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom)) 18px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+/* --- Top Header & Story Timeline --- */
+.opening-top-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.opening-story-timeline {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+.story-segment {
+  flex: 1;
+  height: 3.5px;
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.story-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38BDF8, #0284C7);
+  border-radius: 999px;
+  transition: width 0.04s linear;
+  will-change: width;
+}
+
+.opening-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.opening-brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 999px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.opening-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+
+.opening-brand-name {
+  font-size: 12px;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: 0.3px;
+}
+
+.opening-brand-sub {
+  font-size: 9px;
+  font-weight: 700;
+  color: #0284C7;
+  background: rgba(56, 189, 248, 0.15);
+  padding: 2px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+
+/* "Lewati" (Skip) button */
 .opening-skip-btn {
-  position: absolute;
-  top: calc(16px + env(safe-area-inset-top));
-  right: calc(16px + env(safe-area-inset-right));
-  z-index: 10001;
-  padding: 6px 18px;
-  border: none;
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 14px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
   border-radius: 9999px;
-  background: rgba(56, 189, 248, 0.2); /* soft pastel blue */
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: #0284C7;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
-  opacity: 0;
-  animation: skipFadeIn 0.4s ease-out 0.1s forwards;
-  transition: background 0.2s ease, transform 0.15s ease;
+  box-shadow: 0 2px 8px rgba(56, 189, 248, 0.12);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .opening-skip-btn:hover {
-  background: rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.15);
+  transform: translateX(1px);
 }
 
 .opening-skip-btn:active {
   transform: scale(0.95);
 }
 
-@keyframes skipFadeIn {
-  from { opacity: 0; transform: translateY(-6px); }
+.skip-arrow {
+  color: #0284C7;
+}
+
+/* --- Showcase Cards Container (Positioned in Upper-Middle framing mascot) --- */
+.opening-cards-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-top: 14px;
+  width: 100%;
+}
+
+/* Base Floating Glassmorphic Card */
+.opening-card {
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.08), 0 4px 16px rgba(56, 189, 248, 0.08);
+  border-radius: 20px;
+  padding: 14px 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Phase 0: Intro Card */
+.opening-card-intro {
+  text-align: center;
+  padding: 16px;
+}
+
+.intro-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(56, 189, 248, 0.12);
+  color: #0284C7;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.icon-sparkle {
+  color: #0284C7;
+}
+
+.intro-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.2px;
+}
+
+.intro-sub {
+  font-size: 12px;
+  color: #64748B;
+  margin: 0;
+}
+
+/* Feature Card Header */
+.card-feature-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.feature-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.chip-amber {
+  background: rgba(245, 158, 11, 0.12);
+  color: #D97706;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.chip-rose {
+  background: rgba(244, 63, 94, 0.12);
+  color: #E11D48;
+  border: 1px solid rgba(244, 63, 94, 0.25);
+}
+
+.chip-emerald {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.feature-status-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748B;
+}
+
+.live-dot-green {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10B981;
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+
+.live-dot-rose {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #F43F5E;
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+
+/* Feature 1: Calorie & Deficit */
+.feature-metric-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.metric-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.metric-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.metric-big-num {
+  font-size: 30px;
+  font-weight: 800;
+  color: #0F172A;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+.metric-unit {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748B;
+}
+
+.mini-gauge-wrap {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mini-gauge-svg {
+  transform: rotate(-90deg);
+  width: 100%;
+  height: 100%;
+}
+
+.mini-gauge-bg {
+  fill: none;
+  stroke: #E2E8F0;
+  stroke-width: 4;
+}
+
+.mini-gauge-val {
+  fill: none;
+  stroke: #F59E0B;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 113.1;
+  stroke-dashoffset: 28;
+}
+
+.mini-gauge-icon {
+  position: absolute;
+}
+
+.text-amber {
+  color: #F59E0B;
+}
+
+.feature-pill-stats {
+  display: flex;
+  gap: 8px;
+}
+
+.stat-pill {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #475569;
+  background: rgba(241, 245, 249, 0.7);
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+/* Feature 2: Vitals & Steps */
+.feature-grid-vitals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.vital-item-box {
+  background: rgba(248, 250, 252, 0.9);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 14px;
+  padding: 9px 10px;
+}
+
+.vital-top {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 4px;
+}
+
+.vital-name {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+}
+
+.vital-num-row {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.vital-num {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0F172A;
+  line-height: 1.1;
+}
+
+.vital-unit {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748B;
+}
+
+.vital-tag {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-top: 3px;
+}
+
+.tag-rose {
+  background: rgba(244, 63, 94, 0.12);
+  color: #E11D48;
+}
+
+.tag-cyan {
+  background: rgba(56, 189, 248, 0.15);
+  color: #0284C7;
+}
+
+.text-rose {
+  color: #E11D48;
+}
+
+.icon-beating {
+  animation: heartPulse 0.85s ease-in-out infinite;
+}
+
+@keyframes heartPulse {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.22); }
+  45% { transform: scale(1.04); }
+  65% { transform: scale(1.18); }
+}
+
+.vital-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: #E2E8F0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.vital-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38BDF8, #10B981);
+  border-radius: 999px;
+}
+
+/* Feature 3: Macros & Hydration */
+.macro-breakdown-showcase {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.macro-mini-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.macro-mini-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+}
+
+.macro-mini-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+}
+
+.dot-protein { background: #10B981; }
+.dot-carbs { background: #F59E0B; }
+.dot-fat { background: #F43F5E; }
+
+.macro-mini-title {
+  font-weight: 700;
+  color: #334155;
+  flex: 1;
+}
+
+.macro-mini-val {
+  font-weight: 600;
+  color: #64748B;
+  font-size: 10px;
+}
+
+.macro-mini-track {
+  width: 100%;
+  height: 5px;
+  background: #E2E8F0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.macro-mini-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bar-protein { background: #10B981; }
+.bar-carbs { background: #F59E0B; }
+.bar-fat { background: #F43F5E; }
+
+.hydration-pill-showcase {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #0284C7;
+}
+
+/* Phase 4: Launch Handoff Card */
+.opening-card-launch {
+  text-align: center;
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.launch-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.launch-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 2px 0;
+}
+
+.launch-sub {
+  font-size: 12px;
+  color: #64748B;
+  margin: 0;
+}
+
+/* Bottom Mascot Context Footer */
+.opening-bottom-footer {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.bottom-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.tag-pulse-ring {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #38BDF8;
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
+}
+
+/* Keyframe Animations for Showcase Elements */
+.anim-slide-down {
+  animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+.anim-spring-in {
+  animation: cardSpringIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes cardSpringIn {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+  70% {
+    transform: translateY(-2px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
 }
 
 /* ================= HANDOFF STAGGER ANIMATIONS ================= */
