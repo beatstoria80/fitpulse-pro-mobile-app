@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Target,
   Activity,
+  ShieldCheck,
 } from 'lucide-react';
 import {
   VIDEO_SRC,
@@ -26,20 +27,19 @@ interface OpeningVideoProps {
 }
 
 /**
- * OpeningVideo — 3D Camera Tracker & 2D Motion Tracked UI/UX Experience.
+ * OpeningVideo — Professional VFX 3D Motion Tracked Presentation.
  *
- * Designed to emulate After Effects 3D Camera Tracker & Mocha AE:
- *  • 10% Ultra-Translucent Frosted Glassmorphism (`rgba(255, 255, 255, 0.10)`
- *    with `backdrop-filter: blur(20px)` and luminous edge).
- *  • Dynamic non-static positioning:
- *      - Phase 1 (1.0s - 3.8s): Tracks upper-left flank in 3D perspective (+12° Y-tilt)
- *        with an AR crosshair tracking anchor and connector line pointing to character.
- *      - Phase 2 (3.8s - 6.6s): Mascot turns left → Card tracks upper-right flank (-12° Y-tilt)
- *        with live ECG waveform and step shimmer bar.
- *      - Phase 3 (6.6s - 9.2s): Mascot walks back-left → Card tracks upper-left depth (+8° Y-tilt)
- *        with 3 macro nutrient tracks and water hydration meter.
- *  • Zero interference with mascot's head or face.
- *  • Completely clutter-free (no skip pill, no capsule, no duration line).
+ * Feature Positioning:
+ *  • 0.0s - 1.4s : Intro Hero Kinetic Headline (Themed relatable copy, word rise & spread).
+ *  • 1.4s - 4.0s : Feature 1 — MID-RIGHT FLANK (Torso/hip level, 10% glass, amber glow, AR line).
+ *  • 4.0s - 6.8s : Feature 2 — BOTTOM-LEFT (Lower body/footstep level, 10% glass, rose ECG wave).
+ *  • 6.8s - 8.8s : Feature 3 — MID-CENTER (Torso level, below chin, 10% glass, emerald macro rise).
+ *  • 8.8s - 10.0s: VFX CLOSING PORTAL (Shockwave optical burst, laser scan, sync complete -> Dashboard warp).
+ *
+ * All cards utilize:
+ *  - 10% Ultra-Translucent Frosted Glassmorphism (`rgba(255, 255, 255, 0.10)`).
+ *  - High-impact dynamic RISE STYLE entry for all internal text, numbers, and icons.
+ *  - Zero obstruction of mascot's face and head.
  */
 const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -151,19 +151,19 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
   if (dismissed) return null;
 
   // ── Determine Current Showcase Phase ─────────────────────────────
-  // 0: Intro (0.0s - 1.0s)
-  // 1: Feature 1 (1.0s - 3.8s) Left Flank Tracked — Calorie & Deficit
-  // 2: Feature 2 (3.8s - 6.6s) Right Flank Tracked — Live ECG Vitals & Steps
-  // 3: Feature 3 (6.6s - 9.2s) Left Flank Tracked — Macros & Hydration
-  // 4: Seamless Climax Handoff (9.2s - 10.0s)
+  // 0: Intro Kinetic Headline (0.0s - 1.4s) — Top/Center
+  // 1: Feature 1 (1.4s - 4.0s) — MID-RIGHT FLANK (Calorie & Deficit)
+  // 2: Feature 2 (4.0s - 6.8s) — BOTTOM-LEFT (Sensor Vitals & Steps)
+  // 3: Feature 3 (6.8s - 8.8s) — MID-CENTER TORSO (Macro Nutrients)
+  // 4: VFX Closing Portal (8.8s - 10.0s) — Shockwave Handoff
   let activePhase = 0;
-  if (currentTime >= 9.2) activePhase = 4;
-  else if (currentTime >= 6.6) activePhase = 3;
-  else if (currentTime >= 3.8) activePhase = 2;
-  else if (currentTime >= 1.0) activePhase = 1;
+  if (currentTime >= 8.8) activePhase = 4;
+  else if (currentTime >= 6.8) activePhase = 3;
+  else if (currentTime >= 4.0) activePhase = 2;
+  else if (currentTime >= 1.4) activePhase = 1;
 
   // Subtle 3D camera drift & walking cadence (continuous floating parallax)
-  const driftY = Math.sin(currentTime * 3.5) * 4;
+  const driftY = Math.sin(currentTime * 3.5) * 3;
   const driftX = Math.cos(currentTime * 2.2) * 3;
 
   return (
@@ -194,60 +194,55 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
         onError={handleError}
       />
 
-      {/* 3D Camera Tracking Stage */}
+      {/* 3D Multi-Position Tracking Stage */}
       <div className="opening-tracking-stage">
 
-        {/* ── PHASE 0: 3D AR INTRO BEACON (0.0s - 1.0s) ── */}
+        {/* ── PHASE 0: INTRO HERO KINETIC HEADLINE (0.0s - 1.4s) ── */}
         {activePhase === 0 && (
-          <div
-            className="tracking-node node-intro anim-track-fade"
-            style={{
-              transform: `translate3d(${driftX}px, ${driftY}px, 0) perspective(900px) rotateY(6deg)`,
-            }}
-          >
-            <div className="glass-10-card card-intro-mini">
-              <div className="track-header-meta">
-                <span className="ar-crosshair"><Target size={10} className="text-cyan anim-spin-slow" /></span>
-                <span className="ar-tag">3D_CAM_LOCK • FITPULSE PRO</span>
-              </div>
-              <div className="ar-intro-title">
-                <Sparkles size={13} className="text-cyan" />
-                <span>AI Health Companion</span>
-              </div>
+          <div className="intro-hero-wrapper anim-intro-hero">
+            <div className="intro-hero-badge anim-rise-1">
+              <Sparkles size={11} className="icon-sparkle" />
+              <span>FITPULSE PRO • AI HEALTH TRACKER</span>
             </div>
+            <h1 className="intro-hero-headline anim-rise-2">
+              KONTROL ENERGI,<br />KUASAI HARI
+            </h1>
+            <p className="intro-hero-sub anim-rise-3">
+              Pelacakan Kalori & Kebugaran Generasi Baru
+            </p>
           </div>
         )}
 
-        {/* ── PHASE 1: UPPER-LEFT FLANK 3D TRACKED — TARGET KALORI (1.0s - 3.8s) ── */}
+        {/* ── PHASE 1: SISI TENGAH KANAN — TARGET KALORI & DEFISIT (1.4s - 4.0s) ── */}
         {activePhase === 1 && (
           <div
-            className="tracking-node node-flank-left anim-track-spring-left"
+            className="tracking-node node-mid-right anim-rise-spring"
             style={{
-              transform: `translate3d(${driftX - 2}px, ${driftY}px, 15px) perspective(900px) rotateY(9deg) rotateX(2deg)`,
+              transform: `translate3d(${driftX}px, ${driftY}px, 20px) perspective(900px) rotateY(-12deg) rotateX(3deg)`,
             }}
           >
-            {/* AR Anchor crosshair pointing towards character center */}
-            <div className="ar-anchor-group anchor-to-right">
-              <div className="ar-target-reticle">
-                <span className="reticle-dot dot-amber" />
-                <span className="reticle-ring ring-amber" />
-              </div>
-              <svg className="ar-line-svg" width="46" height="24" viewBox="0 0 46 24">
+            {/* AR Anchor crosshair pointing from left edge toward character */}
+            <div className="ar-anchor-group anchor-to-left">
+              <svg className="ar-line-svg" width="48" height="26" viewBox="0 0 48 26">
                 <polyline
-                  points="0,12 28,12 44,22"
+                  points="48,13 18,13 2,24"
                   fill="none"
                   stroke="#F59E0B"
-                  strokeWidth="1.5"
+                  strokeWidth="1.6"
                   strokeDasharray="3 2"
                   className="ar-dash-anim"
                 />
               </svg>
+              <div className="ar-target-reticle">
+                <span className="reticle-dot dot-amber" />
+                <span className="reticle-ring ring-amber" />
+              </div>
             </div>
 
-            {/* 10% Opacity Frosted Glass Card */}
-            <div className="glass-10-card card-tracked-feature border-glow-amber">
+            {/* 10% Opacity Frosted Glass Card with Rise-Style Content */}
+            <div className="glass-10-card card-mid-flank border-glow-amber">
               {/* Header meta */}
-              <div className="track-header-meta">
+              <div className="track-header-meta anim-rise-1">
                 <div className="meta-left">
                   <span className="ar-crosshair"><Target size={11} className="text-amber" /></span>
                   <span className="ar-tag text-amber">TRACK: #01_CALORIE_DEFICIT</span>
@@ -256,7 +251,7 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
               </div>
 
               {/* Body */}
-              <div className="track-body-row">
+              <div className="track-body-row anim-rise-2">
                 <div className="track-metric-left">
                   <span className="track-label">Target Kalori Harian</span>
                   <div className="track-hero-num">
@@ -266,17 +261,17 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
                 </div>
 
                 {/* Circular Gauge */}
-                <div className="track-mini-gauge">
-                  <svg className="gauge-svg" viewBox="0 0 42 42">
-                    <circle cx="21" cy="21" r="17" className="gauge-bg" />
-                    <circle cx="21" cy="21" r="17" className="gauge-val stroke-amber anim-gauge-fill" />
+                <div className="track-mini-gauge anim-rise-3">
+                  <svg className="gauge-svg" viewBox="0 0 44 44">
+                    <circle cx="22" cy="22" r="18" className="gauge-bg" />
+                    <circle cx="22" cy="22" r="18" className="gauge-val stroke-amber anim-gauge-fill" />
                   </svg>
-                  <Flame size={13} className="gauge-icon text-amber" />
+                  <Flame size={14} className="gauge-icon text-amber anim-flame-pulse" />
                 </div>
               </div>
 
               {/* Bottom stats row */}
-              <div className="track-bottom-badges">
+              <div className="track-bottom-badges anim-rise-4">
                 <div className="ar-badge badge-emerald">
                   <TrendingUp size={10} />
                   <span>Defisit <strong>-450 kkal</strong></span>
@@ -290,47 +285,47 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
           </div>
         )}
 
-        {/* ── PHASE 2: UPPER-RIGHT FLANK 3D TRACKED — VITALS & ECG (3.8s - 6.6s) ── */}
+        {/* ── PHASE 2: SISI KIRI BAWAH — SENSOR VITAL & LANGKAH (4.0s - 6.8s) ── */}
         {activePhase === 2 && (
           <div
-            className="tracking-node node-flank-right anim-track-spring-right"
+            className="tracking-node node-bottom-left anim-rise-spring"
             style={{
-              transform: `translate3d(${driftX + 2}px, ${driftY}px, 15px) perspective(900px) rotateY(-9deg) rotateX(2deg)`,
+              transform: `translate3d(${driftX}px, ${driftY}px, 20px) perspective(900px) rotateY(12deg) rotateX(-3deg)`,
             }}
           >
-            {/* AR Anchor crosshair pointing towards character on the left */}
-            <div className="ar-anchor-group anchor-to-left">
-              <svg className="ar-line-svg" width="46" height="24" viewBox="0 0 46 24">
-                <polyline
-                  points="46,12 18,12 2,22"
-                  fill="none"
-                  stroke="#F43F5E"
-                  strokeWidth="1.5"
-                  strokeDasharray="3 2"
-                  className="ar-dash-anim"
-                />
-              </svg>
+            {/* AR Anchor crosshair pointing from right edge toward character */}
+            <div className="ar-anchor-group anchor-to-right-up">
               <div className="ar-target-reticle">
                 <span className="reticle-dot dot-rose" />
                 <span className="reticle-ring ring-rose" />
               </div>
+              <svg className="ar-line-svg" width="48" height="26" viewBox="0 0 48 26">
+                <polyline
+                  points="0,18 24,18 46,6"
+                  fill="none"
+                  stroke="#F43F5E"
+                  strokeWidth="1.6"
+                  strokeDasharray="3 2"
+                  className="ar-dash-anim"
+                />
+              </svg>
             </div>
 
-            {/* 10% Opacity Frosted Glass Card */}
-            <div className="glass-10-card card-tracked-feature border-glow-rose">
+            {/* 10% Opacity Frosted Glass Card with Rise-Style Content */}
+            <div className="glass-10-card card-bottom-flank border-glow-rose">
               {/* Header meta */}
-              <div className="track-header-meta">
+              <div className="track-header-meta anim-rise-1">
                 <div className="meta-left">
                   <span className="ar-crosshair"><Activity size={11} className="text-rose" /></span>
                   <span className="ar-tag text-rose">TRACK: #02_LIVE_VITALS</span>
                 </div>
-                <span className="ar-live-pulse"><span className="pulse-dot dot-rose" /> 60Hz</span>
+                <span className="ar-live-pulse"><span className="pulse-dot dot-rose" /> SENSOR</span>
               </div>
 
               {/* 2-Column Split: Heart Rate & Steps */}
               <div className="track-grid-split">
                 {/* Heart Rate + ECG */}
-                <div className="split-column">
+                <div className="split-column anim-rise-2">
                   <div className="split-label-row">
                     <Heart size={11} className="text-rose anim-heart-beat" />
                     <span>Detak Jantung</span>
@@ -355,10 +350,10 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
                 </div>
 
                 {/* Steps Counter */}
-                <div className="split-column">
+                <div className="split-column anim-rise-3">
                   <div className="split-label-row">
                     <Footprints size={11} className="text-cyan" />
-                    <span>Langkah Harian</span>
+                    <span>Langkah Kaki</span>
                   </div>
                   <div className="split-val-row">
                     <span className="split-big-val">8,420</span>
@@ -376,56 +371,38 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
           </div>
         )}
 
-        {/* ── PHASE 3: UPPER-LEFT FLANK 3D TRACKED — MACRO NUTRISI (6.6s - 9.2s) ── */}
+        {/* ── PHASE 3: DI TENGAH LAYAR / TORSO LEVEL — MAKRO NUTRISI (6.8s - 8.8s) ── */}
         {activePhase === 3 && (
           <div
-            className="tracking-node node-flank-left anim-track-spring-left"
+            className="tracking-node node-mid-center anim-rise-spring"
             style={{
-              transform: `translate3d(${driftX - 2}px, ${driftY}px, 15px) perspective(900px) rotateY(8deg) rotateX(1deg)`,
+              transform: `translate(-50%, -50%) translate3d(${driftX}px, ${driftY}px, 20px) perspective(900px) rotateX(4deg)`,
             }}
           >
-            {/* AR Anchor crosshair pointing towards character */}
-            <div className="ar-anchor-group anchor-to-right">
-              <div className="ar-target-reticle">
-                <span className="reticle-dot dot-emerald" />
-                <span className="reticle-ring ring-emerald" />
-              </div>
-              <svg className="ar-line-svg" width="46" height="24" viewBox="0 0 46 24">
-                <polyline
-                  points="0,12 28,12 44,22"
-                  fill="none"
-                  stroke="#10B981"
-                  strokeWidth="1.5"
-                  strokeDasharray="3 2"
-                  className="ar-dash-anim"
-                />
-              </svg>
-            </div>
-
-            {/* 10% Opacity Frosted Glass Card */}
-            <div className="glass-10-card card-tracked-feature border-glow-emerald">
+            {/* 10% Opacity Frosted Glass Card with Rise-Style Content */}
+            <div className="glass-10-card card-mid-center border-glow-emerald">
               {/* Header meta */}
-              <div className="track-header-meta">
+              <div className="track-header-meta anim-rise-1">
                 <div className="meta-left">
                   <span className="ar-crosshair"><Utensils size={11} className="text-emerald" /></span>
                   <span className="ar-tag text-emerald">TRACK: #03_MACRO_AI</span>
                 </div>
-                <span className="ar-live-pulse"><span className="pulse-dot dot-emerald" /> AUTO</span>
+                <span className="ar-live-pulse"><span className="pulse-dot dot-emerald" /> PRECISI</span>
               </div>
 
               {/* 3 Macro Lines */}
               <div className="track-macro-stack">
-                <div className="macro-bar-line">
+                <div className="macro-bar-line anim-rise-2">
                   <span className="m-name"><span className="m-dot dot-protein" /> Protein</span>
                   <div className="m-bar"><div className="m-fill fill-protein" style={{ width: '82%' }} /></div>
                   <span className="m-num">140g</span>
                 </div>
-                <div className="macro-bar-line">
+                <div className="macro-bar-line anim-rise-3">
                   <span className="m-name"><span className="m-dot dot-carbs" /> Karbo</span>
                   <div className="m-bar"><div className="m-fill fill-carbs" style={{ width: '70%' }} /></div>
                   <span className="m-num">210g</span>
                 </div>
-                <div className="macro-bar-line">
+                <div className="macro-bar-line anim-rise-4">
                   <span className="m-name"><span className="m-dot dot-fat" /> Lemak</span>
                   <div className="m-bar"><div className="m-fill fill-fat" style={{ width: '58%' }} /></div>
                   <span className="m-num">52g</span>
@@ -433,7 +410,7 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
               </div>
 
               {/* Hydration bar */}
-              <div className="ar-hydration-pill">
+              <div className="ar-hydration-pill anim-rise-5">
                 <Droplet size={11} className="text-cyan" />
                 <span>Hidrasi: <strong>2,100 ml / 2,500 ml</strong> (84%)</span>
               </div>
@@ -441,12 +418,24 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
           </div>
         )}
 
-        {/* ── PHASE 4: 3D CONVERGENCE CLIMAX (9.2s - 10.0s) ── */}
+        {/* ── PHASE 4: PROFESSIONAL VFX CLOSING PORTAL (8.8s - 10.0s) ── */}
         {activePhase === 4 && (
-          <div className="tracking-node node-center anim-converge-out">
-            <div className="glass-10-card card-converge">
-              <span className="pulse-dot dot-cyan" />
-              <span className="converge-text">Menyiapkan Dashboard FitPulse...</span>
+          <div className="vfx-closing-stage anim-vfx-shockwave">
+            {/* Expanding Optical Energy Ring */}
+            <div className="vfx-energy-ring" />
+            <div className="vfx-energy-ring ring-delay" />
+
+            {/* Laser Grid Scan Line */}
+            <div className="vfx-laser-scan" />
+
+            {/* Cinematic Sync Card */}
+            <div className="glass-10-card vfx-sync-card anim-rise-spring">
+              <div className="vfx-sync-icon">
+                <Sparkles size={22} className="icon-zap-pulse" />
+              </div>
+              <span className="vfx-sync-badge">SINKRONISASI AI SELESAI</span>
+              <h2 className="vfx-sync-title">MEMASUKI DASHBOARD</h2>
+              <p className="vfx-sync-sub">Menyiapkan metrik kesehatan personal Anda...</p>
             </div>
           </div>
         )}

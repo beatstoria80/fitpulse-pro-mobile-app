@@ -68,6 +68,7 @@ export default function Home() {
   const [showOpening, setShowOpening] = useState(false);
   const [openingComplete, setOpeningComplete] = useState(false);
   const [ringAnimated, setRingAnimated] = useState(false);
+  const [dashboardVfxActive, setDashboardVfxActive] = useState(false);
 
   // Check if opening should play (only on client mount)
   useEffect(() => {
@@ -79,14 +80,33 @@ export default function Home() {
     }
   }, []);
 
-  // Handle opening completion — trigger stagger & ring animation
+  // Handle opening completion — trigger VFX shockwave handoff, stagger & celebratory confetti
   const handleOpeningComplete = useCallback(() => {
     setShowOpening(false);
     setOpeningComplete(true);
-    // Trigger ring animation after a brief delay for the stagger to feel natural
+    setDashboardVfxActive(true);
+
+    // Celebratory confetti burst on entering dashboard
+    try {
+      confetti({
+        particleCount: 75,
+        spread: 70,
+        origin: { y: 0.62 },
+        colors: ['#0284C7', '#38BDF8', '#10B981', '#F59E0B']
+      });
+    } catch {
+      // ignore in SSR / unsupported environments
+    }
+
+    // Animate ring after brief stagger delay
     setTimeout(() => {
       setRingAnimated(true);
-    }, 350);
+    }, 280);
+
+    // Keep VFX active for 1.4s to let all staggered cards gracefully dock
+    setTimeout(() => {
+      setDashboardVfxActive(false);
+    }, 1400);
   }, []);
 
   // Modals
@@ -660,13 +680,13 @@ export default function Home() {
       {/* Native Mobile Smartphone Container */}
       <main className="app-frame" id="appFrame">
         {/* Main Scrollable App Content */}
-        <div className={`app-content${openingComplete && !ringAnimated ? ' reveal-after-opening' : ''}`} id="appContent">
+        <div className={`app-content${dashboardVfxActive ? ' dashboard-vfx-enter' : ''}`} id="appContent">
 
           {/* ================= TAB 1: DASHBOARD ================= */}
           {activeTab === 'tabDashboard' && (
             <section className="tab-pane active" id="tabDashboard">
               {/* Header User Greeting */}
-              <div className={`user-greeting-card${openingComplete && !ringAnimated ? ' stagger-reveal delay-1' : ''}`}>
+              <div className={`user-greeting-card${dashboardVfxActive ? ' stagger-reveal delay-1' : ''}`}>
                 <div className="greeting-info">
                   <span className="greeting-sub">{todayFormatted}</span>
                   <h1 className="greeting-name">Halo, {data.user_profile.name || 'Pengguna'}</h1>
@@ -698,7 +718,7 @@ export default function Home() {
               </div>
 
               {/* Hero: Calorie & Energy Balance Glass Card */}
-              <div className={`glass-card hero-energy-card${openingComplete && !ringAnimated ? ' stagger-reveal delay-2' : ''}`}>
+              <div className={`glass-card hero-energy-card${dashboardVfxActive ? ' stagger-reveal delay-2' : ''}`}>
                 <div className="card-header-clean">
                   <div className="card-title-group">
                     <span className="badge-mini badge-cyan">Keseimbangan Energi</span>
@@ -781,7 +801,7 @@ export default function Home() {
                 </div>
 
                 {/* Macro Distribution Mini Bars */}
-                <div className={`macro-breakdown-row${openingComplete && !ringAnimated ? ' stagger-reveal delay-4' : ''}`}>
+                <div className={`macro-breakdown-row${dashboardVfxActive ? ' stagger-reveal delay-4' : ''}`}>
                   <div className="macro-item">
                     <div className="macro-labels">
                       <span className="macro-name"><Utensils size={13} className="color-protein" /> Protein</span>
@@ -815,7 +835,7 @@ export default function Home() {
               </div>
 
               {/* Goal Progress Duo: Weight & Body Fat Target Cards */}
-              <div className="two-col-grid">
+              <div className={`two-col-grid${dashboardVfxActive ? ' stagger-reveal delay-3' : ''}`}>
                 {/* Weight Card */}
                 <div className="glass-card stat-tile" onClick={() => setModalProfileOpen(true)} style={{ cursor: 'pointer' }}>
                   <div className="stat-tile-head">
@@ -860,7 +880,7 @@ export default function Home() {
               </div>
 
               {/* Hydration Water Tracker Card */}
-              <div className="glass-card water-tracker-card">
+              <div className={`glass-card water-tracker-card${dashboardVfxActive ? ' stagger-reveal delay-5' : ''}`}>
                 <div className="card-header-clean">
                   <div className="card-title-group">
                     <span className="badge-mini badge-blue"><Droplet size={13} /> Target Hidrasi</span>
@@ -1415,7 +1435,7 @@ export default function Home() {
         </div>{/* /app-content */}
 
         {/* Mobile Bottom Navigation Bar */}
-        <nav className={`bottom-nav${openingComplete && !ringAnimated ? ' stagger-reveal delay-6' : ''}`} id="bottomNav">
+        <nav className={`bottom-nav${dashboardVfxActive ? ' stagger-reveal delay-6' : ''}`} id="bottomNav">
           <button
             className={`nav-item ${activeTab === 'tabDashboard' ? 'active' : ''}`}
             onClick={() => setActiveTab('tabDashboard')}

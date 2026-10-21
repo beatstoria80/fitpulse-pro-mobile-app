@@ -2443,28 +2443,158 @@ body.fullscreen-mode .app-frame {
   transform-style: preserve-3d;
 }
 
-/* Dynamic Positions across X/Y/Z Flanks (Non-Static) */
-.tracking-node.node-intro {
-  top: calc(26px + env(safe-area-inset-top));
-  left: 20px;
+/* Dynamic Positions across Diverse Screen Zones (Non-Static, Face-Protected) */
+.intro-hero-wrapper {
+  position: absolute;
+  top: 13%;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 24px;
+  z-index: 10;
+  pointer-events: none;
 }
 
-.tracking-node.node-flank-left {
-  top: calc(26px + env(safe-area-inset-top));
-  left: 16px;
-  width: 270px;
+.intro-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(2, 132, 199, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  font-family: 'Plus Jakarta Sans', monospace;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 1.1px;
+  color: #0284C7;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.12);
 }
 
-.tracking-node.node-flank-right {
-  top: calc(26px + env(safe-area-inset-top));
-  right: 16px;
-  width: 270px;
+.icon-sparkle {
+  color: #0284C7;
+  animation: sparkleSpin 3s linear infinite;
 }
 
-.tracking-node.node-center {
-  top: calc(30px + env(safe-area-inset-top));
+@keyframes sparkleSpin {
+  0% { transform: scale(0.9) rotate(0deg); }
+  50% { transform: scale(1.15) rotate(180deg); }
+  100% { transform: scale(0.9) rotate(360deg); }
+}
+
+.intro-hero-headline {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1.12;
+  letter-spacing: -0.6px;
+  background: linear-gradient(135deg, #0F172A 0%, #0369A1 50%, #0284C7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0 0 6px 0;
+  filter: drop-shadow(0 2px 10px rgba(255, 255, 255, 0.9));
+}
+
+.intro-hero-sub {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  letter-spacing: 0.2px;
+  margin: 0;
+}
+
+/* Feature 1: Sisi Tengah Kanan (Torso / Hip Level, ~36% from top, right edge) */
+.tracking-node.node-mid-right {
+  top: 36%;
+  right: 14px;
+  width: 255px;
+  max-width: 66%;
+  z-index: 8;
+}
+
+/* Feature 2: Sisi Kiri Bawah (Footstep / Sensor Level, bottom flank) */
+.tracking-node.node-bottom-left {
+  bottom: 84px;
+  left: 14px;
+  width: 275px;
+  max-width: 72%;
+  z-index: 8;
+}
+
+/* Feature 3: Di Tengah Layar (Torso Level, Below Chin - Face Unobstructed) */
+.tracking-node.node-mid-center {
+  top: 52%;
   left: 50%;
-  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 380px;
+  z-index: 8;
+}
+
+/* Card variants */
+.card-mid-flank {
+  width: 100%;
+}
+
+.card-bottom-flank {
+  width: 100%;
+}
+
+.card-mid-center {
+  width: 100%;
+}
+
+/* Dynamic Rise-Style Content Animations */
+.anim-rise-spring {
+  animation: cardRiseSpring 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes cardRiseSpring {
+  0% {
+    opacity: 0;
+    transform: translateY(22px) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.anim-rise-1 {
+  opacity: 0;
+  animation: riseIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.05s;
+}
+.anim-rise-2 {
+  opacity: 0;
+  animation: riseIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.12s;
+}
+.anim-rise-3 {
+  opacity: 0;
+  animation: riseIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.19s;
+}
+.anim-rise-4 {
+  opacity: 0;
+  animation: riseIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.26s;
+}
+.anim-rise-5 {
+  opacity: 0;
+  animation: riseIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.33s;
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* --- 10% Opacity Ultra-Translucent Frosted Glassmorphism --- */
@@ -2512,6 +2642,11 @@ body.fullscreen-mode .app-frame {
 .ar-anchor-group.anchor-to-left {
   top: 18px;
   left: -36px;
+}
+
+.ar-anchor-group.anchor-to-right-up {
+  top: 12px;
+  right: -36px;
 }
 
 .ar-target-reticle {
@@ -2915,111 +3050,168 @@ body.fullscreen-mode .app-frame {
   color: #0284C7;
 }
 
-/* --- Phase 4: Converge --- */
-.card-converge {
+/* ================= PHASE 4: PROFESSIONAL VFX CLOSING PORTAL ================= */
+
+.vfx-closing-stage {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  justify-content: center;
+  z-index: 15;
+  pointer-events: none;
 }
 
-.converge-text {
-  font-size: 11px;
-  font-weight: 700;
-  color: #0F172A;
+.anim-vfx-shockwave {
+  animation: vfxStageFadeIn 0.35s ease-out forwards;
 }
 
-/* --- 3D Motion Tracking Spring Animations --- */
-.anim-track-fade {
-  animation: trackFade 0.4s ease-out forwards;
-}
-
-@keyframes trackFade {
-  from { opacity: 0; transform: scale(0.9); }
+@keyframes vfxStageFadeIn {
+  from { opacity: 0; transform: scale(0.94); }
   to { opacity: 1; transform: scale(1); }
 }
 
-.anim-track-spring-left {
-  animation: trackSpringLeft 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+.vfx-energy-ring {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid rgba(56, 189, 248, 0.85);
+  box-shadow: 0 0 35px rgba(56, 189, 248, 0.7), inset 0 0 25px rgba(2, 132, 199, 0.45);
+  animation: portalShockwave 1.1s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
-@keyframes trackSpringLeft {
+.vfx-energy-ring.ring-delay {
+  animation-delay: 0.45s;
+}
+
+@keyframes portalShockwave {
+  0% {
+    transform: scale(0.4);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(3.4);
+    opacity: 0;
+  }
+}
+
+.vfx-laser-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #38BDF8, #818CF8, transparent);
+  box-shadow: 0 0 18px #38BDF8, 0 0 36px #818CF8;
+  animation: laserScan 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes laserScan {
+  0% { top: 15%; opacity: 0.8; }
+  100% { top: 85%; opacity: 0.8; }
+}
+
+.vfx-sync-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 18px 22px;
+  width: 290px;
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 0 20px 42px rgba(2, 132, 199, 0.25), 0 0 26px rgba(56, 189, 248, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.vfx-sync-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0284C7, #38BDF8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  margin-bottom: 10px;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.7);
+}
+
+.icon-zap-pulse {
+  animation: zapPulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes zapPulse {
+  from { transform: scale(0.9); }
+  to { transform: scale(1.18); filter: drop-shadow(0 0 8px #FFFFFF); }
+}
+
+.vfx-sync-badge {
+  font-family: 'Plus Jakarta Sans', monospace;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #0284C7;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.vfx-sync-title {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+  color: #0F172A;
+  margin: 0 0 4px 0;
+}
+
+.vfx-sync-sub {
+  font-size: 11px;
+  color: #475569;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* ================= PROFESSIONAL DASHBOARD ENTRANCE VFX ================= */
+
+/* Applied to app-content with camera warp and optical dock-in */
+.app-content.dashboard-vfx-enter {
+  animation: dashboardVfxWarp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes dashboardVfxWarp {
   0% {
     opacity: 0;
-    transform: translate3d(-35px, -10px, -40px) perspective(900px) rotateY(24deg);
+    transform: scale(0.96) translateY(24px);
+    filter: blur(8px);
   }
-  65% {
-    transform: translate3d(4px, 2px, 20px) perspective(900px) rotateY(6deg);
+  60% {
+    filter: blur(0);
   }
   100% {
     opacity: 1;
-    transform: translate3d(0, 0, 15px) perspective(900px) rotateY(9deg);
+    transform: scale(1) translateY(0);
+    filter: blur(0);
   }
 }
 
-.anim-track-spring-right {
-  animation: trackSpringRight 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-@keyframes trackSpringRight {
-  0% {
-    opacity: 0;
-    transform: translate3d(35px, -10px, -40px) perspective(900px) rotateY(-24deg);
-  }
-  65% {
-    transform: translate3d(-4px, 2px, 20px) perspective(900px) rotateY(-6deg);
-  }
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 15px) perspective(900px) rotateY(-9deg);
-  }
-}
-
-.anim-converge-out {
-  animation: convergeOut 0.5s ease-out forwards;
-}
-
-@keyframes convergeOut {
-  0% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(0.85); }
-}
-
-/* ================= HANDOFF STAGGER ANIMATIONS ================= */
-
-/* Applied to app-content after the opening completes */
-.app-content.reveal-after-opening {
-  animation: appRevealIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes appRevealIn {
-  from {
-    opacity: 0;
-    transform: scale(1.02);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* Individual element stagger classes */
+/* Individual card dynamic stagger rise */
 .stagger-reveal {
   opacity: 0;
-  transform: translateY(10px);
-  animation: staggerUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform: translateY(18px);
+  animation: staggerCardUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.stagger-reveal.delay-1 { animation-delay: 0ms; }
-.stagger-reveal.delay-2 { animation-delay: 50ms; }
-.stagger-reveal.delay-3 { animation-delay: 100ms; }
-.stagger-reveal.delay-4 { animation-delay: 150ms; }
-.stagger-reveal.delay-5 { animation-delay: 200ms; }
-.stagger-reveal.delay-6 { animation-delay: 250ms; }
+.stagger-reveal.delay-1 { animation-delay: 50ms; }
+.stagger-reveal.delay-2 { animation-delay: 120ms; }
+.stagger-reveal.delay-3 { animation-delay: 190ms; }
+.stagger-reveal.delay-4 { animation-delay: 260ms; }
+.stagger-reveal.delay-5 { animation-delay: 330ms; }
+.stagger-reveal.delay-6 { animation-delay: 400ms; }
 
-@keyframes staggerUp {
+@keyframes staggerCardUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(18px);
   }
   to {
     opacity: 1;
@@ -3041,7 +3233,7 @@ body.fullscreen-mode .app-frame {
 
 /* Bottom nav stagger */
 .bottom-nav.stagger-reveal {
-  animation-delay: 300ms;
+  animation-delay: 320ms;
 }
 
 /* ================= ACCESSIBILITY & PREFERS-REDUCED-MOTION ================= */
