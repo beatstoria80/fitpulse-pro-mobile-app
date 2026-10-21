@@ -41,6 +41,11 @@ export const VIDEO_POSTER = '';  // empty = use solid white bg as fallback
  * - Skips if the user has "reduce motion" enabled.
  */
 export function shouldShowOpening(): boolean {
+  // Allow ?forceOpening=1 for testing & reviewing
+  if (typeof window !== 'undefined' && window.location.search.includes('forceOpening=1')) {
+    return true;
+  }
+
   // 1. Respect prefers-reduced-motion
   if (typeof window !== 'undefined' && window.matchMedia) {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');

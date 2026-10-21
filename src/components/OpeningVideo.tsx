@@ -9,6 +9,7 @@ import {
   Droplet,
   Sparkles,
   TrendingUp,
+  Target,
   Activity,
 } from 'lucide-react';
 import {
@@ -25,15 +26,20 @@ interface OpeningVideoProps {
 }
 
 /**
- * OpeningVideo — Cinematic UI/UX Presentation Video Showcase.
- * 
- * Choreographed specifically with the 3D mascot's camera angle:
- *  • Placed strictly in the TOP SAFE ZONE (Y: 16px - 140px) so it NEVER covers
- *    or touches the mascot's head or face (which sits at Y: 240px - 420px).
- *  • Completely clutter-free: No Skip button, no brand capsule, no duration line.
- *  • High-impact, dynamic motion design: Moving gradient neon borders,
- *    animated SVG ECG heartbeat waveform, interactive circular calorie gauges,
- *    and multi-macro progress bars with light-sweep effects.
+ * OpeningVideo — 3D Camera Tracker & 2D Motion Tracked UI/UX Experience.
+ *
+ * Designed to emulate After Effects 3D Camera Tracker & Mocha AE:
+ *  • 10% Ultra-Translucent Frosted Glassmorphism (`rgba(255, 255, 255, 0.10)`
+ *    with `backdrop-filter: blur(20px)` and luminous edge).
+ *  • Dynamic non-static positioning:
+ *      - Phase 1 (1.0s - 3.8s): Tracks upper-left flank in 3D perspective (+12° Y-tilt)
+ *        with an AR crosshair tracking anchor and connector line pointing to character.
+ *      - Phase 2 (3.8s - 6.6s): Mascot turns left → Card tracks upper-right flank (-12° Y-tilt)
+ *        with live ECG waveform and step shimmer bar.
+ *      - Phase 3 (6.6s - 9.2s): Mascot walks back-left → Card tracks upper-left depth (+8° Y-tilt)
+ *        with 3 macro nutrient tracks and water hydration meter.
+ *  • Zero interference with mascot's head or face.
+ *  • Completely clutter-free (no skip pill, no capsule, no duration line).
  */
 const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -67,7 +73,7 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
     }, CROSSFADE_DURATION_MS);
   }, [fading, onComplete]);
 
-  // ── 60fps Animation Loop for silky smooth sync ─────────────────────
+  // ── 60fps Animation Loop for silky smooth 3D tracking & parallax ────
   useEffect(() => {
     let active = true;
 
@@ -146,21 +152,25 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
 
   // ── Determine Current Showcase Phase ─────────────────────────────
   // 0: Intro (0.0s - 1.0s)
-  // 1: Feature 1 (1.0s - 3.8s) Calorie & Real-Time Deficit Ring
-  // 2: Feature 2 (3.8s - 6.6s) Live ECG Heart Rate & Steps Tracker
-  // 3: Feature 3 (6.6s - 9.2s) Precision Macro Nutrients & Hydration
-  // 4: Seamless Climax Handoff (9.2s - 10s)
+  // 1: Feature 1 (1.0s - 3.8s) Left Flank Tracked — Calorie & Deficit
+  // 2: Feature 2 (3.8s - 6.6s) Right Flank Tracked — Live ECG Vitals & Steps
+  // 3: Feature 3 (6.6s - 9.2s) Left Flank Tracked — Macros & Hydration
+  // 4: Seamless Climax Handoff (9.2s - 10.0s)
   let activePhase = 0;
   if (currentTime >= 9.2) activePhase = 4;
   else if (currentTime >= 6.6) activePhase = 3;
   else if (currentTime >= 3.8) activePhase = 2;
   else if (currentTime >= 1.0) activePhase = 1;
 
+  // Subtle 3D camera drift & walking cadence (continuous floating parallax)
+  const driftY = Math.sin(currentTime * 3.5) * 4;
+  const driftX = Math.cos(currentTime * 2.2) * 3;
+
   return (
     <div
       className={`opening-overlay ${fading ? 'opening-fade-out' : ''}`}
       role="dialog"
-      aria-label="Presentasi Fitur Unggulan FitPulse"
+      aria-label="Presentasi Fitur Unggulan FitPulse 3D Motion Tracked"
       aria-live="polite"
       onClick={triggerFade}
       title="Sentuh untuk langsung memulai"
@@ -184,222 +194,262 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
         onError={handleError}
       />
 
-      {/* Cinematic Showcase Container (bounded to smartphone aspect ratio) */}
-      <div className="opening-stage">
-        
-        {/* TOP POSITIONED FLOATING HUD CARD: Sits safely between Y: 16px and 145px */}
-        <div className="opening-hud-anchor">
+      {/* 3D Camera Tracking Stage */}
+      <div className="opening-tracking-stage">
 
-          {/* ── PHASE 0: WELCOME & MASCOT GREETING (0.0s - 1.0s) ── */}
-          {activePhase === 0 && (
-            <div className="hud-card hud-card-intro anim-hud-drop">
-              <div className="hud-glow-border border-cyan" />
-              <div className="hud-content">
-                <div className="hud-badge badge-cyan">
-                  <Sparkles size={11} className="icon-sparkle" />
-                  <span>SMART HEALTH COMPANION</span>
+        {/* ── PHASE 0: 3D AR INTRO BEACON (0.0s - 1.0s) ── */}
+        {activePhase === 0 && (
+          <div
+            className="tracking-node node-intro anim-track-fade"
+            style={{
+              transform: `translate3d(${driftX}px, ${driftY}px, 0) perspective(900px) rotateY(6deg)`,
+            }}
+          >
+            <div className="glass-10-card card-intro-mini">
+              <div className="track-header-meta">
+                <span className="ar-crosshair"><Target size={10} className="text-cyan anim-spin-slow" /></span>
+                <span className="ar-tag">3D_CAM_LOCK • FITPULSE PRO</span>
+              </div>
+              <div className="ar-intro-title">
+                <Sparkles size={13} className="text-cyan" />
+                <span>AI Health Companion</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── PHASE 1: UPPER-LEFT FLANK 3D TRACKED — TARGET KALORI (1.0s - 3.8s) ── */}
+        {activePhase === 1 && (
+          <div
+            className="tracking-node node-flank-left anim-track-spring-left"
+            style={{
+              transform: `translate3d(${driftX - 2}px, ${driftY}px, 15px) perspective(900px) rotateY(9deg) rotateX(2deg)`,
+            }}
+          >
+            {/* AR Anchor crosshair pointing towards character center */}
+            <div className="ar-anchor-group anchor-to-right">
+              <div className="ar-target-reticle">
+                <span className="reticle-dot dot-amber" />
+                <span className="reticle-ring ring-amber" />
+              </div>
+              <svg className="ar-line-svg" width="46" height="24" viewBox="0 0 46 24">
+                <polyline
+                  points="0,12 28,12 44,22"
+                  fill="none"
+                  stroke="#F59E0B"
+                  strokeWidth="1.5"
+                  strokeDasharray="3 2"
+                  className="ar-dash-anim"
+                />
+              </svg>
+            </div>
+
+            {/* 10% Opacity Frosted Glass Card */}
+            <div className="glass-10-card card-tracked-feature border-glow-amber">
+              {/* Header meta */}
+              <div className="track-header-meta">
+                <div className="meta-left">
+                  <span className="ar-crosshair"><Target size={11} className="text-amber" /></span>
+                  <span className="ar-tag text-amber">TRACK: #01_CALORIE_DEFICIT</span>
                 </div>
-                <div className="hud-intro-text">
-                  <h2 className="hud-intro-heading">FitPulse Pro</h2>
-                  <span className="hud-intro-sub">Mulai transformasi sehatmu hari ini</span>
+                <span className="ar-live-pulse"><span className="pulse-dot dot-amber" /> LIVE</span>
+              </div>
+
+              {/* Body */}
+              <div className="track-body-row">
+                <div className="track-metric-left">
+                  <span className="track-label">Target Kalori Harian</span>
+                  <div className="track-hero-num">
+                    <span className="hero-val">2,150</span>
+                    <span className="hero-unit">kkal</span>
+                  </div>
+                </div>
+
+                {/* Circular Gauge */}
+                <div className="track-mini-gauge">
+                  <svg className="gauge-svg" viewBox="0 0 42 42">
+                    <circle cx="21" cy="21" r="17" className="gauge-bg" />
+                    <circle cx="21" cy="21" r="17" className="gauge-val stroke-amber anim-gauge-fill" />
+                  </svg>
+                  <Flame size={13} className="gauge-icon text-amber" />
+                </div>
+              </div>
+
+              {/* Bottom stats row */}
+              <div className="track-bottom-badges">
+                <div className="ar-badge badge-emerald">
+                  <TrendingUp size={10} />
+                  <span>Defisit <strong>-450 kkal</strong></span>
+                </div>
+                <div className="ar-badge badge-amber">
+                  <Flame size={10} />
+                  <span>Bakar <strong>380 kkal</strong></span>
                 </div>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* ── PHASE 1: TARGET KALORI & DEFISIT CERDAS (1.0s - 3.8s) ── */}
-          {activePhase === 1 && (
-            <div className="hud-card hud-card-feature anim-hud-spring">
-              <div className="hud-glow-border border-amber" />
-              <div className="hud-content">
-                {/* Header row */}
-                <div className="hud-top-meta">
-                  <div className="hud-chip chip-amber">
-                    <Flame size={11} />
-                    <span>FITUR 01 • TARGET KALORI & DEFISIT</span>
-                  </div>
-                  <span className="hud-live-tag">
-                    <span className="pulse-dot dot-amber" /> Realtime Defisit
-                  </span>
+        {/* ── PHASE 2: UPPER-RIGHT FLANK 3D TRACKED — VITALS & ECG (3.8s - 6.6s) ── */}
+        {activePhase === 2 && (
+          <div
+            className="tracking-node node-flank-right anim-track-spring-right"
+            style={{
+              transform: `translate3d(${driftX + 2}px, ${driftY}px, 15px) perspective(900px) rotateY(-9deg) rotateX(2deg)`,
+            }}
+          >
+            {/* AR Anchor crosshair pointing towards character on the left */}
+            <div className="ar-anchor-group anchor-to-left">
+              <svg className="ar-line-svg" width="46" height="24" viewBox="0 0 46 24">
+                <polyline
+                  points="46,12 18,12 2,22"
+                  fill="none"
+                  stroke="#F43F5E"
+                  strokeWidth="1.5"
+                  strokeDasharray="3 2"
+                  className="ar-dash-anim"
+                />
+              </svg>
+              <div className="ar-target-reticle">
+                <span className="reticle-dot dot-rose" />
+                <span className="reticle-ring ring-rose" />
+              </div>
+            </div>
+
+            {/* 10% Opacity Frosted Glass Card */}
+            <div className="glass-10-card card-tracked-feature border-glow-rose">
+              {/* Header meta */}
+              <div className="track-header-meta">
+                <div className="meta-left">
+                  <span className="ar-crosshair"><Activity size={11} className="text-rose" /></span>
+                  <span className="ar-tag text-rose">TRACK: #02_LIVE_VITALS</span>
                 </div>
+                <span className="ar-live-pulse"><span className="pulse-dot dot-rose" /> 60Hz</span>
+              </div>
 
-                {/* Hero metric row */}
-                <div className="hud-calorie-body">
-                  <div className="hud-metric-group">
-                    <span className="hud-sub-label">Target Kalori Harian</span>
-                    <div className="hud-big-num-row">
-                      <span className="hud-number-hero">2,150</span>
-                      <span className="hud-unit-hero">kkal</span>
-                    </div>
+              {/* 2-Column Split: Heart Rate & Steps */}
+              <div className="track-grid-split">
+                {/* Heart Rate + ECG */}
+                <div className="split-column">
+                  <div className="split-label-row">
+                    <Heart size={11} className="text-rose anim-heart-beat" />
+                    <span>Detak Jantung</span>
                   </div>
-
-                  {/* Circular Progress Gauge with Flame Core */}
-                  <div className="hud-mini-gauge">
-                    <svg className="hud-gauge-svg" viewBox="0 0 46 46">
-                      <circle cx="23" cy="23" r="19" className="gauge-track-bg" />
-                      <circle
-                        cx="23"
-                        cy="23"
-                        r="19"
-                        className="gauge-track-fill fill-amber anim-gauge-draw"
+                  <div className="split-val-row">
+                    <span className="split-big-val">78</span>
+                    <span className="split-unit">BPM</span>
+                  </div>
+                  {/* Realtime ECG Path */}
+                  <div className="ecg-track-wrap">
+                    <svg className="ecg-mini-svg" viewBox="0 0 80 16" preserveAspectRatio="none">
+                      <path
+                        d="M0,8 L20,8 L24,2 L28,14 L32,6 L36,10 L40,8 L80,8"
+                        fill="none"
+                        stroke="#F43F5E"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        className="ecg-wave-line"
                       />
                     </svg>
-                    <Flame size={14} className="gauge-center-icon icon-flame-pulsing" />
                   </div>
+                </div>
 
-                  {/* Stat pills */}
-                  <div className="hud-mini-stats-col">
-                    <div className="hud-stat-pill pill-emerald">
-                      <TrendingUp size={11} />
-                      <span>-450 kkal</span>
-                    </div>
-                    <div className="hud-stat-pill pill-amber">
-                      <Flame size={11} />
-                      <span>380 aktif</span>
+                {/* Steps Counter */}
+                <div className="split-column">
+                  <div className="split-label-row">
+                    <Footprints size={11} className="text-cyan" />
+                    <span>Langkah Harian</span>
+                  </div>
+                  <div className="split-val-row">
+                    <span className="split-big-val">8,420</span>
+                    <span className="split-unit">/ 10k</span>
+                  </div>
+                  {/* Shimmering step track */}
+                  <div className="track-progress-bar">
+                    <div className="track-progress-fill fill-cyan" style={{ width: '84%' }}>
+                      <span className="bar-sweep-light" />
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* ── PHASE 2: LIVE ECG DETAK JANTUNG & LANGKAH (3.8s - 6.6s) ── */}
-          {activePhase === 2 && (
-            <div className="hud-card hud-card-feature anim-hud-spring">
-              <div className="hud-glow-border border-rose" />
-              <div className="hud-content">
-                {/* Header row */}
-                <div className="hud-top-meta">
-                  <div className="hud-chip chip-rose">
-                    <Heart size={11} />
-                    <span>FITUR 02 • SENSOR VITAL & LANGKAH</span>
-                  </div>
-                  <span className="hud-live-tag">
-                    <span className="pulse-dot dot-rose" /> Sensor Aktif
-                  </span>
+        {/* ── PHASE 3: UPPER-LEFT FLANK 3D TRACKED — MACRO NUTRISI (6.6s - 9.2s) ── */}
+        {activePhase === 3 && (
+          <div
+            className="tracking-node node-flank-left anim-track-spring-left"
+            style={{
+              transform: `translate3d(${driftX - 2}px, ${driftY}px, 15px) perspective(900px) rotateY(8deg) rotateX(1deg)`,
+            }}
+          >
+            {/* AR Anchor crosshair pointing towards character */}
+            <div className="ar-anchor-group anchor-to-right">
+              <div className="ar-target-reticle">
+                <span className="reticle-dot dot-emerald" />
+                <span className="reticle-ring ring-emerald" />
+              </div>
+              <svg className="ar-line-svg" width="46" height="24" viewBox="0 0 46 24">
+                <polyline
+                  points="0,12 28,12 44,22"
+                  fill="none"
+                  stroke="#10B981"
+                  strokeWidth="1.5"
+                  strokeDasharray="3 2"
+                  className="ar-dash-anim"
+                />
+              </svg>
+            </div>
+
+            {/* 10% Opacity Frosted Glass Card */}
+            <div className="glass-10-card card-tracked-feature border-glow-emerald">
+              {/* Header meta */}
+              <div className="track-header-meta">
+                <div className="meta-left">
+                  <span className="ar-crosshair"><Utensils size={11} className="text-emerald" /></span>
+                  <span className="ar-tag text-emerald">TRACK: #03_MACRO_AI</span>
                 </div>
+                <span className="ar-live-pulse"><span className="pulse-dot dot-emerald" /> AUTO</span>
+              </div>
 
-                {/* 2-Column Vitals HUD */}
-                <div className="hud-vitals-body">
-                  {/* Heart Rate + Live ECG Waveform */}
-                  <div className="hud-vital-pane pane-heart">
-                    <div className="vital-header-row">
-                      <Heart size={12} className="icon-beating text-rose" />
-                      <span className="vital-header-title">Detak Jantung</span>
-                    </div>
-                    <div className="vital-value-row">
-                      <span className="vital-big-number">78</span>
-                      <span className="vital-small-unit">BPM</span>
-                    </div>
-
-                    {/* Animated SVG ECG Waveform Path */}
-                    <div className="ecg-waveform-wrap">
-                      <svg className="ecg-svg" viewBox="0 0 100 20" preserveAspectRatio="none">
-                        <path
-                          className="ecg-path"
-                          d="M0,10 L25,10 L30,4 L35,16 L40,8 L45,12 L50,10 L100,10"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-
-                  {/* Step Counter + Shimmer Progress */}
-                  <div className="hud-vital-pane pane-steps">
-                    <div className="vital-header-row">
-                      <Footprints size={12} className="text-cyan" />
-                      <span className="vital-header-title">Langkah Kaki</span>
-                    </div>
-                    <div className="vital-value-row">
-                      <span className="vital-big-number">8,420</span>
-                      <span className="vital-small-unit">/ 10k</span>
-                    </div>
-                    {/* Shimmering Step Progress Bar */}
-                    <div className="hud-step-bar-wrap">
-                      <div className="hud-step-bar-fill" style={{ width: '84%' }}>
-                        <span className="bar-shimmer-sweep" />
-                      </div>
-                    </div>
-                  </div>
+              {/* 3 Macro Lines */}
+              <div className="track-macro-stack">
+                <div className="macro-bar-line">
+                  <span className="m-name"><span className="m-dot dot-protein" /> Protein</span>
+                  <div className="m-bar"><div className="m-fill fill-protein" style={{ width: '82%' }} /></div>
+                  <span className="m-num">140g</span>
+                </div>
+                <div className="macro-bar-line">
+                  <span className="m-name"><span className="m-dot dot-carbs" /> Karbo</span>
+                  <div className="m-bar"><div className="m-fill fill-carbs" style={{ width: '70%' }} /></div>
+                  <span className="m-num">210g</span>
+                </div>
+                <div className="macro-bar-line">
+                  <span className="m-name"><span className="m-dot dot-fat" /> Lemak</span>
+                  <div className="m-bar"><div className="m-fill fill-fat" style={{ width: '58%' }} /></div>
+                  <span className="m-num">52g</span>
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* ── PHASE 3: MAKRO NUTRISI & HIDRASI CERDAS (6.6s - 9.2s) ── */}
-          {activePhase === 3 && (
-            <div className="hud-card hud-card-feature anim-hud-spring">
-              <div className="hud-glow-border border-emerald" />
-              <div className="hud-content">
-                {/* Header row */}
-                <div className="hud-top-meta">
-                  <div className="hud-chip chip-emerald">
-                    <Utensils size={11} />
-                    <span>FITUR 03 • MAKRO NUTRISI & HIDRASI</span>
-                  </div>
-                  <span className="hud-live-tag">
-                    <span className="pulse-dot dot-emerald" /> Gizi Seimbang
-                  </span>
-                </div>
-
-                {/* 3 Macro Bars Stack + Hydration Pill */}
-                <div className="hud-macros-body">
-                  <div className="macro-tri-stack">
-                    {/* Protein */}
-                    <div className="macro-compact-line">
-                      <span className="macro-tag-label"><span className="dot-protein" /> Protein</span>
-                      <div className="macro-line-track">
-                        <div className="macro-line-fill fill-protein" style={{ width: '82%' }}>
-                          <span className="glow-bullet" />
-                        </div>
-                      </div>
-                      <span className="macro-val-label">140g</span>
-                    </div>
-
-                    {/* Karbohidrat */}
-                    <div className="macro-compact-line">
-                      <span className="macro-tag-label"><span className="dot-carbs" /> Karbo</span>
-                      <div className="macro-line-track">
-                        <div className="macro-line-fill fill-carbs" style={{ width: '70%' }}>
-                          <span className="glow-bullet" />
-                        </div>
-                      </div>
-                      <span className="macro-val-label">210g</span>
-                    </div>
-
-                    {/* Lemak */}
-                    <div className="macro-compact-line">
-                      <span className="macro-tag-label"><span className="dot-fat" /> Lemak</span>
-                      <div className="macro-line-track">
-                        <div className="macro-line-fill fill-fat" style={{ width: '58%' }}>
-                          <span className="glow-bullet" />
-                        </div>
-                      </div>
-                      <span className="macro-val-label">52g</span>
-                    </div>
-                  </div>
-
-                  {/* Water Hydration Pill */}
-                  <div className="hud-hydration-row">
-                    <Droplet size={11} className="text-cyan icon-droplet-glow" />
-                    <span className="hydration-text">Air: <strong>2,100 ml</strong> / 2,500 ml (84%)</span>
-                  </div>
-                </div>
+              {/* Hydration bar */}
+              <div className="ar-hydration-pill">
+                <Droplet size={11} className="text-cyan" />
+                <span>Hidrasi: <strong>2,100 ml / 2,500 ml</strong> (84%)</span>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* ── PHASE 4: SEAMLESS CLIMAX TRANSITION (9.2s - 10.0s) ── */}
-          {activePhase === 4 && (
-            <div className="hud-card hud-card-launch anim-hud-scale-out">
-              <div className="hud-glow-border border-cyan" />
-              <div className="hud-content hud-launch-content">
-                <span className="pulse-dot dot-cyan" />
-                <span className="launch-text">Membuka Dashboard FitPulse...</span>
-              </div>
+        {/* ── PHASE 4: 3D CONVERGENCE CLIMAX (9.2s - 10.0s) ── */}
+        {activePhase === 4 && (
+          <div className="tracking-node node-center anim-converge-out">
+            <div className="glass-10-card card-converge">
+              <span className="pulse-dot dot-cyan" />
+              <span className="converge-text">Menyiapkan Dashboard FitPulse...</span>
             </div>
-          )}
-
-        </div>
+          </div>
+        )}
 
       </div>
     </div>

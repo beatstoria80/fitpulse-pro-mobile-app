@@ -2422,488 +2422,566 @@ body.fullscreen-mode .app-frame {
 }
 
 /* Stage container: locks width to mobile phone aspect ratio (max 440px) */
-.opening-stage {
+.opening-tracking-stage {
   position: relative;
   z-index: 2;
   width: 100%;
   max-width: 440px;
   height: 100%;
   max-height: 920px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  box-sizing: border-box;
+  perspective: 1000px;
+  transform-style: preserve-3d;
   pointer-events: none;
-}
-
-/* TOP ANCHOR: Sits at the very top (Y: 18px), height is strictly capped <= 122px */
-.opening-hud-anchor {
-  position: absolute;
-  top: calc(18px + env(safe-area-inset-top));
-  left: 18px;
-  right: 18px;
-  z-index: 10;
-  pointer-events: auto;
-}
-
-/* Floating HUD Card Container */
-.hud-card {
-  position: relative;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  padding: 10px 14px;
-  box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.85), 0 4px 16px rgba(56, 189, 248, 0.1);
   overflow: hidden;
-  box-sizing: border-box;
-  transform-origin: center top;
 }
 
-/* Dynamic moving neon gradient border */
-.hud-glow-border {
+/* 3D Motion Tracked Nodes */
+.tracking-node {
   position: absolute;
-  inset: 0;
-  border-radius: 20px;
-  padding: 1.5px;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+  pointer-events: auto;
+  will-change: transform;
+  transform-style: preserve-3d;
 }
 
-.hud-glow-border.border-amber {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.7), rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.8));
-}
-.hud-glow-border.border-rose {
-  background: linear-gradient(135deg, rgba(244, 63, 94, 0.8), rgba(251, 113, 133, 0.2), rgba(56, 189, 248, 0.8));
-}
-.hud-glow-border.border-emerald {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.8), rgba(52, 211, 153, 0.2), rgba(56, 189, 248, 0.8));
-}
-.hud-glow-border.border-cyan {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.8), rgba(2, 132, 199, 0.3));
+/* Dynamic Positions across X/Y/Z Flanks (Non-Static) */
+.tracking-node.node-intro {
+  top: calc(26px + env(safe-area-inset-top));
+  left: 20px;
 }
 
-.hud-content {
+.tracking-node.node-flank-left {
+  top: calc(26px + env(safe-area-inset-top));
+  left: 16px;
+  width: 270px;
+}
+
+.tracking-node.node-flank-right {
+  top: calc(26px + env(safe-area-inset-top));
+  right: 16px;
+  width: 270px;
+}
+
+.tracking-node.node-center {
+  top: calc(30px + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* --- 10% Opacity Ultra-Translucent Frosted Glassmorphism --- */
+.glass-10-card {
   position: relative;
-  z-index: 1;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.10); /* 10% Opacity Glassmorphism as requested */
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+  padding: 10px 12px;
+  box-sizing: border-box;
 }
 
-/* --- Top Metadata Tag --- */
-.hud-top-meta {
+.glass-10-card.border-glow-amber {
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 14px 30px -4px rgba(245, 158, 11, 0.16), 0 0 0 1px rgba(245, 158, 11, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.6);
+}
+
+.glass-10-card.border-glow-rose {
+  border-color: rgba(244, 63, 94, 0.4);
+  box-shadow: 0 14px 30px -4px rgba(244, 63, 94, 0.16), 0 0 0 1px rgba(244, 63, 94, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.6);
+}
+
+.glass-10-card.border-glow-emerald {
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 14px 30px -4px rgba(16, 185, 129, 0.16), 0 0 0 1px rgba(16, 185, 129, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.6);
+}
+
+/* --- AR Motion Tracking Anchor & Target Reticle --- */
+.ar-anchor-group {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.ar-anchor-group.anchor-to-right {
+  top: 18px;
+  right: -36px;
+}
+
+.ar-anchor-group.anchor-to-left {
+  top: 18px;
+  left: -36px;
+}
+
+.ar-target-reticle {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.reticle-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.reticle-ring {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  animation: reticleRadar 1.5s infinite ease-out;
+}
+
+.reticle-ring.ring-amber { color: #F59E0B; }
+.reticle-ring.ring-rose  { color: #F43F5E; }
+.reticle-ring.ring-emerald { color: #10B981; }
+
+@keyframes reticleRadar {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+.ar-dash-anim {
+  animation: dashMarch 1.2s linear infinite;
+}
+
+@keyframes dashMarch {
+  to { stroke-dashoffset: -10; }
+}
+
+/* --- Track Header Meta --- */
+.track-header-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.meta-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ar-crosshair {
+  display: flex;
+  align-items: center;
+}
+
+.anim-spin-slow {
+  animation: spinSlow 8s linear infinite;
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.ar-tag {
+  font-family: 'Plus Jakarta Sans', monospace;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+}
+
+.ar-live-pulse {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 8.5px;
+  font-weight: 800;
+  color: #64748B;
+  letter-spacing: 0.5px;
+}
+
+.pulse-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  animation: dotFlash 1s infinite alternate;
+}
+
+@keyframes dotFlash {
+  0% { opacity: 0.3; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1.1); }
+}
+
+.dot-amber { background: #F59E0B; box-shadow: 0 0 5px #F59E0B; }
+.dot-rose { background: #F43F5E; box-shadow: 0 0 5px #F43F5E; }
+.dot-emerald { background: #10B981; box-shadow: 0 0 5px #10B981; }
+.dot-cyan { background: #38BDF8; box-shadow: 0 0 5px #38BDF8; }
+
+/* --- Phase 0 Intro Mini --- */
+.card-intro-mini {
+  padding: 8px 12px;
+}
+
+.ar-intro-title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+/* --- Phase 1: Calorie Body --- */
+.track-body-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 7px;
 }
 
-.hud-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 9.5px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  padding: 2.5px 7px;
-  border-radius: 999px;
-}
-
-.hud-chip.chip-amber {
-  background: rgba(245, 158, 11, 0.12);
-  color: #D97706;
-}
-.hud-chip.chip-rose {
-  background: rgba(244, 63, 94, 0.12);
-  color: #E11D48;
-}
-.hud-chip.chip-emerald {
-  background: rgba(16, 185, 129, 0.12);
-  color: #059669;
-}
-
-.hud-live-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  font-weight: 700;
-  color: #64748B;
-}
-
-.pulse-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  animation: dotBlink 1.2s infinite ease-in-out;
-}
-.dot-amber { background: #F59E0B; box-shadow: 0 0 6px #F59E0B; }
-.dot-rose { background: #F43F5E; box-shadow: 0 0 6px #F43F5E; }
-.dot-emerald { background: #10B981; box-shadow: 0 0 6px #10B981; }
-.dot-cyan { background: #38BDF8; box-shadow: 0 0 6px #38BDF8; }
-
-@keyframes dotBlink {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(0.75); opacity: 0.4; }
-}
-
-/* --- Phase 0: Intro --- */
-.hud-card-intro {
-  padding: 12px 16px;
-}
-.hud-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 9.5px;
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: 999px;
-  margin-bottom: 4px;
-}
-.badge-cyan {
-  background: rgba(56, 189, 248, 0.15);
-  color: #0284C7;
-}
-.hud-intro-heading {
-  font-size: 15px;
-  font-weight: 800;
-  color: #0F172A;
-  margin: 0;
-  line-height: 1.2;
-}
-.hud-intro-sub {
-  font-size: 11px;
-  color: #64748B;
-}
-
-/* --- Phase 1: Calorie Body --- */
-.hud-calorie-body {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.hud-metric-group {
+.track-metric-left {
   display: flex;
   flex-direction: column;
 }
-.hud-sub-label {
-  font-size: 10px;
-  font-weight: 600;
-  color: #64748B;
+
+.track-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #475569;
   text-transform: uppercase;
 }
-.hud-big-num-row {
+
+.track-hero-num {
   display: flex;
   align-items: baseline;
   gap: 3px;
 }
-.hud-number-hero {
-  font-size: 26px;
+
+.hero-val {
+  font-size: 24px;
   font-weight: 800;
   color: #0F172A;
   line-height: 1;
 }
-.hud-unit-hero {
-  font-size: 12px;
+
+.hero-unit {
+  font-size: 11px;
   font-weight: 700;
   color: #64748B;
 }
 
-.hud-mini-gauge {
+.track-mini-gauge {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
-.hud-gauge-svg {
+
+.gauge-svg {
   transform: rotate(-90deg);
   width: 100%;
   height: 100%;
 }
-.gauge-track-bg {
+
+.gauge-bg {
   fill: none;
-  stroke: #E2E8F0;
-  stroke-width: 4;
+  stroke: rgba(226, 232, 240, 0.7);
+  stroke-width: 3.5;
 }
-.gauge-track-fill {
+
+.gauge-val {
   fill: none;
-  stroke-width: 4;
+  stroke-width: 3.5;
   stroke-linecap: round;
 }
-.fill-amber {
+
+.stroke-amber {
   stroke: #F59E0B;
 }
-.anim-gauge-draw {
-  stroke-dasharray: 120;
-  stroke-dashoffset: 120;
-  animation: drawGauge 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.1s;
-}
-@keyframes drawGauge {
-  to { stroke-dashoffset: 32; }
+
+.anim-gauge-fill {
+  stroke-dasharray: 107;
+  stroke-dashoffset: 107;
+  animation: fillCalorieGauge 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.1s;
 }
 
-.gauge-center-icon {
+@keyframes fillCalorieGauge {
+  to { stroke-dashoffset: 26; }
+}
+
+.gauge-icon {
   position: absolute;
-  color: #F59E0B;
-}
-.icon-flame-pulsing {
-  animation: flameGlow 1.2s infinite ease-in-out;
-}
-@keyframes flameGlow {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.6)); }
-  50% { transform: scale(1.18); filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.9)); }
 }
 
-.hud-mini-stats-col {
+.track-bottom-badges {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
-.hud-stat-pill {
+
+.ar-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 10px;
+  gap: 3px;
+  font-size: 9px;
   font-weight: 700;
-  padding: 3px 7px;
-  border-radius: 8px;
-  white-space: nowrap;
+  padding: 2.5px 6px;
+  border-radius: 6px;
 }
-.pill-emerald {
-  background: rgba(16, 185, 129, 0.12);
+
+.badge-emerald {
+  background: rgba(16, 185, 129, 0.15);
   color: #059669;
 }
-.pill-amber {
-  background: rgba(245, 158, 11, 0.12);
+
+.badge-amber {
+  background: rgba(245, 158, 11, 0.15);
   color: #D97706;
 }
 
-/* --- Phase 2: Vitals Body --- */
-.hud-vitals-body {
+/* --- Phase 2: Vitals & ECG --- */
+.track-grid-split {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
-.hud-vital-pane {
-  background: rgba(248, 250, 252, 0.85);
-  border: 1px solid rgba(226, 232, 240, 0.7);
+
+.split-column {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 12px;
-  padding: 6px 9px;
+  padding: 6px 8px;
 }
-.vital-header-row {
+
+.split-label-row {
   display: flex;
   align-items: center;
   gap: 4px;
-}
-.vital-header-title {
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 700;
-  color: #64748B;
-  text-transform: uppercase;
+  color: #475569;
 }
-.vital-value-row {
+
+.split-val-row {
   display: flex;
   align-items: baseline;
-  gap: 3px;
-  margin: 1px 0 3px 0;
+  gap: 2px;
+  margin: 1px 0 2px 0;
 }
-.vital-big-number {
-  font-size: 18px;
+
+.split-big-val {
+  font-size: 17px;
   font-weight: 800;
   color: #0F172A;
   line-height: 1;
 }
-.vital-small-unit {
-  font-size: 10px;
+
+.split-unit {
+  font-size: 9.5px;
   font-weight: 700;
   color: #64748B;
 }
 
-/* Animated ECG Waveform */
-.ecg-waveform-wrap {
+.anim-heart-beat {
+  animation: heartRatePulse 0.8s ease-in-out infinite;
+}
+
+@keyframes heartRatePulse {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.25); }
+  45% { transform: scale(1.05); }
+  65% { transform: scale(1.2); }
+}
+
+.ecg-track-wrap {
   width: 100%;
-  height: 14px;
+  height: 12px;
   overflow: hidden;
 }
-.ecg-svg {
+
+.ecg-mini-svg {
   width: 100%;
   height: 100%;
 }
-.ecg-path {
-  fill: none;
-  stroke: #F43F5E;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 80;
-  stroke-dashoffset: 80;
-  animation: ecgPulse 1.4s linear infinite;
+
+.ecg-wave-line {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: runECG 1.3s linear infinite;
 }
-@keyframes ecgPulse {
-  0% { stroke-dashoffset: 80; }
+
+@keyframes runECG {
+  0% { stroke-dashoffset: 60; }
   100% { stroke-dashoffset: 0; }
 }
 
-/* Step Bar Shimmer */
-.hud-step-bar-wrap {
+.track-progress-bar {
   width: 100%;
   height: 4px;
-  background: #E2E8F0;
+  background: rgba(226, 232, 240, 0.7);
   border-radius: 999px;
   overflow: hidden;
   margin-top: 4px;
 }
-.hud-step-bar-fill {
+
+.track-progress-fill.fill-cyan {
   position: relative;
   height: 100%;
   background: linear-gradient(90deg, #38BDF8, #0284C7);
   border-radius: 999px;
   overflow: hidden;
 }
-.bar-shimmer-sweep {
+
+.bar-sweep-light {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
-  animation: shimmerMove 1.5s infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
+  animation: sweepLight 1.5s infinite;
 }
-@keyframes shimmerMove {
+
+@keyframes sweepLight {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(200%); }
 }
 
-/* --- Phase 3: Macros Body --- */
-.hud-macros-body {
+/* --- Phase 3: Macros --- */
+.track-macro-stack {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 3px;
+  margin-bottom: 5px;
 }
-.macro-tri-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 3.5px;
-}
-.macro-compact-line {
+
+.macro-bar-line {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 10px;
+  gap: 5px;
+  font-size: 9.5px;
 }
-.macro-tag-label {
-  width: 48px;
+
+.m-name {
+  width: 44px;
   font-weight: 700;
   color: #334155;
   display: flex;
   align-items: center;
   gap: 3px;
 }
-.dot-protein { width: 5px; height: 5px; border-radius: 50%; background: #10B981; }
-.dot-carbs { width: 5px; height: 5px; border-radius: 50%; background: #F59E0B; }
-.dot-fat { width: 5px; height: 5px; border-radius: 50%; background: #F43F5E; }
 
-.macro-line-track {
+.m-dot { width: 4.5px; height: 4.5px; border-radius: 50%; }
+.dot-protein { background: #10B981; }
+.dot-carbs { background: #F59E0B; }
+.dot-fat { background: #F43F5E; }
+
+.m-bar {
   flex: 1;
-  height: 4.5px;
-  background: #E2E8F0;
+  height: 4px;
+  background: rgba(226, 232, 240, 0.7);
   border-radius: 999px;
   overflow: hidden;
-  position: relative;
 }
-.macro-line-fill {
-  position: relative;
+
+.m-fill {
   height: 100%;
   border-radius: 999px;
-  transition: width 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
 .fill-protein { background: #10B981; }
 .fill-carbs { background: #F59E0B; }
 .fill-fat { background: #F43F5E; }
 
-.glow-bullet {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 3px;
-  background: #FFFFFF;
-  border-radius: 50%;
-  box-shadow: 0 0 4px #FFFFFF;
-}
-
-.macro-val-label {
-  font-size: 9.5px;
+.m-num {
+  font-size: 9px;
   font-weight: 700;
   color: #64748B;
-  width: 28px;
+  width: 25px;
   text-align: right;
 }
 
-.hud-hydration-row {
+.ar-hydration-pill {
   display: flex;
   align-items: center;
-  gap: 5px;
-  background: rgba(56, 189, 248, 0.1);
-  border-radius: 8px;
-  padding: 3px 8px;
-  font-size: 10px;
+  gap: 4px;
+  background: rgba(56, 189, 248, 0.12);
+  border-radius: 7px;
+  padding: 2.5px 7px;
+  font-size: 9.5px;
   color: #0284C7;
 }
 
-/* --- Phase 4: Launch --- */
-.hud-launch-content {
+/* --- Phase 4: Converge --- */
+.card-converge {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 6px;
+  gap: 6px;
+  padding: 6px 12px;
 }
-.launch-text {
-  font-size: 12px;
+
+.converge-text {
+  font-size: 11px;
   font-weight: 700;
   color: #0F172A;
 }
 
-/* --- High-Energy Snappy Spring Animations --- */
-.anim-hud-drop {
-  animation: hudDrop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-@keyframes hudDrop {
-  0% { opacity: 0; transform: translateY(-16px) scale(0.95); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+/* --- 3D Motion Tracking Spring Animations --- */
+.anim-track-fade {
+  animation: trackFade 0.4s ease-out forwards;
 }
 
-.anim-hud-spring {
-  animation: hudSpring 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+@keyframes trackFade {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }
-@keyframes hudSpring {
+
+.anim-track-spring-left {
+  animation: trackSpringLeft 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes trackSpringLeft {
   0% {
     opacity: 0;
-    transform: translateY(-12px) scale(0.92);
+    transform: translate3d(-35px, -10px, -40px) perspective(900px) rotateY(24deg);
   }
   65% {
-    transform: translateY(2px) scale(1.02);
+    transform: translate3d(4px, 2px, 20px) perspective(900px) rotateY(6deg);
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translate3d(0, 0, 15px) perspective(900px) rotateY(9deg);
   }
 }
 
-.anim-hud-scale-out {
-  animation: hudScaleOut 0.5s ease-out forwards;
+.anim-track-spring-right {
+  animation: trackSpringRight 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
-@keyframes hudScaleOut {
+
+@keyframes trackSpringRight {
+  0% {
+    opacity: 0;
+    transform: translate3d(35px, -10px, -40px) perspective(900px) rotateY(-24deg);
+  }
+  65% {
+    transform: translate3d(-4px, 2px, 20px) perspective(900px) rotateY(-6deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 15px) perspective(900px) rotateY(-9deg);
+  }
+}
+
+.anim-converge-out {
+  animation: convergeOut 0.5s ease-out forwards;
+}
+
+@keyframes convergeOut {
   0% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(0.92) translateY(-8px); }
+  100% { opacity: 0; transform: scale(0.85); }
 }
 
 /* ================= HANDOFF STAGGER ANIMATIONS ================= */
