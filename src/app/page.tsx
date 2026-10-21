@@ -59,7 +59,6 @@ import {
 export default function Home() {
   const [data, setData] = useState<AppFitnessData>(initialFitnessData);
   const [activeTab, setActiveTab] = useState<'tabDashboard' | 'tabActivities' | 'tabNutrition' | 'tabAnalytics'>('tabDashboard');
-  const [isFullView, setIsFullView] = useState(false);
   const [clock, setClock] = useState('14:04');
   const [toast, setToast] = useState<string | null>(null);
 
@@ -217,17 +216,6 @@ export default function Home() {
       if (intervalId) clearInterval(intervalId);
     };
   }, []);
-
-  // Sync isFullView with body class
-  useEffect(() => {
-    if (isFullView) {
-      document.body.classList.add('fullscreen-mode');
-      document.body.classList.remove('device-framed');
-    } else {
-      document.body.classList.add('device-framed');
-      document.body.classList.remove('fullscreen-mode');
-    }
-  }, [isFullView]);
 
   const saveUpdatedData = (newData: AppFitnessData) => {
     setData(newData);
@@ -605,28 +593,14 @@ export default function Home() {
 
   return (
     <>
-      {/* Desktop Viewport Controls */}
-      <aside className="desktop-bar" id="desktopBar" aria-label="Device Preview Controls">
+      {/* Desktop Bar (Hanya tampil di monitor layar lebar) */}
+      <aside className="desktop-bar" id="desktopBar" aria-label="Desktop Controls">
         <div className="desktop-bar-left">
           <span className="pulse-indicator"></span>
-          <span className="desktop-title">FitPulse Pro • Mobile App Simulator (Next.js 16)</span>
+          <span className="desktop-title">FitPulse Pro • Health & Fitness Tracker</span>
           <span className="badge user-badge">{data.user_profile.user_id} ({data.user_profile.name || 'Pengguna'} • {data.user_profile.demographics.age} th)</span>
         </div>
         <div className="desktop-bar-actions">
-          <button
-            className={`control-btn ${!isFullView ? 'active' : ''}`}
-            onClick={() => setIsFullView(false)}
-            title="Tampilan Mockup Mobile"
-          >
-            <Smartphone size={14} /> Mode HP
-          </button>
-          <button
-            className={`control-btn ${isFullView ? 'active' : ''}`}
-            onClick={() => setIsFullView(true)}
-            title="Tampilan Layar Penuh"
-          >
-            <Maximize2 size={14} /> Layar Penuh
-          </button>
           <button
             className="control-btn"
             onClick={() => setModalSupabaseOpen(true)}
@@ -640,7 +614,7 @@ export default function Home() {
             onClick={handleResetTodayData}
             title="Kosongkan data hari ini untuk menguji status Tanpa Data (Null)"
           >
-            <RotateCcw size={14} /> Reset/Uji Data Nol
+            <RotateCcw size={14} /> Reset Data Nol
           </button>
           <button
             className="control-btn action-highlight"
@@ -652,24 +626,8 @@ export default function Home() {
         </div>
       </aside>
 
-      {/* Mobile Device Container */}
+      {/* Native Mobile Smartphone Container */}
       <main className="app-frame" id="appFrame">
-        {/* iPhone-style Dynamic Island & Status Bar */}
-        <header className="status-bar" id="statusBar">
-          <div className="status-time" id="statusClock">{clock}</div>
-          <div className="dynamic-island">
-            <div className="island-pill">
-              <Flame size={13} className="island-icon" />
-              <span className="island-text">{burnedCalories} kkal terbakar</span>
-            </div>
-          </div>
-          <div className="status-icons">
-            <Signal size={13} />
-            <Wifi size={13} />
-            <BatteryMedium size={15} />
-          </div>
-        </header>
-
         {/* Main Scrollable App Content */}
         <div className="app-content" id="appContent">
 
@@ -1409,9 +1367,14 @@ export default function Home() {
                     <span className="badge-mini badge-cyan">Sistem Log Real-time</span>
                     <h3>Data Profil & Log Pengguna</h3>
                   </div>
-                  <button className="btn-copy-json" onClick={handleExportJson}>
-                    <Download size={14} /> Unduh JSON
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <button className="btn-copy-json" onClick={handleResetTodayData} title="Kosongkan data hari ini untuk menguji status Tanpa Data (Null)">
+                      <RotateCcw size={14} /> Reset Data Nol
+                    </button>
+                    <button className="btn-copy-json" onClick={handleExportJson}>
+                      <Download size={14} /> Unduh JSON
+                    </button>
+                  </div>
                 </div>
                 <pre className="json-code-box"><code>{JSON.stringify(data, null, 2)}</code></pre>
               </div>
@@ -1466,9 +1429,6 @@ export default function Home() {
             <div className="active-dot"></div>
           </button>
         </nav>
-
-        {/* Floating Home Bar Indicator (iOS style) */}
-        <div className="home-indicator"></div>
       </main>
 
       {/* ================= MODALS ================= */}
