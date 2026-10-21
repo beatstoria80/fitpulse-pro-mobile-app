@@ -11,14 +11,10 @@ import OpeningVideo from '../components/OpeningVideo';
 import { shouldShowOpening } from '../lib/openingController';
 import {
   Smartphone,
-  Maximize2,
   Cloud,
   Download,
   RotateCcw,
   Flame,
-  Signal,
-  Wifi,
-  BatteryMedium,
   Edit3,
   Info,
   Utensils,
@@ -72,12 +68,15 @@ export default function Home() {
 
   // Check if opening should play (only on client mount)
   useEffect(() => {
-    if (shouldShowOpening()) {
-      setShowOpening(true);
-    } else {
-      setOpeningComplete(true);
-      setRingAnimated(true);
-    }
+    const handle = requestAnimationFrame(() => {
+      if (shouldShowOpening()) {
+        setShowOpening(true);
+      } else {
+        setOpeningComplete(true);
+        setRingAnimated(true);
+      }
+    });
+    return () => cancelAnimationFrame(handle);
   }, []);
 
   // Handle opening completion — trigger VFX shockwave handoff, stagger & celebratory confetti

@@ -10,8 +10,7 @@ import {
   Sparkles,
   TrendingUp,
   Target,
-  Activity,
-  ShieldCheck,
+  Activity
 } from 'lucide-react';
 import {
   VIDEO_SRC,
