@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import { initialFitnessData, calculateBMR, formatDateIndonesian, getTodayDateStr } from '../lib/initialData';
 import { mapCloudNutritionToApp, mapCloudActivityToApp } from '../lib/supabase';
 import { AppFitnessData, ActivityLog, NutritionLog, UserProfile } from '../types/fitness';
 import HeartRateMonitor from '../components/HeartRateMonitor';
 import StepCounter from '../components/StepCounter';
+import OpeningVideo from '../components/OpeningVideo';
+import { shouldShowOpening } from '../lib/openingController';
 import {
   Smartphone,
   Maximize2,
@@ -61,6 +63,31 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'tabDashboard' | 'tabActivities' | 'tabNutrition' | 'tabAnalytics'>('tabDashboard');
   const [clock, setClock] = useState('14:04');
   const [toast, setToast] = useState<string | null>(null);
+
+  // Opening video state
+  const [showOpening, setShowOpening] = useState(false);
+  const [openingComplete, setOpeningComplete] = useState(false);
+  const [ringAnimated, setRingAnimated] = useState(false);
+
+  // Check if opening should play (only on client mount)
+  useEffect(() => {
+    if (shouldShowOpening()) {
+      setShowOpening(true);
+    } else {
+      setOpeningComplete(true);
+      setRingAnimated(true);
+    }
+  }, []);
+
+  // Handle opening completion — trigger stagger & ring animation
+  const handleOpeningComplete = useCallback(() => {
+    setShowOpening(false);
+    setOpeningComplete(true);
+    // Trigger ring animation after a brief delay for the stagger to feel natural
+    setTimeout(() => {
+      setRingAnimated(true);
+    }, 350);
+  }, []);
 
   // Modals
   const [modalActivityOpen, setModalActivityOpen] = useState(false);
@@ -593,6 +620,10 @@ export default function Home() {
 
   return (
     <>
+      {/* ================= OPENING VIDEO ================= */}
+      {showOpening && (
+        <OpeningVideo onComplete={handleOpeningComplete} />
+      )}
       {/* Desktop Bar (Hanya tampil di monitor layar lebar) */}
       <aside className="desktop-bar" id="desktopBar" aria-label="Desktop Controls">
         <div className="desktop-bar-left">
@@ -629,13 +660,13 @@ export default function Home() {
       {/* Native Mobile Smartphone Container */}
       <main className="app-frame" id="appFrame">
         {/* Main Scrollable App Content */}
-        <div className="app-content" id="appContent">
+        <div className={`app-content${openingComplete && !ringAnimated ? ' reveal-after-opening' : ''}`} id="appContent">
 
           {/* ================= TAB 1: DASHBOARD ================= */}
           {activeTab === 'tabDashboard' && (
             <section className="tab-pane active" id="tabDashboard">
               {/* Header User Greeting */}
-              <div className="user-greeting-card">
+              <div className={`user-greeting-card${openingComplete && !ringAnimated ? ' stagger-reveal delay-1' : ''}`}>
                 <div className="greeting-info">
                   <span className="greeting-sub">{todayFormatted}</span>
                   <h1 className="greeting-name">Halo, {data.user_profile.name || 'Pengguna'}</h1>
@@ -667,7 +698,7 @@ export default function Home() {
               </div>
 
               {/* Hero: Calorie & Energy Balance Glass Card */}
-              <div className="glass-card hero-energy-card">
+              <div className={`glass-card hero-energy-card${openingComplete && !ringAnimated ? ' stagger-reveal delay-2' : ''}`}>
                 <div className="card-header-clean">
                   <div className="card-title-group">
                     <span className="badge-mini badge-cyan">Keseimbangan Energi</span>
@@ -698,14 +729,14 @@ export default function Home() {
                       </defs>
                       <circle className="ring-bg" cx="90" cy="90" r="76" strokeWidth="12" />
                       <circle
-                        className="ring-progress"
+                        className={`ring-progress${openingComplete && !ringAnimated ? ' ring-animate-in' : ''}`}
                         id="ringCalories"
                         cx="90"
                         cy="90"
                         r="76"
                         strokeWidth="12"
                         strokeDasharray="477.5"
-                        strokeDashoffset={ringOffset}
+                        strokeDashoffset={ringAnimated ? ringOffset : 477.5}
                       />
                     </svg>
                     <div className="gauge-center-content">
@@ -750,7 +781,7 @@ export default function Home() {
                 </div>
 
                 {/* Macro Distribution Mini Bars */}
-                <div className="macro-breakdown-row">
+                <div className={`macro-breakdown-row${openingComplete && !ringAnimated ? ' stagger-reveal delay-4' : ''}`}>
                   <div className="macro-item">
                     <div className="macro-labels">
                       <span className="macro-name"><Utensils size={13} className="color-protein" /> Protein</span>
@@ -1384,7 +1415,7 @@ export default function Home() {
         </div>{/* /app-content */}
 
         {/* Mobile Bottom Navigation Bar */}
-        <nav className="bottom-nav" id="bottomNav">
+        <nav className={`bottom-nav${openingComplete && !ringAnimated ? ' stagger-reveal delay-6' : ''}`} id="bottomNav">
           <button
             className={`nav-item ${activeTab === 'tabDashboard' ? 'active' : ''}`}
             onClick={() => setActiveTab('tabDashboard')}
