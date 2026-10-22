@@ -29,15 +29,16 @@ interface OpeningVideoProps {
  * OpeningVideo — Professional VFX 3D Motion Tracked Presentation.
  *
  * Feature Positioning:
- *  • 0.0s - 1.4s : Intro Hero Kinetic Headline (Themed relatable copy, word rise & spread).
- *  • 1.4s - 4.0s : Feature 1 — MID-RIGHT FLANK (Torso/hip level, 10% glass, amber glow, AR line).
- *  • 4.0s - 6.8s : Feature 2 — BOTTOM-LEFT (Lower body/footstep level, 10% glass, rose ECG wave).
- *  • 6.8s - 8.8s : Feature 3 — MID-CENTER (Torso level, below chin, 10% glass, emerald macro rise).
+ *  • 0.0s - 8.8s : Hero Copy Headline — SISI KIRI BAWAH (High contrast, overlay pada animasi 3D walking character).
+ *  • 1.4s - 4.0s : Feature 1 — MID-RIGHT FLANK (Target Kalori & Defisit, amber glow, anti-clipping fixed).
+ *  • 4.0s - 6.8s : Feature 2 — LOWER-RIGHT FLANK (Sensor Vitals & Langkah, rose ECG wave, no overlay with hero copy).
+ *  • 6.8s - 8.8s : Feature 3 — MID-CENTER (Makro Nutrisi AI & Hidrasi, emerald rise, torso level).
  *  • 8.8s - 10.0s: VFX CLOSING PORTAL (Shockwave optical burst, laser scan, sync complete -> Dashboard warp).
  *
  * All cards utilize:
  *  - 10% Ultra-Translucent Frosted Glassmorphism (`rgba(255, 255, 255, 0.10)`).
  *  - High-impact dynamic RISE STYLE entry for all internal text, numbers, and icons.
+ *  - Zero clipping on small screens and zero overlay with hero copy text.
  *  - Zero obstruction of mascot's face and head.
  */
 const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
@@ -196,8 +197,8 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
       {/* 3D Multi-Position Tracking Stage */}
       <div className="opening-tracking-stage">
 
-        {/* ── PHASE 0: INTRO HERO KINETIC HEADLINE (0.0s - 1.4s) ── */}
-        {activePhase === 0 && (
+        {/* ── HERO COPY HEADLINE: SISI KIRI BAWAH (0.0s - 8.8s) ── */}
+        {activePhase < 4 && (
           <div className="intro-hero-wrapper anim-intro-hero">
             <div className="intro-hero-badge anim-rise-1">
               <Sparkles size={11} className="icon-sparkle" />
@@ -217,14 +218,15 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
           <div
             className="tracking-node node-mid-right anim-rise-spring"
             style={{
-              transform: `translate3d(${driftX}px, ${driftY}px, 20px) perspective(900px) rotateY(-12deg) rotateX(3deg)`,
+              transform: `translate3d(${driftX}px, ${driftY}px, 15px) perspective(900px) rotateY(-5deg) rotateX(2deg)`,
+              transformOrigin: 'right center',
             }}
           >
             {/* AR Anchor crosshair pointing from left edge toward character */}
             <div className="ar-anchor-group anchor-to-left">
-              <svg className="ar-line-svg" width="48" height="26" viewBox="0 0 48 26">
+              <svg className="ar-line-svg" width="36" height="22" viewBox="0 0 36 22">
                 <polyline
-                  points="48,13 18,13 2,24"
+                  points="36,11 14,11 2,18"
                   fill="none"
                   stroke="#F59E0B"
                   strokeWidth="1.6"
@@ -284,23 +286,20 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
           </div>
         )}
 
-        {/* ── PHASE 2: SISI KIRI BAWAH — SENSOR VITAL & LANGKAH (4.0s - 6.8s) ── */}
+        {/* ── PHASE 2: SISI KANAN BAWAH / RIGHT FLANK — SENSOR VITAL & LANGKAH (4.0s - 6.8s) ── */}
         {activePhase === 2 && (
           <div
-            className="tracking-node node-bottom-left anim-rise-spring"
+            className="tracking-node node-lower-right anim-rise-spring"
             style={{
-              transform: `translate3d(${driftX}px, ${driftY}px, 20px) perspective(900px) rotateY(12deg) rotateX(-3deg)`,
+              transform: `translate3d(${driftX}px, ${driftY}px, 15px) perspective(900px) rotateY(-5deg) rotateX(-2deg)`,
+              transformOrigin: 'right center',
             }}
           >
-            {/* AR Anchor crosshair pointing from right edge toward character */}
-            <div className="ar-anchor-group anchor-to-right-up">
-              <div className="ar-target-reticle">
-                <span className="reticle-dot dot-rose" />
-                <span className="reticle-ring ring-rose" />
-              </div>
-              <svg className="ar-line-svg" width="48" height="26" viewBox="0 0 48 26">
+            {/* AR Anchor crosshair pointing from left edge toward character */}
+            <div className="ar-anchor-group anchor-to-left">
+              <svg className="ar-line-svg" width="36" height="22" viewBox="0 0 36 22">
                 <polyline
-                  points="0,18 24,18 46,6"
+                  points="36,11 14,11 2,4"
                   fill="none"
                   stroke="#F43F5E"
                   strokeWidth="1.6"
@@ -308,10 +307,14 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
                   className="ar-dash-anim"
                 />
               </svg>
+              <div className="ar-target-reticle">
+                <span className="reticle-dot dot-rose" />
+                <span className="reticle-ring ring-rose" />
+              </div>
             </div>
 
             {/* 10% Opacity Frosted Glass Card with Rise-Style Content */}
-            <div className="glass-10-card card-bottom-flank border-glow-rose">
+            <div className="glass-10-card card-lower-flank border-glow-rose">
               {/* Header meta */}
               <div className="track-header-meta anim-rise-1">
                 <div className="meta-left">
@@ -375,7 +378,7 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
           <div
             className="tracking-node node-mid-center anim-rise-spring"
             style={{
-              transform: `translate(-50%, -50%) translate3d(${driftX}px, ${driftY}px, 20px) perspective(900px) rotateX(4deg)`,
+              transform: `translate(-50%, -50%) translate3d(${driftX}px, ${driftY}px, 15px) perspective(900px) rotateX(3deg)`,
             }}
           >
             {/* 10% Opacity Frosted Glass Card with Rise-Style Content */}

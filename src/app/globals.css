@@ -2443,18 +2443,17 @@ body.fullscreen-mode .app-frame {
   transform-style: preserve-3d;
 }
 
-/* Dynamic Positions across Diverse Screen Zones (Non-Static, Face-Protected) */
+/* Hero Copy Headline: Di Sisi Kiri Bawah (Warna Kontras & Overlay pada Animasi Video Character) */
 .intro-hero-wrapper {
   position: absolute;
-  top: 13%;
-  left: 0;
-  right: 0;
+  bottom: 28px;
+  left: 16px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 0 24px;
-  z-index: 10;
+  align-items: flex-start;
+  text-align: left;
+  max-width: 220px;
+  z-index: 12;
   pointer-events: none;
 }
 
@@ -2462,22 +2461,24 @@ body.fullscreen-mode .app-frame {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
+  padding: 5px 11px;
   border-radius: 999px;
-  background: rgba(2, 132, 199, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.45);
+  background: rgba(15, 23, 42, 0.90);
+  border: 1px solid rgba(56, 189, 248, 0.6);
   font-family: 'Plus Jakarta Sans', monospace;
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 800;
-  letter-spacing: 1.1px;
-  color: #0284C7;
+  letter-spacing: 1px;
+  color: #38BDF8;
   text-transform: uppercase;
-  margin-bottom: 10px;
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.12);
+  margin-bottom: 7px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.25), 0 0 10px rgba(56, 189, 248, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .icon-sparkle {
-  color: #0284C7;
+  color: #38BDF8;
   animation: sparkleSpin 3s linear infinite;
 }
 
@@ -2489,60 +2490,66 @@ body.fullscreen-mode .app-frame {
 
 .intro-hero-headline {
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 26px;
+  font-size: 23px;
   font-weight: 900;
-  line-height: 1.12;
+  line-height: 1.15;
   letter-spacing: -0.6px;
-  background: linear-gradient(135deg, #0F172A 0%, #0369A1 50%, #0284C7 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin: 0 0 6px 0;
-  filter: drop-shadow(0 2px 10px rgba(255, 255, 255, 0.9));
+  color: #0F172A;
+  margin: 0 0 5px 0;
+  filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.95)) drop-shadow(0 1px 2px rgba(15, 23, 42, 0.25));
 }
 
 .intro-hero-sub {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  color: #475569;
-  letter-spacing: 0.2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #1E293B;
+  letter-spacing: 0.1px;
   margin: 0;
+  filter: drop-shadow(0 1px 4px rgba(255, 255, 255, 0.9));
 }
 
-/* Feature 1: Sisi Tengah Kanan (Torso / Hip Level, ~36% from top, right edge) */
+/* Feature 1: Sisi Kanan Atas-Tengah (Torso / Hip Level, ~22% from top, right edge — fixed clipping) */
 .tracking-node.node-mid-right {
-  top: 36%;
-  right: 14px;
-  width: 255px;
-  max-width: 66%;
-  z-index: 8;
+  top: 22%;
+  right: 16px;
+  width: 220px;
+  max-width: 58%;
+  z-index: 10;
 }
 
-/* Feature 2: Sisi Kiri Bawah (Footstep / Sensor Level, bottom flank) */
-.tracking-node.node-bottom-left {
-  bottom: 84px;
-  left: 14px;
-  width: 275px;
-  max-width: 72%;
-  z-index: 8;
+/* Feature 2: Sisi Kanan Tengah-Bawah (Torso/Legs Level, ~47% from top, right edge — tidak overlay teks copy hero di kiri bawah) */
+.tracking-node.node-lower-right {
+  top: 47%;
+  right: 16px;
+  width: 222px;
+  max-width: 58%;
+  z-index: 10;
 }
 
 /* Feature 3: Di Tengah Layar (Torso Level, Below Chin - Face Unobstructed) */
 .tracking-node.node-mid-center {
-  top: 52%;
+  top: 36%;
   left: 50%;
-  width: calc(100% - 32px);
-  max-width: 380px;
-  z-index: 8;
+  width: calc(100% - 40px);
+  max-width: 310px;
+  z-index: 10;
 }
 
 /* Card variants */
 .card-mid-flank {
   width: 100%;
+  padding: 8px 10px;
+}
+
+.card-lower-flank {
+  width: 100%;
+  padding: 8px 10px;
 }
 
 .card-bottom-flank {
   width: 100%;
+  padding: 8px 10px;
 }
 
 .card-mid-center {
