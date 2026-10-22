@@ -2195,6 +2195,25 @@ body.fullscreen-mode .app-frame {
   box-shadow: none;
 }
 
+.ppg-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: rgba(250, 204, 21, 0.08);
+  border: 1px solid rgba(250, 204, 21, 0.2);
+  border-radius: 10px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.ppg-disclaimer svg {
+  flex-shrink: 0;
+  color: #FACC15;
+  margin-top: 1px;
+}
+
 .ppg-zone-legend {
   margin-top: 14px;
   padding-top: 12px;

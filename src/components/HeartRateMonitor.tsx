@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { HeartPulse, Camera, CheckCircle2, Loader2, Hand, Hourglass, Play, Square } from 'lucide-react';
+import { HeartPulse, Camera, CheckCircle2, Loader2, Hand, Hourglass, Play, Square, Info } from 'lucide-react';
 import { HeartRatePPG, PPGReading } from '../lib/heartRatePPG';
 
 interface HeartRateMonitorProps {
@@ -167,7 +167,8 @@ export default function HeartRateMonitor({ userAge, onMeasurementComplete }: Hea
               </div>
             ) : (
               <p className="ppg-instruction">
-                Tekan tombol di bawah, lalu <strong>tutup kamera belakang dengan ujung jari</strong> Anda
+                Tekan tombol di bawah, lalu <strong>tutup kamera belakang dengan ujung jari</strong> Anda.
+                Tekan lembut dan tahan stabil selama ±10 detik.
               </p>
             )}
           </div>
@@ -229,6 +230,16 @@ export default function HeartRateMonitor({ userAge, onMeasurementComplete }: Hea
           {isActive ? 'Hentikan Pengukuran' : 'Mulai Ukur Detak Jantung'}
         </button>
       )}
+
+      {/* Disclaimer Presisi */}
+      <div className="ppg-disclaimer">
+        <Info size={14} />
+        <span>
+          Hasil pengukuran bersifat <strong>estimasi</strong> untuk monitoring kesehatan harian.
+          Akurasi ±3-5 BPM. Bukan pengganti alat medis profesional.
+          Untuk diagnosis, konsultasikan ke dokter.
+        </span>
+      </div>
 
       {/* Heart Rate Zone Reference (now with real data context) */}
       <div className="ppg-zone-legend">

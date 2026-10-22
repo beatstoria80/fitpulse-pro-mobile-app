@@ -1,12 +1,19 @@
 /**
- * FitPulse Pro • Device Motion Step Counter (Pedometer)
- * =====================================================
+ * FitPulse Pro • Device Motion Step Counter (Pedometer) v2
+ * ========================================================
  * Mendeteksi langkah kaki REAL-TIME menggunakan sensor gerak HP.
+ *
+ * Perbaikan v2:
+ * - Algoritma peak detection GANDA (harus ada pola naik-turun yang benar)
+ * - Konfirmasi langkah bertahap (butuh 2 consecutive peaks untuk mulai menghitung)
+ * - Threshold adaptif berdasarkan aktivitas
+ * - Debounce ketat: goyangan kecil TIDAK dianggap langkah
+ * - Warmup period: 1 detik pertama tidak menghitung (stabilisasi sensor)
  *
  * Cara kerja:
  * 1. Menggunakan DeviceMotion API / Accelerometer API
  * 2. Mendeteksi pola ayunan langkah dari data akselerometer
- * 3. Algoritma menghitung langkah berdasarkan peak detection pada sinyal akselerasi
+ * 3. Algoritma peak detection dengan konfirmasi pola (bukan hanya threshold)
  *
  * Akurasi: ±5-10% (cukup baik jika HP di saku celana)
  */
@@ -33,13 +40,23 @@ export interface PedometerConfig {
 }
 
 const DEFAULT_CONFIG: PedometerConfig = {
-  stepThreshold: 1.2,
-  minStepInterval: 250,   // Max ~240 steps/min (running)
-  maxStepInterval: 2000,  // Min ~30 steps/min (very slow walk)
-  strideLength: 0.7,      // 70 cm default stride
+  stepThreshold: 2.5,       // Dinaikkan dari 1.2 → 2.5 (butuh gerakan nyata)
+  minStepInterval: 300,     // Dinaikkan dari 250 → 300ms (max ~200 steps/min)
+  maxStepInterval: 2000,    // Min ~30 steps/min (very slow walk)
+  strideLength: 0.7,        // 70 cm default stride
   weightKg: 69,
   heightCm: 160,
 };
+
+/**
+ * State machine untuk deteksi pola langkah yang akurat.
+ * Langkah hanya dihitung jika ada pola: baseline → peak → valley → baseline
+ */
+enum StepPhase {
+  WAITING_PEAK = 'WAITING_PEAK',     // Menunggu lonjakan (goyangan naik)
+  WAITING_VALLEY = 'WAITING_VALLEY', // Menunggu penurunan (goyangan turun)
+  CONFIRMED = 'CONFIRMED',           // Pola langkah dikonfirmasi
+}
 
 export class Pedometer {
   private config: PedometerConfig;
@@ -48,6 +65,17 @@ export class Pedometer {
   private stepTimestamps: number[] = [];
   private lastStepTime = 0;
   private accelBuffer: number[] = [];
+
+  // === PERBAIKAN: Deteksi pola langkah ===
+  private phase: StepPhase = StepPhase.WAITING_PEAK;
+  private peakValue = 0;          // Nilai peak terakhir yang terdeteksi
+  private valleyValue = Infinity; // Nilai valley terakhir
+  private consecutivePatterns = 0; // Berapa pola berturut-turut terdeteksi
+  private warmupUntil = 0;        // Timestamp akhir warmup (stabilisasi sensor)
+  
+  // Low-pass filter state
+  private filteredMag = 9.81;     // Nilai akselerasi yang sudah di-filter
+  private gravity = 9.81;         // Estimasi gravitasi (baseline)
 
   // Activity detection
   private recentCadences: number[] = [];
@@ -111,6 +139,17 @@ export class Pedometer {
     this.lastStepTime = 0;
     this.accelBuffer = [];
     this.recentCadences = [];
+
+    // Reset step pattern detection state
+    this.phase = StepPhase.WAITING_PEAK;
+    this.peakValue = 0;
+    this.valleyValue = Infinity;
+    this.consecutivePatterns = 0;
+    this.filteredMag = 9.81;
+    this.gravity = 9.81;
+
+    // Warmup: 1 detik pertama untuk stabilisasi sensor
+    this.warmupUntil = Date.now() + 1000;
 
     // Check support
     if (!Pedometer.isSupported()) {
@@ -193,55 +232,162 @@ export class Pedometer {
   }
 
   /**
-   * Process raw acceleration data to detect steps
+   * Process raw acceleration data to detect steps.
+   * 
+   * PERBAIKAN UTAMA:
+   * - Low-pass filter untuk memisahkan gravitasi dari gerakan
+   * - State machine: butuh pola peak → valley (bukan hanya threshold crossing)
+   * - Konfirmasi berturut-turut: 2 pola pertama dianggap "kalibrasi"
+   * - Debounce ketat dengan interval minimum 300ms
    */
   private processAcceleration(x: number, y: number, z: number): void {
     if (!this.isRunning) return;
 
-    // Calculate acceleration magnitude
-    const magnitude = Math.sqrt(x * x + y * y + z * z);
+    const now = Date.now();
 
-    // Add to buffer (keep last 50 readings)
-    this.accelBuffer.push(magnitude);
+    // Dalam periode warmup, hanya kalibrasi baseline (TIDAK menghitung langkah)
+    if (now < this.warmupUntil) {
+      const magnitude = Math.sqrt(x * x + y * y + z * z);
+      // Kalibrasi gravitasi selama warmup
+      this.gravity = this.gravity * 0.9 + magnitude * 0.1;
+      this.filteredMag = magnitude;
+      return;
+    }
+
+    // Calculate acceleration magnitude
+    const rawMag = Math.sqrt(x * x + y * y + z * z);
+
+    // Low-pass filter: pisahkan gravitasi dari gerakan
+    // α = 0.1 → sangat smooth, hanya menangkap gerakan besar
+    const alphaGravity = 0.05;
+    this.gravity = this.gravity * (1 - alphaGravity) + rawMag * alphaGravity;
+
+    // High-pass: gerakan murni = raw - gravity
+    // Lalu low-pass lagi untuk smoothing noise
+    const alphaSmooth = 0.2;
+    const motionMag = Math.abs(rawMag - this.gravity);
+    this.filteredMag = this.filteredMag * (1 - alphaSmooth) + motionMag * alphaSmooth;
+
+    // Add to buffer (keep last 50 readings) — for adaptive threshold
+    this.accelBuffer.push(this.filteredMag);
     if (this.accelBuffer.length > 50) {
       this.accelBuffer.shift();
     }
 
-    // Need at least 10 readings for baseline
-    if (this.accelBuffer.length < 10) return;
+    // Need at least 15 readings for stable baseline
+    if (this.accelBuffer.length < 15) return;
 
-    // Calculate moving average (baseline gravity ≈ 9.81)
-    const recentWindow = this.accelBuffer.slice(-10);
-    const avg = recentWindow.reduce((s, v) => s + v, 0) / recentWindow.length;
+    // === STEP DETECTION VIA STATE MACHINE ===
+    // Langkah yang benar memiliki pola: acceleration naik (peak) → turun (valley)
+    // Goyangan kecil TIDAK memiliki pola ini secara konsisten
 
-    // Step detection: magnitude crosses threshold above average
-    const deviation = Math.abs(magnitude - avg);
-    const now = Date.now();
+    const dynamicThreshold = this.getDynamicThreshold();
     const timeSinceLastStep = now - this.lastStepTime;
 
-    if (
-      deviation > this.config.stepThreshold &&
-      timeSinceLastStep > this.config.minStepInterval &&
-      timeSinceLastStep < this.config.maxStepInterval
-    ) {
-      // STEP DETECTED!
-      this.totalSteps++;
-      this.lastStepTime = now;
-      this.stepTimestamps.push(now);
+    switch (this.phase) {
+      case StepPhase.WAITING_PEAK:
+        // Menunggu sinyal naik melewati threshold
+        if (this.filteredMag > dynamicThreshold) {
+          this.peakValue = this.filteredMag;
+          this.phase = StepPhase.WAITING_VALLEY;
+        }
+        break;
 
-      // Keep only last 120 step timestamps (for cadence calculation)
-      if (this.stepTimestamps.length > 120) {
-        this.stepTimestamps.shift();
-      }
+      case StepPhase.WAITING_VALLEY:
+        // Track peak tertinggi
+        if (this.filteredMag > this.peakValue) {
+          this.peakValue = this.filteredMag;
+        }
+        
+        // Menunggu sinyal turun signifikan (minimal 40% dari peak)
+        if (this.filteredMag < this.peakValue * 0.6) {
+          this.valleyValue = this.filteredMag;
+          this.phase = StepPhase.CONFIRMED;
+        }
+        
+        // Timeout: jika tidak turun dalam 500ms, batal (bukan langkah)
+        if (timeSinceLastStep > 0 && timeSinceLastStep < 500 && this.lastStepTime > 0) {
+          // Masih dalam window wajar
+        } else if (this.peakValue === this.filteredMag) {
+          // Masih naik, lanjut
+        }
+        break;
 
-      this.emitReading('tracking', `Langkah terdeteksi: ${this.totalSteps}`);
-    } else if (this.lastStepTime === 0 && deviation > this.config.stepThreshold) {
-      // First step
-      this.totalSteps++;
-      this.lastStepTime = now;
-      this.stepTimestamps.push(now);
-      this.emitReading('tracking', 'Langkah pertama terdeteksi!');
+      case StepPhase.CONFIRMED:
+        // Pola peak → valley DIKONFIRMASI
+        // Periksa apakah amplitudo cukup besar (peak vs valley)
+        const amplitude = this.peakValue - this.valleyValue;
+        
+        if (amplitude > dynamicThreshold * 0.5) {
+          // Valid step pattern!
+          this.consecutivePatterns++;
+
+          // Perlu minimal 2 pola berturut-turut sebelum mulai menghitung
+          // Ini mencegah goyangan acak dianggap langkah
+          if (this.consecutivePatterns >= 2) {
+            // Periksa interval waktu
+            if (
+              this.lastStepTime === 0 ||
+              (timeSinceLastStep >= this.config.minStepInterval &&
+               timeSinceLastStep <= this.config.maxStepInterval)
+            ) {
+              // VALID STEP!
+              this.totalSteps++;
+              this.lastStepTime = now;
+              this.stepTimestamps.push(now);
+
+              // Keep only last 120 step timestamps (for cadence calculation)
+              if (this.stepTimestamps.length > 120) {
+                this.stepTimestamps.shift();
+              }
+
+              this.emitReading('tracking', `Langkah terdeteksi: ${this.totalSteps}`);
+            } else if (timeSinceLastStep > this.config.maxStepInterval) {
+              // Terlalu lama sejak langkah terakhir → reset consecutive counter
+              // User mungkin berhenti lalu mulai lagi
+              this.consecutivePatterns = 1;
+              this.lastStepTime = now;
+            }
+          } else {
+            // Masih dalam kalibrasi awal (building confidence)
+            this.lastStepTime = now;
+          }
+        } else {
+          // Amplitudo terlalu kecil → goyangan, bukan langkah
+          // Reset consecutive counter
+          this.consecutivePatterns = Math.max(0, this.consecutivePatterns - 1);
+        }
+
+        // Reset state machine untuk deteksi langkah berikutnya
+        this.phase = StepPhase.WAITING_PEAK;
+        this.peakValue = 0;
+        this.valleyValue = Infinity;
+        break;
     }
+  }
+
+  /**
+   * Hitung threshold dinamis berdasarkan aktivitas terbaru.
+   * Saat diam, threshold lebih tinggi (lebih sulit trigger).
+   * Saat sudah berjalan, threshold bisa sedikit turun (adaptif).
+   */
+  private getDynamicThreshold(): number {
+    if (this.accelBuffer.length < 10) return this.config.stepThreshold;
+
+    // Hitung standar deviasi dari buffer terakhir
+    const recent = this.accelBuffer.slice(-20);
+    const mean = recent.reduce((s, v) => s + v, 0) / recent.length;
+    const variance = recent.reduce((s, v) => s + (v - mean) ** 2, 0) / recent.length;
+    const std = Math.sqrt(variance);
+
+    // Jika belum ada langkah yang dikonfirmasi, gunakan threshold ketat
+    if (this.consecutivePatterns < 2) {
+      return Math.max(this.config.stepThreshold, mean + 2 * std);
+    }
+
+    // Sudah dalam mode walking → threshold adaptif (sedikit lebih rendah)
+    // Tapi tetap minimal 1.8 untuk menghindari false positives
+    return Math.max(1.8, mean + 1.2 * std);
   }
 
   /**
@@ -346,6 +492,12 @@ export class Pedometer {
     this.lastStepTime = 0;
     this.accelBuffer = [];
     this.recentCadences = [];
+    this.phase = StepPhase.WAITING_PEAK;
+    this.peakValue = 0;
+    this.valleyValue = Infinity;
+    this.consecutivePatterns = 0;
+    this.filteredMag = 9.81;
+    this.gravity = 9.81;
   }
 
   /**

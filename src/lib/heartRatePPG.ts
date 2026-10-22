@@ -1,7 +1,15 @@
 /**
- * FitPulse Pro • Camera-Based PPG (Photoplethysmography) Heart Rate Monitor
- * =========================================================================
+ * FitPulse Pro • Camera-Based PPG (Photoplethysmography) Heart Rate Monitor v2
+ * =============================================================================
  * Mendeteksi detak jantung REAL-TIME menggunakan kamera HP.
+ *
+ * Perbaikan v2:
+ * - Improved bandpass filter (5-point weighted moving average + detrend)
+ * - Stricter confidence threshold (75% untuk "stable")
+ * - Longer EMA smoothing (0.15 bukan 0.3) → lebih stabil, kurang "lompat"
+ * - Auto-correlation BPM estimation sebagai validasi silang
+ * - Pengecekan kualitas sinyal (SNR) sebelum menampilkan hasil
+ * - Minimum sampling window diperbesar ke 5 detik
  *
  * Cara kerja:
  * 1. User menaruh ujung jari di kamera belakang (dengan flash/lampu menyala)
@@ -21,17 +29,17 @@ export interface PPGReading {
 }
 
 export interface PPGConfig {
-  sampleWindowMs: number;  // Window durasi sampling (default 10000ms = 10s)
+  sampleWindowMs: number;  // Window durasi sampling (default 12000ms = 12s)
   fpsTarget: number;       // Target FPS kamera (default 30)
   minRedIntensity: number; // Minimum intensitas merah untuk deteksi jari
   smoothingFactor: number; // Smoothing EMA (0-1)
 }
 
 const DEFAULT_CONFIG: PPGConfig = {
-  sampleWindowMs: 10000,
+  sampleWindowMs: 12000,   // Diperbesar dari 10s → 12s untuk presisi lebih baik
   fpsTarget: 30,
   minRedIntensity: 80,
-  smoothingFactor: 0.3,
+  smoothingFactor: 0.15,   // Diturunkan dari 0.3 → 0.15 (lebih stabil, kurang lompat)
 };
 
 export class HeartRatePPG {
@@ -46,6 +54,10 @@ export class HeartRatePPG {
   private redSignal: number[] = [];
   private timestamps: number[] = [];
   private bpmHistory: number[] = [];
+
+  // === PERBAIKAN: Signal quality tracking ===
+  private signalQualityBuffer: number[] = [];  // Track kualitas sinyal
+  private lastValidBpm = 0;                     // BPM terakhir yang valid
 
   private config: PPGConfig;
   private onReading: ((reading: PPGReading) => void) | null = null;
@@ -116,6 +128,8 @@ export class HeartRatePPG {
       this.redSignal = [];
       this.timestamps = [];
       this.bpmHistory = [];
+      this.signalQualityBuffer = [];
+      this.lastValidBpm = 0;
       this.isRunning = true;
 
       // Start processing loop
@@ -256,13 +270,13 @@ export class HeartRatePPG {
       this.redSignal.shift();
     }
 
-    // Need at least 3 seconds of data to compute BPM
+    // Need at least 5 seconds of data to compute BPM (dinaikkan dari 3s)
     const dataSpanMs = this.timestamps.length > 1
       ? this.timestamps[this.timestamps.length - 1] - this.timestamps[0]
       : 0;
 
-    if (dataSpanMs < 3000 || this.redSignal.length < 60) {
-      const progress = Math.min(100, Math.round((dataSpanMs / 3000) * 100));
+    if (dataSpanMs < 5000 || this.redSignal.length < 100) {
+      const progress = Math.min(100, Math.round((dataSpanMs / 5000) * 100));
       this.onReading?.({
         bpm: 0,
         confidence: 0,
@@ -282,34 +296,65 @@ export class HeartRatePPG {
     // 1. Normalize the signal
     const normalized = this.getNormalizedSignal();
 
-    // 2. Apply bandpass-like filtering (moving average + detrend)
+    // 2. Apply improved bandpass filter
     const filtered = this.bandpassFilter(normalized);
 
-    // 3. Find peaks (heartbeats)
+    // 3. Calculate signal quality (SNR)
+    const signalQuality = this.calculateSignalQuality(filtered);
+    this.signalQualityBuffer.push(signalQuality);
+    if (this.signalQualityBuffer.length > 10) this.signalQualityBuffer.shift();
+
+    // 4. Find peaks (heartbeats) dengan threshold adaptif
     const peaks = this.findPeaks(filtered);
 
-    // 4. Calculate BPM from inter-peak intervals
-    const bpm = this.calculateBPM(peaks);
+    // 5. Calculate BPM from inter-peak intervals
+    const peakBpm = this.calculateBPM(peaks);
 
-    // 5. Calculate confidence based on peak consistency
-    const confidence = this.calculateConfidence(peaks);
+    // 6. Cross-validate dengan autocorrelation
+    const acBpm = this.autocorrelationBPM(filtered);
 
-    // 6. Apply EMA smoothing
+    // 7. Pilih BPM terbaik: gunakan peak jika ada, cross-validate dengan autocorrelation
+    let bpm = peakBpm;
+    if (peakBpm > 0 && acBpm > 0) {
+      // Jika kedua metode sepakat (dalam ±15 bpm), ambil rata-rata
+      if (Math.abs(peakBpm - acBpm) < 15) {
+        bpm = Math.round((peakBpm + acBpm) / 2);
+      }
+      // Jika tidak sepakat, gunakan peak detection (biasanya lebih akurat)
+    } else if (acBpm > 0 && peakBpm === 0) {
+      bpm = acBpm;
+    }
+
+    // 8. Calculate confidence based on peak consistency + signal quality
+    const peakConfidence = this.calculateConfidence(peaks);
+    const qualityFactor = Math.min(1, signalQuality / 5); // SNR > 5 = excellent
+    const confidence = Math.round(peakConfidence * 0.7 + qualityFactor * 100 * 0.3);
+
+    // 9. Apply EMA smoothing (lebih pelan → lebih stabil)
     let smoothedBpm = bpm;
     if (this.bpmHistory.length > 0 && bpm > 0) {
       const lastBpm = this.bpmHistory[this.bpmHistory.length - 1];
+
+      // Jika perbedaan > 20 bpm dari terakhir, anggap noise dan dampen lebih kuat
+      const diff = Math.abs(bpm - lastBpm);
+      const factor = diff > 20 ? 0.08 : this.config.smoothingFactor;
+
       smoothedBpm = Math.round(
-        lastBpm * (1 - this.config.smoothingFactor) + bpm * this.config.smoothingFactor
+        lastBpm * (1 - factor) + bpm * factor
       );
     }
 
     if (smoothedBpm > 0) {
       this.bpmHistory.push(smoothedBpm);
       if (this.bpmHistory.length > 30) this.bpmHistory.shift();
+      this.lastValidBpm = smoothedBpm;
     }
 
-    // Determine status
-    const isStable = confidence > 60 && this.bpmHistory.length >= 5;
+    // Determine status — threshold dinaikkan dari 60% → 75%
+    const avgQuality = this.signalQualityBuffer.length > 0
+      ? this.signalQualityBuffer.reduce((a, b) => a + b, 0) / this.signalQualityBuffer.length
+      : 0;
+    const isStable = confidence > 75 && this.bpmHistory.length >= 8 && avgQuality > 2;
     const validBpm = smoothedBpm >= 40 && smoothedBpm <= 220;
 
     this.onReading?.({
@@ -339,13 +384,16 @@ export class HeartRatePPG {
   }
 
   /**
-   * Simple bandpass filter: remove DC offset + smooth high-freq noise
+   * Improved bandpass filter:
+   * - Detrend (remove slow baseline drift) menggunakan window lebih besar
+   * - 5-point weighted moving average (bukan 3-point)
+   * - Second pass smoothing untuk noise reduction
    */
   private bandpassFilter(signal: number[]): number[] {
     if (signal.length < 5) return signal;
 
-    // Detrend (remove slow baseline drift)
-    const windowSize = Math.min(15, Math.floor(signal.length / 4));
+    // Detrend (remove slow baseline drift) — window size lebih besar
+    const windowSize = Math.min(25, Math.floor(signal.length / 3));
     const detrended: number[] = [];
     for (let i = 0; i < signal.length; i++) {
       const start = Math.max(0, i - windowSize);
@@ -356,17 +404,119 @@ export class HeartRatePPG {
       detrended.push(signal[i] - localMean);
     }
 
-    // Smooth (low-pass: 3-point moving average)
-    const smoothed: number[] = [];
+    // Smooth pass 1: 5-point weighted moving average [1, 2, 3, 2, 1] / 9
+    const weights = [1, 2, 3, 2, 1];
+    const weightSum = 9;
+    const smoothed1: number[] = [];
     for (let i = 0; i < detrended.length; i++) {
-      if (i === 0 || i === detrended.length - 1) {
-        smoothed.push(detrended[i]);
+      if (i < 2 || i >= detrended.length - 2) {
+        smoothed1.push(detrended[i]);
       } else {
-        smoothed.push((detrended[i - 1] + detrended[i] + detrended[i + 1]) / 3);
+        let val = 0;
+        for (let k = -2; k <= 2; k++) {
+          val += detrended[i + k] * weights[k + 2];
+        }
+        smoothed1.push(val / weightSum);
       }
     }
 
-    return smoothed;
+    // Smooth pass 2: 3-point moving average (final cleanup)
+    const smoothed2: number[] = [];
+    for (let i = 0; i < smoothed1.length; i++) {
+      if (i === 0 || i === smoothed1.length - 1) {
+        smoothed2.push(smoothed1[i]);
+      } else {
+        smoothed2.push((smoothed1[i - 1] + smoothed1[i] + smoothed1[i + 1]) / 3);
+      }
+    }
+
+    return smoothed2;
+  }
+
+  /**
+   * Calculate Signal-to-Noise Ratio (SNR) of the filtered signal.
+   * Higher SNR = cleaner signal = more reliable BPM.
+   */
+  private calculateSignalQuality(signal: number[]): number {
+    if (signal.length < 20) return 0;
+
+    // Hitung power spectral estimate sederhana
+    let signalPower = 0;
+    let noisePower = 0;
+
+    // Signal: variance dari sinyal itu sendiri
+    const mean = signal.reduce((a, b) => a + b, 0) / signal.length;
+    for (const v of signal) {
+      signalPower += (v - mean) ** 2;
+    }
+    signalPower /= signal.length;
+
+    // Noise: variance dari first-difference (high-frequency component)
+    for (let i = 1; i < signal.length; i++) {
+      const diff = signal[i] - signal[i - 1];
+      noisePower += diff ** 2;
+    }
+    noisePower /= (signal.length - 1);
+
+    if (noisePower < 0.0001) return 10; // Very clean signal
+    return signalPower / noisePower;
+  }
+
+  /**
+   * Autocorrelation-based BPM estimation.
+   * Mencari periodisitas dominan pada sinyal PPG.
+   * Digunakan sebagai cross-validation terhadap peak detection.
+   */
+  private autocorrelationBPM(signal: number[]): number {
+    if (signal.length < 60) return 0;
+
+    const avgSampleRate = this.timestamps.length > 1
+      ? (this.timestamps.length - 1) / ((this.timestamps[this.timestamps.length - 1] - this.timestamps[0]) / 1000)
+      : 30;
+
+    // Search range: 40-200 BPM
+    const minLag = Math.floor(avgSampleRate * 60 / 200); // ~9 samples
+    const maxLag = Math.floor(avgSampleRate * 60 / 40);  // ~45 samples
+
+    if (maxLag >= signal.length / 2) return 0;
+
+    // Hitung mean
+    const mean = signal.reduce((a, b) => a + b, 0) / signal.length;
+
+    // Autocorrelation untuk setiap lag
+    let bestLag = 0;
+    let bestCorr = -1;
+
+    for (let lag = minLag; lag <= maxLag; lag++) {
+      let corr = 0;
+      let normA = 0;
+      let normB = 0;
+      const n = signal.length - lag;
+
+      for (let i = 0; i < n; i++) {
+        const a = signal[i] - mean;
+        const b = signal[i + lag] - mean;
+        corr += a * b;
+        normA += a * a;
+        normB += b * b;
+      }
+
+      const denom = Math.sqrt(normA * normB);
+      if (denom > 0) {
+        corr /= denom;
+        if (corr > bestCorr) {
+          bestCorr = corr;
+          bestLag = lag;
+        }
+      }
+    }
+
+    // Autocorrelation harus cukup kuat (> 0.3) agar valid
+    if (bestCorr < 0.3 || bestLag === 0) return 0;
+
+    // Convert lag ke BPM
+    const periodMs = (bestLag / avgSampleRate) * 1000;
+    return Math.round(60000 / periodMs);
   }
 
   /**
@@ -376,7 +526,7 @@ export class HeartRatePPG {
     const peaks: number[] = [];
     if (signal.length < 3) return peaks;
 
-    // Adaptive threshold: mean + 0.3 * std
+    // Adaptive threshold: mean + 0.5 * std (dinaikkan dari 0.3)
     let sum = 0;
     for (const v of signal) sum += v;
     const mean = sum / signal.length;
@@ -385,20 +535,23 @@ export class HeartRatePPG {
     for (const v of signal) sqSum += (v - mean) ** 2;
     const std = Math.sqrt(sqSum / signal.length);
 
-    const threshold = mean + 0.3 * std;
+    const threshold = mean + 0.5 * std;
 
-    // Minimum distance between peaks (based on 220 bpm max = ~4.5 samples at 30fps)
+    // Minimum distance between peaks (based on 200 bpm max)
     const avgSampleRate = this.timestamps.length > 1
       ? (this.timestamps.length - 1) / ((this.timestamps[this.timestamps.length - 1] - this.timestamps[0]) / 1000)
       : 30;
-    const minPeakDistance = Math.floor(avgSampleRate * 60 / 220); // ~8 samples for 220bpm@30fps
+    const minPeakDistance = Math.floor(avgSampleRate * 60 / 200);
 
     let lastPeakIdx = -minPeakDistance;
 
-    for (let i = 1; i < signal.length - 1; i++) {
+    for (let i = 2; i < signal.length - 2; i++) {
+      // Stricter peak detection: must be higher than 2 neighbors on each side
       if (
         signal[i] > signal[i - 1] &&
         signal[i] > signal[i + 1] &&
+        signal[i] >= signal[i - 2] &&
+        signal[i] >= signal[i + 2] &&
         signal[i] > threshold &&
         (i - lastPeakIdx) >= minPeakDistance
       ) {
@@ -428,18 +581,37 @@ export class HeartRatePPG {
 
     if (intervals.length === 0) return 0;
 
-    // Remove outlier intervals (outside 40-220 BPM range)
+    // Remove outlier intervals (outside 40-200 BPM range — dipersempit dari 220)
     const validIntervals = intervals.filter((ms) => {
       const bpm = 60000 / ms;
-      return bpm >= 40 && bpm <= 220;
+      return bpm >= 40 && bpm <= 200;
     });
 
     if (validIntervals.length === 0) return 0;
 
-    // Median interval (more robust than mean)
+    // === PERBAIKAN: IQR-based outlier removal ===
     validIntervals.sort((a, b) => a - b);
-    const medianInterval = validIntervals[Math.floor(validIntervals.length / 2)];
+    
+    if (validIntervals.length >= 4) {
+      const q1Idx = Math.floor(validIntervals.length * 0.25);
+      const q3Idx = Math.floor(validIntervals.length * 0.75);
+      const q1 = validIntervals[q1Idx];
+      const q3 = validIntervals[q3Idx];
+      const iqr = q3 - q1;
+      const lowerBound = q1 - 1.5 * iqr;
+      const upperBound = q3 + 1.5 * iqr;
 
+      const inliers = validIntervals.filter((v) => v >= lowerBound && v <= upperBound);
+      if (inliers.length >= 2) {
+        // Use median of inliers
+        inliers.sort((a, b) => a - b);
+        const medianInterval = inliers[Math.floor(inliers.length / 2)];
+        return Math.round(60000 / medianInterval);
+      }
+    }
+
+    // Fallback: median of all valid intervals
+    const medianInterval = validIntervals[Math.floor(validIntervals.length / 2)];
     return Math.round(60000 / medianInterval);
   }
 
@@ -447,7 +619,7 @@ export class HeartRatePPG {
    * Calculate confidence score based on peak consistency
    */
   private calculateConfidence(peaks: number[]): number {
-    if (peaks.length < 3) return Math.min(30, peaks.length * 15);
+    if (peaks.length < 3) return Math.min(20, peaks.length * 10);
 
     const intervals: number[] = [];
     for (let i = 1; i < peaks.length; i++) {
@@ -458,17 +630,20 @@ export class HeartRatePPG {
       }
     }
 
-    if (intervals.length < 2) return 30;
+    if (intervals.length < 2) return 20;
 
     // Calculate coefficient of variation (lower = more consistent = higher confidence)
     const mean = intervals.reduce((a, b) => a + b, 0) / intervals.length;
     const variance = intervals.reduce((sum, v) => sum + (v - mean) ** 2, 0) / intervals.length;
     const cv = Math.sqrt(variance) / mean;
 
-    // Map CV to confidence: CV=0 → 100%, CV=0.5 → 0%
-    const confidence = Math.max(0, Math.min(100, Math.round((1 - cv * 2) * 100)));
+    // Map CV to confidence: CV=0 → 100%, CV=0.4 → 0% (dipersempit dari 0.5)
+    const baseConfidence = Math.max(0, Math.min(100, Math.round((1 - cv * 2.5) * 100)));
 
-    return confidence;
+    // Bonus: lebih banyak peaks = lebih confident
+    const peakBonus = Math.min(10, peaks.length - 3);
+
+    return Math.min(100, baseConfidence + peakBonus);
   }
 
   /**
