@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import { initialFitnessData, calculateBMR, formatDateIndonesian, getTodayDateStr } from '../lib/initialData';
 import { mapCloudNutritionToApp, mapCloudActivityToApp } from '../lib/supabase';
-import { AppFitnessData, ActivityLog, NutritionLog, UserProfile } from '../types/fitness';
+import { AppFitnessData, ActivityLog, NutritionLog, UserProfile, HeartRateLog } from '../types/fitness';
 import OpeningVideo from '../components/OpeningVideo';
 import { shouldShowOpening } from '../lib/openingController';
 import DesktopBar from '../components/navigation/DesktopBar';
@@ -434,15 +434,43 @@ export default function Home() {
     }
   };
 
+  // Save Heart Rate to Vitals Log
+  const handleSaveHeartRate = (newLog: HeartRateLog) => {
+    const existingLogs = data.heart_rate_logs || [];
+    const updated: AppFitnessData = {
+      ...data,
+      heart_rate_logs: [newLog, ...existingLogs],
+    };
+    saveUpdatedData(updated);
+    try {
+      confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+    } catch {
+      // ignore in environments without confetti canvas
+    }
+    showToast(`Detak jantung ${newLog.bpm} BPM tersimpan di Buku Vitals! ❤️`);
+  };
+
+  // Delete Heart Rate from Vitals Log
+  const handleDeleteHeartRate = (id: string) => {
+    const existingLogs = data.heart_rate_logs || [];
+    const updated: AppFitnessData = {
+      ...data,
+      heart_rate_logs: existingLogs.filter((h) => h.id !== id),
+    };
+    saveUpdatedData(updated);
+    showToast('Catatan detak jantung dihapus dari Buku Vitals');
+  };
+
   // Reset Today's Logs (to test empty / null state)
   const handleResetTodayData = () => {
-    if (!window.confirm('Kosongkan semua log latihan, makanan, dan air hari ini untuk menguji status Tanpa Data?'))
+    if (!window.confirm('Kosongkan semua log latihan, makanan, air, dan detak jantung hari ini untuk menguji status Tanpa Data?'))
       return;
     const updated: AppFitnessData = {
       ...data,
       activity_logs: [],
       nutrition_logs: [],
       hydration_logs: [],
+      heart_rate_logs: [],
       daily_summary: {
         ...data.daily_summary,
         calories_consumed: 0,
@@ -601,6 +629,8 @@ export default function Home() {
               onHeartRateComplete={(bpm, confidence) => {
                 showToast(`Detak jantung terukur: ${bpm} BPM (Akurasi: ${confidence}%)`);
               }}
+              onSaveHeartRate={handleSaveHeartRate}
+              onDeleteHeartRate={handleDeleteHeartRate}
             />
           )}
 

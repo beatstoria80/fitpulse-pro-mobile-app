@@ -77,10 +77,26 @@ export interface DailySummary {
   net_calories?: number;
 }
 
+export type HeartRateMethod = 'camera_ppg' | 'tactile_tap' | 'ble_watch' | 'manual';
+
+export interface HeartRateLog {
+  id: string;
+  timestamp: string; // e.g. "09:45"
+  date: string; // e.g. "2026-10-23"
+  bpm: number;
+  confidence: number; // 0-100%
+  method: HeartRateMethod;
+  category: 'resting' | 'normal' | 'elevated' | 'high';
+  hrv_ms?: number;
+  notes?: string;
+}
+
 export interface AppFitnessData {
   user_profile: UserProfile;
   activity_logs: ActivityLog[];
   nutrition_logs: NutritionLog[];
   hydration_logs: HydrationLog[];
+  heart_rate_logs?: HeartRateLog[];
   daily_summary: DailySummary;
 }
+

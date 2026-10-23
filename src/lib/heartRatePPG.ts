@@ -19,12 +19,17 @@
  * Akurasi: ±3-5 bpm (cukup untuk monitoring harian)
  */
 
+export type PPGPressureState = 'optimal' | 'too_hard' | 'too_light' | 'moving';
+
 export interface PPGReading {
   bpm: number;
   confidence: number; // 0-100%
   timestamp: number;
   rawSignal: number[];
   status: 'initializing' | 'measuring' | 'stable' | 'finger_missing' | 'error';
+  pressureState: PPGPressureState;
+  pressureMessage: string;
+  progressPercent: number; // 0-100%
   message: string;
 }
 
@@ -55,9 +60,11 @@ export class HeartRatePPG {
   private timestamps: number[] = [];
   private bpmHistory: number[] = [];
 
-  // === PERBAIKAN: Signal quality tracking ===
+  // === PERBAIKAN: Signal quality tracking & Motion detection ===
   private signalQualityBuffer: number[] = [];  // Track kualitas sinyal
   private lastValidBpm = 0;                     // BPM terakhir yang valid
+  private lastAvgRed = 0;                       // Motion detector
+  private motionArtifactStreak = 0;
 
   private config: PPGConfig;
   private onReading: ((reading: PPGReading) => void) | null = null;
@@ -130,6 +137,8 @@ export class HeartRatePPG {
       this.bpmHistory = [];
       this.signalQualityBuffer = [];
       this.lastValidBpm = 0;
+      this.lastAvgRed = 0;
+      this.motionArtifactStreak = 0;
       this.isRunning = true;
 
       // Start processing loop
@@ -141,6 +150,9 @@ export class HeartRatePPG {
         timestamp: Date.now(),
         rawSignal: [],
         status: 'initializing',
+        pressureState: 'too_light',
+        pressureMessage: 'Letakkan ujung jari Anda di atas kamera belakang',
+        progressPercent: 0,
         message: 'Letakkan ujung jari Anda di kamera...',
       });
     } catch (err) {
@@ -150,6 +162,9 @@ export class HeartRatePPG {
         timestamp: Date.now(),
         rawSignal: [],
         status: 'error',
+        pressureState: 'too_light',
+        pressureMessage: 'Sensor kamera gagal dimulai',
+        progressPercent: 0,
         message: `Kamera tidak tersedia: ${(err as Error).message}`,
       });
       throw err;
@@ -237,7 +252,32 @@ export class HeartRatePPG {
 
     // Check if finger is covering the camera
     // When finger covers camera with flash: high red, low green
-    const isFingerPresent = avgRed > this.config.minRedIntensity && avgRed > avgGreen * 1.2;
+    const deltaRed = this.lastAvgRed > 0 ? Math.abs(avgRed - this.lastAvgRed) : 0;
+    this.lastAvgRed = avgRed;
+
+    const isFingerPresent = avgRed > this.config.minRedIntensity && avgRed > avgGreen * 1.15;
+
+    // Evaluate pressure & stability
+    let pressureState: PPGPressureState = 'optimal';
+    let pressureMessage = 'Posisi & tekanan optimal';
+
+    if (!isFingerPresent) {
+      pressureState = 'too_light';
+      pressureMessage = 'Tutup rapat lensa kamera dengan ujung jari Anda';
+    } else if (deltaRed > 11) {
+      this.motionArtifactStreak++;
+      if (this.motionArtifactStreak >= 2) {
+        pressureState = 'moving';
+        pressureMessage = 'Tangan bergerak! Tahan posisi tangan & jari stabil';
+      }
+    } else if (avgRed > 248) {
+      pressureState = 'too_hard';
+      pressureMessage = 'Tekanan terlalu keras! Kurangi sedikit tekanan jari';
+    } else {
+      this.motionArtifactStreak = Math.max(0, this.motionArtifactStreak - 1);
+      pressureState = 'optimal';
+      pressureMessage = 'Sinyal terdeteksi stabil';
+    }
 
     if (!isFingerPresent) {
       this.onReading?.({
@@ -246,6 +286,9 @@ export class HeartRatePPG {
         timestamp: now,
         rawSignal: [],
         status: 'finger_missing',
+        pressureState,
+        pressureMessage,
+        progressPercent: 0,
         message: 'Tutup kamera dengan ujung jari Anda dan tekan lembut',
       });
 
@@ -270,20 +313,24 @@ export class HeartRatePPG {
       this.redSignal.shift();
     }
 
-    // Need at least 5 seconds of data to compute BPM (dinaikkan dari 3s)
+    // Need at least 4.5 seconds of data to compute initial BPM
     const dataSpanMs = this.timestamps.length > 1
       ? this.timestamps[this.timestamps.length - 1] - this.timestamps[0]
       : 0;
 
-    if (dataSpanMs < 5000 || this.redSignal.length < 100) {
-      const progress = Math.min(100, Math.round((dataSpanMs / 5000) * 100));
+    const currentProgress = Math.min(100, Math.round((dataSpanMs / 8000) * 100));
+
+    if (dataSpanMs < 4500 || this.redSignal.length < 80) {
       this.onReading?.({
         bpm: 0,
         confidence: 0,
         timestamp: now,
         rawSignal: this.getNormalizedSignal(),
         status: 'measuring',
-        message: `Mengukur... ${progress}% (tahan jari Anda tetap di kamera)`,
+        pressureState,
+        pressureMessage,
+        progressPercent: currentProgress,
+        message: `Menganalisis denyut... ${currentProgress}% (tahan stabil)`,
       });
 
       this.onWaveform?.(this.getNormalizedSignal());
@@ -320,7 +367,6 @@ export class HeartRatePPG {
       if (Math.abs(peakBpm - acBpm) < 15) {
         bpm = Math.round((peakBpm + acBpm) / 2);
       }
-      // Jika tidak sepakat, gunakan peak detection (biasanya lebih akurat)
     } else if (acBpm > 0 && peakBpm === 0) {
       bpm = acBpm;
     }
@@ -354,7 +400,7 @@ export class HeartRatePPG {
     const avgQuality = this.signalQualityBuffer.length > 0
       ? this.signalQualityBuffer.reduce((a, b) => a + b, 0) / this.signalQualityBuffer.length
       : 0;
-    const isStable = confidence > 75 && this.bpmHistory.length >= 8 && avgQuality > 2;
+    const isStable = confidence >= 72 && this.bpmHistory.length >= 6 && avgQuality > 1.8 && pressureState === 'optimal';
     const validBpm = smoothedBpm >= 40 && smoothedBpm <= 220;
 
     this.onReading?.({
@@ -363,9 +409,12 @@ export class HeartRatePPG {
       timestamp: now,
       rawSignal: filtered,
       status: isStable ? 'stable' : 'measuring',
+      pressureState,
+      pressureMessage,
+      progressPercent: currentProgress,
       message: isStable
-        ? `Detak jantung: ${smoothedBpm} BPM (Akurasi: ${confidence}%)`
-        : `Menganalisis sinyal... tahan jari tetap stabil`,
+        ? `Detak jantung stabil: ${smoothedBpm} BPM (Akurasi: ${confidence}%)`
+        : `Membaca denyut nadi... ${currentProgress}%`,
     });
 
     this.onWaveform?.(filtered);
@@ -674,4 +723,26 @@ export class HeartRatePPG {
     if (percent < 90) return { zone: 4, name: 'Kardio Intensif', color: '#FF8008' };
     return { zone: 5, name: 'Anaerob / Maksimal', color: '#FF512F' };
   }
+
+  /**
+   * Get clinical HR category
+   */
+  static getHRCategory(bpm: number): {
+    category: 'resting' | 'normal' | 'elevated' | 'high';
+    label: string;
+    color: string;
+    badgeClass: string;
+  } {
+    if (bpm < 60) {
+      return { category: 'resting', label: 'Istirahat / Atlet (Resting)', color: '#0284C7', badgeClass: 'badge-blue' };
+    }
+    if (bpm <= 100) {
+      return { category: 'normal', label: 'Normal Sehat', color: '#059669', badgeClass: 'badge-green' };
+    }
+    if (bpm <= 130) {
+      return { category: 'elevated', label: 'Meningkat (Elevated)', color: '#D97706', badgeClass: 'badge-orange' };
+    }
+    return { category: 'high', label: 'Tinggi / Kardio Keras', color: '#E11D48', badgeClass: 'badge-rose' };
+  }
 }
+
