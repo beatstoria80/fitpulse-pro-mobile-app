@@ -237,7 +237,7 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({
             <div className="hr-empty-state">
               <HeartPulse size={24} className="text-tertiary" />
               <p>Belum ada riwayat detak jantung tersimpan hari ini.</p>
-              <span>Ukur nadi Anda dengan kamera atau ketuk nadi di atas, lalu simpan ke buku vitals.</span>
+              <span>Ukur nadi Anda dengan kamera atau smartwatch BLE di atas, lalu simpan ke buku vitals.</span>
             </div>
           )}
         </div>

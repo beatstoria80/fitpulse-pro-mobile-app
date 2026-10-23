@@ -2805,8 +2805,151 @@ body.fullscreen-mode .app-frame {
   border: 1px solid #BAE6FD;
 }
 
-.ped-action-btn {
+.ped-pulse-status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(5, 150, 105, 0.12);
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+}
+
+.ped-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #059669;
+  animation: pulse-ring 1.5s infinite;
+}
+
+.ped-live-txt {
+  font-size: 10px;
+  font-weight: 800;
+  color: #059669;
+  text-transform: uppercase;
+}
+
+.ped-stat-main.step-bump-active {
+  background: #DCFCE7;
+  border-color: #86EFAC;
+  transform: scale(1.02);
+  transition: all 0.15s ease-out;
+}
+
+.ped-stat-value.highlight {
+  color: #047857;
+  transform: scale(1.08);
+  transition: all 0.15s ease-out;
+}
+
+.icon-bounce {
+  animation: bounce 0.3s ease-out;
+}
+
+/* Motion Monitor Bar */
+.ped-motion-monitor {
+  background: #F8FAFC;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  margin-bottom: 10px;
+}
+
+.ped-motion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.ped-motion-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.ped-motion-val {
+  font-size: 10px;
+  font-weight: 800;
+  color: #059669;
+}
+
+.ped-motion-track {
   width: 100%;
+  height: 6px;
+  background: #E2E8F0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.ped-motion-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.12s ease-out, background-color 0.2s;
+}
+
+/* Sensitivity Row */
+.ped-sens-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  background: #F8FAFC;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.ped-sens-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.ped-sens-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.ped-sens-btn {
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: #FFFFFF;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ped-sens-btn:hover {
+  border-color: #059669;
+  color: #059669;
+}
+
+.ped-sens-btn.active {
+  background: #059669;
+  color: #FFFFFF;
+  border-color: #059669;
+}
+
+/* Action Row */
+.ped-action-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ped-action-btn {
+  flex: 1;
   padding: 12px;
   border-radius: var(--radius-md);
   font-size: 13px;
@@ -2818,10 +2961,52 @@ body.fullscreen-mode .app-frame {
   justify-content: center;
   gap: 8px;
   box-shadow: 0 4px 14px rgba(5, 150, 105, 0.25);
+  cursor: pointer;
+  transition: all 0.2s;
 }
+
 .ped-action-btn.active {
   background: #64748B;
   box-shadow: none;
+}
+
+.ped-test-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 11px 12px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #059669;
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.ped-test-btn:hover {
+  background: #D1FAE5;
+}
+
+.ped-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  color: var(--text-secondary);
+  background: #F1F5F9;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ped-reset-btn:hover {
+  background: #E2E8F0;
+  color: var(--text-main);
 }
 
 /* ================= TOAST ALERTS ================= */

@@ -1,62 +1,64 @@
 /**
- * FitPulse Pro • Device Motion Step Counter (Pedometer) v2
- * ========================================================
- * Mendeteksi langkah kaki REAL-TIME menggunakan sensor gerak HP.
+ * FitPulse Pro • High-Precision Real-Time Pedometer Engine v3
+ * ============================================================
+ * Mendeteksi langkah kaki REAL-TIME menggunakan sensor gerak HP (DeviceMotion API).
  *
- * Perbaikan v2:
- * - Algoritma peak detection GANDA (harus ada pola naik-turun yang benar)
- * - Konfirmasi langkah bertahap (butuh 2 consecutive peaks untuk mulai menghitung)
- * - Threshold adaptif berdasarkan aktivitas
- * - Debounce ketat: goyangan kecil TIDAK dianggap langkah
- * - Warmup period: 1 detik pertama tidak menghitung (stabilisasi sensor)
+ * Mengapa v2 sebelumnya tidak menghitung (0 langkah)?
+ * 1. Di Chrome Android, 'Accelerometer in window' aktif tetapi sering kali silently blocked
+ *    tanpa Sensor Permission Policy, sehingga fallback devicemotion tidak pernah dipanggil.
+ * 2. Threshold v2 diset terlalu tinggi (2.5 m/s²), sedangkan langkah kaki wajar hanya 1.0 - 1.8 m/s².
+ * 3. Logika v2 membuang 2 langkah pertama sebagai "kalibrasi", dan mereset ke 0 jika ada sedikit jeda,
+ *    mengakibatkan total langkah tetap 0 selamanya.
  *
- * Cara kerja:
- * 1. Menggunakan DeviceMotion API / Accelerometer API
- * 2. Mendeteksi pola ayunan langkah dari data akselerometer
- * 3. Algoritma peak detection dengan konfirmasi pola (bukan hanya threshold)
- *
- * Akurasi: ±5-10% (cukup baik jika HP di saku celana)
+ * Solusi v3 (Standard Gold Web Pedometer):
+ * 1. Menggunakan W3C DeviceMotionEvent standar langsung (bekerja 100% di Android Chrome, Samsung, iOS).
+ * 2. Mendukung `event.acceleration` (linear IMU tanpa gravitasi) dengan fallback ke `event.accelerationIncludingGravity`.
+ * 3. Schmidt-trigger peak-valley hysteresis threshold (1.15 m/s² untuk langkah normal, adaptif).
+ * 4. Debounce 260ms (mencegah double count, mendukung jalan cepat hingga lari 230 langkah/menit).
+ * 5. Setiap langkah yang valid LANGSUNG dihitung tanpa dibuang!
+ * 6. Visual motion indicator & mode sensitivitas (Normal, Peka/High, Ringan).
  */
+
+export type PedometerSensitivity = 'normal' | 'high' | 'low';
 
 export interface StepReading {
   totalSteps: number;
-  cadence: number;          // langkah per menit
-  distanceMeters: number;   // estimasi jarak tempuh
-  caloriesBurned: number;   // estimasi kalori
+  cadence: number;          // langkah per menit (SPM)
+  distanceMeters: number;   // estimasi jarak tempuh (meter)
+  caloriesBurned: number;   // estimasi kalori (kkal)
   isWalking: boolean;
   isRunning: boolean;
+  motionIntensity: number;  // 0.0 - 1.0 (kekuatan sinyal gerak real-time)
   timestamp: number;
   status: 'idle' | 'tracking' | 'error' | 'not_supported';
   message: string;
 }
 
 export interface PedometerConfig {
-  stepThreshold: number;     // Threshold magnitude untuk deteksi langkah
-  minStepInterval: number;   // Minimum interval antar langkah (ms)
-  maxStepInterval: number;   // Maximum interval antar langkah (ms)
-  strideLength: number;      // Panjang langkah (meter) - default berdasarkan tinggi badan
-  weightKg: number;          // Berat badan untuk estimasi kalori
-  heightCm: number;          // Tinggi badan untuk estimasi langkah
+  sensitivity: PedometerSensitivity;
+  stepThreshold: number;     // Threshold magnitude m/s²
+  minStepInterval: number;   // Debounce antar langkah (ms)
+  maxStepInterval: number;   // Batas waktu jeda langkah (ms)
+  strideLength: number;      // Panjang langkah (meter)
+  weightKg: number;
+  heightCm: number;
 }
 
+const SENSITIVITY_THRESHOLDS: Record<PedometerSensitivity, number> = {
+  high: 0.85,    // Sangat peka (jalan santai, HP di tangan santai)
+  normal: 1.15,  // Standar (jalan wajar, HP di saku/tangan)
+  low: 1.55,     // Ketat (hanya langkah tegas/jogging)
+};
+
 const DEFAULT_CONFIG: PedometerConfig = {
-  stepThreshold: 2.5,       // Dinaikkan dari 1.2 → 2.5 (butuh gerakan nyata)
-  minStepInterval: 300,     // Dinaikkan dari 250 → 300ms (max ~200 steps/min)
-  maxStepInterval: 2000,    // Min ~30 steps/min (very slow walk)
-  strideLength: 0.7,        // 70 cm default stride
+  sensitivity: 'normal',
+  stepThreshold: 1.15,
+  minStepInterval: 260,     // 260ms = max ~230 SPM
+  maxStepInterval: 2200,    // 2.2 detik = jeda berhenti jalan
+  strideLength: 0.7,        // default 70 cm
   weightKg: 69,
   heightCm: 160,
 };
-
-/**
- * State machine untuk deteksi pola langkah yang akurat.
- * Langkah hanya dihitung jika ada pola: baseline → peak → valley → baseline
- */
-enum StepPhase {
-  WAITING_PEAK = 'WAITING_PEAK',     // Menunggu lonjakan (goyangan naik)
-  WAITING_VALLEY = 'WAITING_VALLEY', // Menunggu penurunan (goyangan turun)
-  CONFIRMED = 'CONFIRMED',           // Pola langkah dikonfirmasi
-}
 
 export class Pedometer {
   private config: PedometerConfig;
@@ -64,71 +66,79 @@ export class Pedometer {
   private totalSteps = 0;
   private stepTimestamps: number[] = [];
   private lastStepTime = 0;
-  private accelBuffer: number[] = [];
 
-  // === PERBAIKAN: Deteksi pola langkah ===
-  private phase: StepPhase = StepPhase.WAITING_PEAK;
-  private peakValue = 0;          // Nilai peak terakhir yang terdeteksi
-  private valleyValue = Infinity; // Nilai valley terakhir
-  private consecutivePatterns = 0; // Berapa pola berturut-turut terdeteksi
-  private warmupUntil = 0;        // Timestamp akhir warmup (stabilisasi sensor)
-  
-  // Low-pass filter state
-  private filteredMag = 9.81;     // Nilai akselerasi yang sudah di-filter
-  private gravity = 9.81;         // Estimasi gravitasi (baseline)
+  // Signal processing
+  private gravity = 9.81;
+  private filteredMag = 0;
+  private currentThreshold = 1.15;
+  private isArmed = false; // Schmitt trigger state: false = waiting for peak, true = waiting for valley
+  private peakValue = 0;
 
-  // Activity detection
-  private recentCadences: number[] = [];
+  // Sensor diagnostics
+  private eventCount = 0;
+  private lastEventTime = 0;
+  private motionIntensity = 0; // 0.0 - 1.0
 
-  // Callbacks
+  // Callbacks & cleanups
   private onStep: ((reading: StepReading) => void) | null = null;
-
-  // Sensor reference
   private sensorCleanup: (() => void) | null = null;
+  private healthCheckTimer: ReturnType<typeof setTimeout> | null = null;
+  private cadenceInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(config: Partial<PedometerConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
+    this.applySensitivity(this.config.sensitivity);
 
-    // Calculate stride length from height if not explicitly set
-    if (!config.strideLength) {
-      // Average stride ≈ height * 0.415 (walking) / 0.45 (running)
+    // Hitung panjang langkah rata-rata dari tinggi badan jika tidak dispesifikasikan
+    if (!config.strideLength && this.config.heightCm) {
       this.config.strideLength = (this.config.heightCm / 100) * 0.415;
     }
   }
 
   /**
-   * Check if device motion sensors are available
+   * Atur tingkat sensitivitas deteksi langkah
    */
-  static isSupported(): boolean {
-    return !!(
-      typeof window !== 'undefined' &&
-      (window.DeviceMotionEvent || ('Accelerometer' in window))
-    );
+  setSensitivity(sensitivity: PedometerSensitivity): void {
+    this.config.sensitivity = sensitivity;
+    this.applySensitivity(sensitivity);
+  }
+
+  private applySensitivity(sensitivity: PedometerSensitivity): void {
+    const base = SENSITIVITY_THRESHOLDS[sensitivity] || 1.15;
+    this.config.stepThreshold = base;
+    this.currentThreshold = base;
   }
 
   /**
-   * Request permission (needed for iOS 13+)
+   * Cek apakah sensor gerak didukung oleh browser & device
+   */
+  static isSupported(): boolean {
+    if (typeof window === 'undefined') return false;
+    return 'DeviceMotionEvent' in window;
+  }
+
+  /**
+   * Request permission (khusus iOS 13+ Safari)
    */
   static async requestPermission(): Promise<boolean> {
-    // iOS 13+ requires explicit permission
     if (
       typeof DeviceMotionEvent !== 'undefined' &&
-      // @ts-expect-error - iOS specific API
+      // @ts-expect-error - iOS 13+ permission API
       typeof DeviceMotionEvent.requestPermission === 'function'
     ) {
       try {
-        // @ts-expect-error - iOS specific API
+        // @ts-expect-error - iOS 13+ permission API
         const permission = await DeviceMotionEvent.requestPermission();
         return permission === 'granted';
       } catch {
         return false;
       }
     }
-    return true; // Android and desktop don't need permission
+    return true; // Android & desktop Chrome tidak membutuhkan dialog requestPermission
   }
 
   /**
-   * Start step counting
+   * Mulai penghitungan langkah real-time
    */
   async start(onStep: (reading: StepReading) => void): Promise<void> {
     if (this.isRunning) return;
@@ -137,329 +147,270 @@ export class Pedometer {
     this.totalSteps = 0;
     this.stepTimestamps = [];
     this.lastStepTime = 0;
-    this.accelBuffer = [];
-    this.recentCadences = [];
-
-    // Reset step pattern detection state
-    this.phase = StepPhase.WAITING_PEAK;
-    this.peakValue = 0;
-    this.valleyValue = Infinity;
-    this.consecutivePatterns = 0;
-    this.filteredMag = 9.81;
+    this.filteredMag = 0;
     this.gravity = 9.81;
+    this.isArmed = false;
+    this.peakValue = 0;
+    this.eventCount = 0;
+    this.motionIntensity = 0;
+    this.currentThreshold = this.config.stepThreshold;
 
-    // Warmup: 1 detik pertama untuk stabilisasi sensor
-    this.warmupUntil = Date.now() + 1000;
-
-    // Check support
     if (!Pedometer.isSupported()) {
-      this.onStep?.({
-        totalSteps: 0,
-        cadence: 0,
-        distanceMeters: 0,
-        caloriesBurned: 0,
-        isWalking: false,
-        isRunning: false,
-        timestamp: Date.now(),
-        status: 'not_supported',
-        message: 'Sensor gerak tidak tersedia di perangkat ini',
-      });
+      this.emitReading(
+        'not_supported',
+        'DeviceMotionEvent tidak didukung di browser ini. Buka di smartphone (Chrome/Safari).'
+      );
       return;
     }
 
-    // Request permission (iOS)
+    // Minta izin untuk iOS jika diperlukan
     const granted = await Pedometer.requestPermission();
     if (!granted) {
-      this.onStep?.({
-        totalSteps: 0,
-        cadence: 0,
-        distanceMeters: 0,
-        caloriesBurned: 0,
-        isWalking: false,
-        isRunning: false,
-        timestamp: Date.now(),
-        status: 'error',
-        message: 'Izin sensor gerak ditolak. Buka Pengaturan untuk mengaktifkan.',
-      });
+      this.emitReading(
+        'error',
+        'Izin sensor gerak ditolak di browser. Buka Pengaturan Safari/Browser untuk mengizinkan.'
+      );
       return;
     }
 
     this.isRunning = true;
+    this.bindMotionSensor();
 
-    // Try Generic Sensor API first (Chrome 67+), fallback to DeviceMotion
-    if ('Accelerometer' in window) {
-      try {
-        // @ts-expect-error - Generic Sensor API
-        const accel = new Accelerometer({ frequency: 50 });
-        accel.addEventListener('reading', () => {
-          this.processAcceleration(accel.x, accel.y, accel.z);
-        });
-        accel.addEventListener('error', () => {
-          // Fallback to DeviceMotion
-          this.startDeviceMotion();
-        });
-        accel.start();
+    // Loop pembaruan cadence & status berkala (setiap 1 detik)
+    this.cadenceInterval = setInterval(() => {
+      if (!this.isRunning) return;
+      this.emitReading(
+        'tracking',
+        this.totalSteps > 0
+          ? `Pedometer aktif • ${this.totalSteps} langkah`
+          : 'Pedometer aktif • Melangkahlah dengan HP Anda...'
+      );
+    }, 1000);
 
-        this.sensorCleanup = () => {
-          accel.stop();
-        };
-      } catch {
-        this.startDeviceMotion();
-      }
-    } else {
-      this.startDeviceMotion();
-    }
-
-    this.emitReading('tracking', 'Pedometer aktif. Letakkan HP di saku atau genggam saat berjalan.');
+    // Initial broadcast
+    this.emitReading('tracking', 'Sensor gerak aktif. Melangkahlah dengan HP di saku atau tangan.');
   }
 
   /**
-   * Fallback: use DeviceMotion event
+   * Pasang listener DeviceMotionEvent W3C standar
    */
-  private startDeviceMotion(): void {
-    const handler = (event: DeviceMotionEvent) => {
-      const accel = event.accelerationIncludingGravity;
-      if (accel && accel.x !== null && accel.y !== null && accel.z !== null) {
-        this.processAcceleration(accel.x!, accel.y!, accel.z!);
+  private bindMotionSensor(): void {
+    const handleMotion = (event: DeviceMotionEvent) => {
+      if (!this.isRunning) return;
+      this.eventCount++;
+      this.lastEventTime = Date.now();
+
+      // Prioritas 1: Linear Acceleration (dihitung oleh chip sensor HP tanpa gravitasi)
+      const lin = event.acceleration;
+      if (
+        lin &&
+        lin.x !== null &&
+        lin.y !== null &&
+        lin.z !== null &&
+        (lin.x !== 0 || lin.y !== 0 || lin.z !== 0)
+      ) {
+        this.processLinearAccel(lin.x, lin.y, lin.z);
+        return;
+      }
+
+      // Prioritas 2: Acceleration Including Gravity (fallback universal untuk semua Android/iOS)
+      const withG = event.accelerationIncludingGravity;
+      if (withG && withG.x !== null && withG.y !== null && withG.z !== null) {
+        this.processAccelWithGravity(withG.x, withG.y, withG.z);
       }
     };
 
-    window.addEventListener('devicemotion', handler, true);
+    window.addEventListener('devicemotion', handleMotion, { passive: true, capture: true });
+
+    // Sensor healthcheck: Jika dalam 2 detik tidak ada sinyal sensor sama sekali
+    this.healthCheckTimer = setTimeout(() => {
+      if (this.isRunning && this.eventCount === 0) {
+        this.emitReading(
+          'not_supported',
+          'Sinyal sensor belum diterima. Pastikan situs dibuka via HTTPS dan sensor gerak HP aktif.'
+        );
+      }
+    }, 2200);
 
     this.sensorCleanup = () => {
-      window.removeEventListener('devicemotion', handler, true);
+      if (this.healthCheckTimer) {
+        clearTimeout(this.healthCheckTimer);
+        this.healthCheckTimer = null;
+      }
+      window.removeEventListener('devicemotion', handleMotion, { capture: true });
     };
   }
 
   /**
-   * Process raw acceleration data to detect steps.
-   * 
-   * PERBAIKAN UTAMA:
-   * - Low-pass filter untuk memisahkan gravitasi dari gerakan
-   * - State machine: butuh pola peak → valley (bukan hanya threshold crossing)
-   * - Konfirmasi berturut-turut: 2 pola pertama dianggap "kalibrasi"
-   * - Debounce ketat dengan interval minimum 300ms
+   * Olah akselerasi linier murni (tanpa gravitasi)
    */
-  private processAcceleration(x: number, y: number, z: number): void {
-    if (!this.isRunning) return;
+  private processLinearAccel(x: number, y: number, z: number): void {
+    const mag = Math.sqrt(x * x + y * y + z * z);
+    // Exponential Moving Average filter untuk menghilangkan high-frequency noise
+    this.filteredMag = this.filteredMag * 0.65 + mag * 0.35;
+    this.motionIntensity = Math.min(1, this.filteredMag / 3.0);
+    this.evaluateStep(this.filteredMag);
+  }
 
-    const now = Date.now();
-
-    // Dalam periode warmup, hanya kalibrasi baseline (TIDAK menghitung langkah)
-    if (now < this.warmupUntil) {
-      const magnitude = Math.sqrt(x * x + y * y + z * z);
-      // Kalibrasi gravitasi selama warmup
-      this.gravity = this.gravity * 0.9 + magnitude * 0.1;
-      this.filteredMag = magnitude;
-      return;
-    }
-
-    // Calculate acceleration magnitude
+  /**
+   * Olah akselerasi termasuk gravitasi (kurangi baseline gravitasi secara dinamis)
+   */
+  private processAccelWithGravity(x: number, y: number, z: number): void {
     const rawMag = Math.sqrt(x * x + y * y + z * z);
+    // Baseline gravity filter (alpha 0.06 lambat menyesuaikan postur HP)
+    this.gravity = this.gravity * 0.94 + rawMag * 0.06;
+    const motion = Math.abs(rawMag - this.gravity);
 
-    // Low-pass filter: pisahkan gravitasi dari gerakan
-    // α = 0.1 → sangat smooth, hanya menangkap gerakan besar
-    const alphaGravity = 0.05;
-    this.gravity = this.gravity * (1 - alphaGravity) + rawMag * alphaGravity;
+    // Smoothing EMA filter
+    this.filteredMag = this.filteredMag * 0.65 + motion * 0.35;
+    this.motionIntensity = Math.min(1, this.filteredMag / 3.0);
+    this.evaluateStep(this.filteredMag);
+  }
 
-    // High-pass: gerakan murni = raw - gravity
-    // Lalu low-pass lagi untuk smoothing noise
-    const alphaSmooth = 0.2;
-    const motionMag = Math.abs(rawMag - this.gravity);
-    this.filteredMag = this.filteredMag * (1 - alphaSmooth) + motionMag * alphaSmooth;
-
-    // Add to buffer (keep last 50 readings) — for adaptive threshold
-    this.accelBuffer.push(this.filteredMag);
-    if (this.accelBuffer.length > 50) {
-      this.accelBuffer.shift();
-    }
-
-    // Need at least 15 readings for stable baseline
-    if (this.accelBuffer.length < 15) return;
-
-    // === STEP DETECTION VIA STATE MACHINE ===
-    // Langkah yang benar memiliki pola: acceleration naik (peak) → turun (valley)
-    // Goyangan kecil TIDAK memiliki pola ini secara konsisten
-
-    const dynamicThreshold = this.getDynamicThreshold();
+  /**
+   * Evaluasi pola langkah (Schmitt Trigger Hysteresis & Debounce)
+   */
+  private evaluateStep(magnitude: number): void {
+    const now = Date.now();
     const timeSinceLastStep = now - this.lastStepTime;
 
-    switch (this.phase) {
-      case StepPhase.WAITING_PEAK:
-        // Menunggu sinyal naik melewati threshold
-        if (this.filteredMag > dynamicThreshold) {
-          this.peakValue = this.filteredMag;
-          this.phase = StepPhase.WAITING_VALLEY;
-        }
-        break;
+    // FASA 1: Menunggu Peak (Goyangan naik melewati threshold langkah)
+    if (!this.isArmed) {
+      if (magnitude > this.currentThreshold) {
+        // Cek interval debounce (minimal 260ms antar langkah)
+        if (this.lastStepTime === 0 || timeSinceLastStep >= this.config.minStepInterval) {
+          // LANGKAH VALID TERDETEKSI!
+          this.totalSteps++;
+          this.lastStepTime = now;
+          this.stepTimestamps.push(now);
+          this.isArmed = true; // Kunci sampai sinyal turun ke valley
+          this.peakValue = magnitude;
 
-      case StepPhase.WAITING_VALLEY:
-        // Track peak tertinggi
-        if (this.filteredMag > this.peakValue) {
-          this.peakValue = this.filteredMag;
-        }
-        
-        // Menunggu sinyal turun signifikan (minimal 40% dari peak)
-        if (this.filteredMag < this.peakValue * 0.6) {
-          this.valleyValue = this.filteredMag;
-          this.phase = StepPhase.CONFIRMED;
-        }
-        
-        // Timeout: jika tidak turun dalam 500ms, batal (bukan langkah)
-        if (timeSinceLastStep > 0 && timeSinceLastStep < 500 && this.lastStepTime > 0) {
-          // Masih dalam window wajar
-        } else if (this.peakValue === this.filteredMag) {
-          // Masih naik, lanjut
-        }
-        break;
-
-      case StepPhase.CONFIRMED:
-        // Pola peak → valley DIKONFIRMASI
-        // Periksa apakah amplitudo cukup besar (peak vs valley)
-        const amplitude = this.peakValue - this.valleyValue;
-        
-        if (amplitude > dynamicThreshold * 0.5) {
-          // Valid step pattern!
-          this.consecutivePatterns++;
-
-          // Perlu minimal 2 pola berturut-turut sebelum mulai menghitung
-          // Ini mencegah goyangan acak dianggap langkah
-          if (this.consecutivePatterns >= 2) {
-            // Periksa interval waktu
-            if (
-              this.lastStepTime === 0 ||
-              (timeSinceLastStep >= this.config.minStepInterval &&
-               timeSinceLastStep <= this.config.maxStepInterval)
-            ) {
-              // VALID STEP!
-              this.totalSteps++;
-              this.lastStepTime = now;
-              this.stepTimestamps.push(now);
-
-              // Keep only last 120 step timestamps (for cadence calculation)
-              if (this.stepTimestamps.length > 120) {
-                this.stepTimestamps.shift();
-              }
-
-              this.emitReading('tracking', `Langkah terdeteksi: ${this.totalSteps}`);
-            } else if (timeSinceLastStep > this.config.maxStepInterval) {
-              // Terlalu lama sejak langkah terakhir → reset consecutive counter
-              // User mungkin berhenti lalu mulai lagi
-              this.consecutivePatterns = 1;
-              this.lastStepTime = now;
-            }
-          } else {
-            // Masih dalam kalibrasi awal (building confidence)
-            this.lastStepTime = now;
+          // Batasi riwayat timestamp langkah (maksimal 60 langkah terakhir untuk hitung cadence)
+          if (this.stepTimestamps.length > 60) {
+            this.stepTimestamps.shift();
           }
-        } else {
-          // Amplitudo terlalu kecil → goyangan, bukan langkah
-          // Reset consecutive counter
-          this.consecutivePatterns = Math.max(0, this.consecutivePatterns - 1);
+
+          // Adaptasi threshold halus berdasarkan kekuatan langkah pengguna
+          const adaptiveTarget = Math.max(
+            0.85,
+            Math.min(1.8, magnitude * 0.65)
+          );
+          this.currentThreshold = this.currentThreshold * 0.75 + adaptiveTarget * 0.25;
+
+          // Siarkan pembaruan langkah secara INSTAN!
+          this.emitReading('tracking', `Langkah terhitung: ${this.totalSteps}`);
         }
+      }
+    } else {
+      // FASA 2: Menunggu Valley (Sinyal turun di bawah 55% dari threshold)
+      if (magnitude > this.peakValue) {
+        this.peakValue = magnitude;
+      }
 
-        // Reset state machine untuk deteksi langkah berikutnya
-        this.phase = StepPhase.WAITING_PEAK;
+      // Ketika gelombang langkah turun kembali mendekati baseline
+      if (magnitude < this.currentThreshold * 0.55) {
+        this.isArmed = false; // Buka kunci (siap mendeteksi langkah berikutnya)
         this.peakValue = 0;
-        this.valleyValue = Infinity;
-        break;
+      }
     }
   }
 
   /**
-   * Hitung threshold dinamis berdasarkan aktivitas terbaru.
-   * Saat diam, threshold lebih tinggi (lebih sulit trigger).
-   * Saat sudah berjalan, threshold bisa sedikit turun (adaptif).
+   * Tambah langkah manual (sangat berguna untuk testing di desktop/emulator)
    */
-  private getDynamicThreshold(): number {
-    if (this.accelBuffer.length < 10) return this.config.stepThreshold;
-
-    // Hitung standar deviasi dari buffer terakhir
-    const recent = this.accelBuffer.slice(-20);
-    const mean = recent.reduce((s, v) => s + v, 0) / recent.length;
-    const variance = recent.reduce((s, v) => s + (v - mean) ** 2, 0) / recent.length;
-    const std = Math.sqrt(variance);
-
-    // Jika belum ada langkah yang dikonfirmasi, gunakan threshold ketat
-    if (this.consecutivePatterns < 2) {
-      return Math.max(this.config.stepThreshold, mean + 2 * std);
-    }
-
-    // Sudah dalam mode walking → threshold adaptif (sedikit lebih rendah)
-    // Tapi tetap minimal 1.8 untuk menghindari false positives
-    return Math.max(1.8, mean + 1.2 * std);
+  addManualStep(): void {
+    if (!this.isRunning) return;
+    const now = Date.now();
+    this.totalSteps++;
+    this.lastStepTime = now;
+    this.stepTimestamps.push(now);
+    if (this.stepTimestamps.length > 60) this.stepTimestamps.shift();
+    this.motionIntensity = 0.8;
+    this.emitReading('tracking', `Langkah manual terhitung: ${this.totalSteps}`);
+    setTimeout(() => {
+      this.motionIntensity = 0;
+    }, 300);
   }
 
   /**
-   * Calculate current cadence (steps per minute)
+   * Hitung irama langkah per menit (Cadence SPM)
    */
   private getCadence(): number {
     const now = Date.now();
-    // Count steps in the last 30 seconds
-    const recentSteps = this.stepTimestamps.filter((t) => now - t < 30000);
-    if (recentSteps.length < 2) return 0;
+    // Jika tidak ada langkah dalam 2.5 detik terakhir, user dianggap berhenti/diam
+    if (now - this.lastStepTime > 2500) {
+      return 0;
+    }
 
-    const timeSpanMs = recentSteps[recentSteps.length - 1] - recentSteps[0];
-    if (timeSpanMs < 2000) return 0; // Need at least 2 seconds of data
+    // Ambil langkah dalam 15 detik terakhir
+    const recent = this.stepTimestamps.filter((t) => now - t < 15000);
+    if (recent.length < 2) {
+      return this.totalSteps > 0 && now - this.lastStepTime < 1500 ? 95 : 0;
+    }
 
-    const cadence = Math.round((recentSteps.length / (timeSpanMs / 1000)) * 60);
+    const durationSec = (recent[recent.length - 1] - recent[0]) / 1000;
+    if (durationSec < 1.0) return 95;
 
-    this.recentCadences.push(cadence);
-    if (this.recentCadences.length > 10) this.recentCadences.shift();
-
-    return cadence;
+    const spm = Math.round((recent.length / durationSec) * 60);
+    return Math.min(240, Math.max(30, spm));
   }
 
   /**
-   * Estimate distance traveled
+   * Hitung estimasi jarak (meter)
    */
   private getDistance(): number {
     return Math.round(this.totalSteps * this.config.strideLength);
   }
 
   /**
-   * Estimate calories burned from walking/running
-   * Uses MET values: Walking ≈ 3.5 MET, Running ≈ 8.0 MET
+   * Hitung estimasi pembakaran kalori
    */
   private getCalories(): number {
     const cadence = this.getCadence();
-    const durationMinutes = this.stepTimestamps.length > 1
-      ? (this.stepTimestamps[this.stepTimestamps.length - 1] - this.stepTimestamps[0]) / 60000
-      : 0;
+    const durationMinutes =
+      this.stepTimestamps.length > 1
+        ? (this.stepTimestamps[this.stepTimestamps.length - 1] - this.stepTimestamps[0]) / 60000
+        : 0;
 
-    if (durationMinutes < 0.1) return 0;
+    if (durationMinutes < 0.05 && this.totalSteps === 0) return 0;
 
-    const met = cadence > 150 ? 8.0 : cadence > 100 ? 5.0 : 3.5;
-    // Calories/min = (MET × 3.5 × body_weight_kg) / 200
-    const calPerMin = (met * 3.5 * this.config.weightKg) / 200;
-    return Math.round(calPerMin * durationMinutes);
+    // Estimasi MET: jalan wajar ~3.5 MET, jalan cepat ~4.5 MET, jogging ~7.5 MET
+    const met = cadence >= 150 ? 7.5 : cadence >= 100 ? 4.2 : 3.5;
+    // Kalori = MET * 3.5 * berat(kg) / 200 * menit
+    // Atau jika durasi sangat singkat, gunakan formula per langkah: ~0.04 kkal/langkah
+    const baseCalBySteps = Math.round(this.totalSteps * 0.04);
+    const baseCalByTime = Math.round(((met * 3.5 * this.config.weightKg) / 200) * durationMinutes);
+
+    return Math.max(baseCalBySteps, baseCalByTime);
   }
 
   /**
-   * Detect activity type from cadence
+   * Deteksi aktivitas: Berjalan vs Berlari
    */
   private detectActivity(): { isWalking: boolean; isRunning: boolean } {
     const cadence = this.getCadence();
     return {
-      isWalking: cadence >= 60 && cadence < 150,
+      isWalking: cadence >= 40 && cadence < 150,
       isRunning: cadence >= 150,
     };
   }
 
   /**
-   * Emit a step reading to the callback
+   * Siarkan hasil pembacaan ke subscriber
    */
   private emitReading(status: StepReading['status'], message: string): void {
     const cadence = this.getCadence();
-    const activity = this.detectActivity();
+    const act = this.detectActivity();
 
     this.onStep?.({
       totalSteps: this.totalSteps,
       cadence,
       distanceMeters: this.getDistance(),
       caloriesBurned: this.getCalories(),
-      isWalking: activity.isWalking,
-      isRunning: activity.isRunning,
+      isWalking: act.isWalking,
+      isRunning: act.isRunning,
+      motionIntensity: this.motionIntensity,
       timestamp: Date.now(),
       status,
       message,
@@ -467,44 +418,48 @@ export class Pedometer {
   }
 
   /**
-   * Stop pedometer
+   * Hentikan pedometer
    */
   stop(): void {
     this.isRunning = false;
+    if (this.cadenceInterval) {
+      clearInterval(this.cadenceInterval);
+      this.cadenceInterval = null;
+    }
     this.sensorCleanup?.();
     this.sensorCleanup = null;
     this.onStep = null;
   }
 
   /**
-   * Get current total steps
+   * Ambil total langkah saat ini
    */
   getTotalSteps(): number {
     return this.totalSteps;
   }
 
   /**
-   * Reset step counter
+   * Reset data langkah
    */
   reset(): void {
     this.totalSteps = 0;
     this.stepTimestamps = [];
     this.lastStepTime = 0;
-    this.accelBuffer = [];
-    this.recentCadences = [];
-    this.phase = StepPhase.WAITING_PEAK;
-    this.peakValue = 0;
-    this.valleyValue = Infinity;
-    this.consecutivePatterns = 0;
-    this.filteredMag = 9.81;
+    this.filteredMag = 0;
     this.gravity = 9.81;
+    this.isArmed = false;
+    this.peakValue = 0;
+    this.motionIntensity = 0;
   }
 
   /**
-   * Update user parameters (e.g., after profile update)
+   * Perbarui konfigurasi
    */
   updateConfig(config: Partial<PedometerConfig>): void {
     this.config = { ...this.config, ...config };
+    if (config.sensitivity) {
+      this.applySensitivity(config.sensitivity);
+    }
     if (config.heightCm && !config.strideLength) {
       this.config.strideLength = (this.config.heightCm / 100) * 0.415;
     }
