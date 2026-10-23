@@ -128,8 +128,9 @@ export class HeartRatePPG {
       this.video.srcObject = this.stream;
       await this.video.play();
 
-      // Try to turn on torch/flash for better reading
-      this.enableTorch();
+      // Torch/flash disabled — PPG works via ambient light through finger
+      // without needing the flash LED (prevents discomfort on mobile).
+      // this.enableTorch();
 
       // Reset buffers
       this.redSignal = [];

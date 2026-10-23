@@ -43,7 +43,7 @@ interface HeartRateMonitorProps {
   onSaveHeartRate?: (log: HeartRateLog) => void;
 }
 
-type MeasurementMode = 'camera' | 'tap' | 'bluetooth';
+type MeasurementMode = 'camera' | 'bluetooth';
 
 export default function HeartRateMonitor({
   userAge,
@@ -58,11 +58,7 @@ export default function HeartRateMonitor({
   const [waveform, setWaveform] = useState<number[]>([]);
   const [sessionBpm, setSessionBpm] = useState<number[]>([]);
 
-  // Tactile Tap Pulse states
-  const [tapTimestamps, setTapTimestamps] = useState<number[]>([]);
-  const [tapBpm, setTapBpm] = useState<number | null>(null);
-  const [tapConfidence, setTapConfidence] = useState<number>(0);
-  const [tapActive, setTapActive] = useState(false);
+
 
   // Bluetooth states
   const [bleDeviceName, setBleDeviceName] = useState<string | null>(null);
@@ -202,71 +198,7 @@ export default function HeartRateMonitor({
     }
   }, [isActive, sessionBpm, reading, onMeasurementComplete]);
 
-  // Handle Tactile Pulse Tap
-  const handlePulseTap = () => {
-    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-      try {
-        navigator.vibrate(35);
-      } catch {
-        // ignore
-      }
-    }
 
-    const now = Date.now();
-    setTapActive(true);
-    setSavedSuccess(false);
-
-    setTapTimestamps((prev) => {
-      // If gap since last tap is > 2.5s, start a fresh pulse sequence
-      const last = prev[prev.length - 1];
-      const timestamps = last && now - last > 2500 ? [now] : [...prev, now];
-
-      // Keep up to 14 recent taps
-      const recent = timestamps.slice(-14);
-
-      if (recent.length >= 2) {
-        const intervals: number[] = [];
-        for (let i = 1; i < recent.length; i++) {
-          const delta = recent[i] - recent[i - 1];
-          // Valid physiological heart interval: 300ms (200 bpm) to 1500ms (40 bpm)
-          if (delta >= 300 && delta <= 1500) {
-            intervals.push(delta);
-          }
-        }
-
-        if (intervals.length >= 2) {
-          const meanInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-          const variance = intervals.reduce((sum, v) => sum + (v - meanInterval) ** 2, 0) / intervals.length;
-          const std = Math.sqrt(variance);
-          const cv = std / meanInterval;
-
-          // Confidence based on rhythm consistency
-          const conf = Math.max(30, Math.min(98, Math.round((1 - cv * 2) * 100)));
-          const computedBpm = Math.round(60000 / meanInterval);
-
-          setTapBpm(computedBpm);
-          setTapConfidence(conf);
-
-          // If reached 8 consistent taps, auto suggest result
-          if (recent.length >= 8 && conf >= 75) {
-            setFinalResult({ bpm: computedBpm, confidence: conf, method: 'tactile_tap' });
-            onMeasurementComplete?.(computedBpm, conf);
-          }
-        }
-      }
-
-      return recent;
-    });
-  };
-
-  const handleResetTap = () => {
-    setTapTimestamps([]);
-    setTapBpm(null);
-    setTapConfidence(0);
-    setTapActive(false);
-    setFinalResult(null);
-    setSavedSuccess(false);
-  };
 
   // Handle Web Bluetooth BLE Smartwatch
   const handleConnectBluetooth = async () => {
@@ -366,8 +298,6 @@ export default function HeartRateMonitor({
       notes: `Pengukuran via ${
         finalResult.method === 'camera_ppg'
           ? 'Kamera AI PPG'
-          : finalResult.method === 'tactile_tap'
-          ? 'Ketuk Nadi Taktil'
           : 'Smartwatch BLE'
       }`,
     };
@@ -421,16 +351,6 @@ export default function HeartRateMonitor({
           }}
         >
           <Camera size={14} /> Kamera Jari (PPG)
-        </button>
-        <button
-          className={`ppg-tab-btn ${activeMode === 'tap' ? 'active' : ''}`}
-          onClick={() => {
-            if (isActive) ppgRef.current?.stop();
-            setIsActive(false);
-            setActiveMode('tap');
-          }}
-        >
-          <HeartPulse size={14} /> Ketuk Nadi (Fail-Safe)
         </button>
         <button
           className={`ppg-tab-btn ${activeMode === 'bluetooth' ? 'active' : ''}`}
@@ -538,64 +458,7 @@ export default function HeartRateMonitor({
         </div>
       )}
 
-      {/* MODE 2: TACTILE PULSE TAP */}
-      {activeMode === 'tap' && (
-        <div className="ppg-content-box tactile-tap-box">
-          <div className="tactile-guide-card">
-            <span className="badge-mini badge-green">
-              <ShieldCheck size={12} /> 100% Anti-Gagal Gerakan
-            </span>
-            <h4>Cara Mengukur dengan Ketukan Nadi:</h4>
-            <ol className="tactile-steps">
-              <li>Tempelkan 2 jari (telunjuk & tengah) di nadi pergelangan tangan atau leher Anda.</li>
-              <li>Tiap kali Anda merasakan denyutan pembuluh darah, <strong>ketuk tombol hati merah</strong> di bawah seirama.</li>
-              <li>Lakukan minimal 8 ketukan ritmis hingga akurasi stabil.</li>
-            </ol>
-          </div>
 
-          <div className="tap-heart-stage">
-            <button
-              className={`tap-heart-trigger ${tapActive ? 'active' : ''}`}
-              onPointerDown={handlePulseTap}
-              aria-label="Ketuk denyut nadi"
-            >
-              <HeartPulse size={48} />
-              <span className="tap-trigger-text">
-                {tapTimestamps.length > 0
-                  ? `Ketukan: ${tapTimestamps.length}`
-                  : 'KETUK DISINI SEIRAMA NADI'}
-              </span>
-            </button>
-          </div>
-
-          {tapBpm && (
-            <div className="tap-live-results">
-              <div className="tap-bpm-row">
-                <span className="tap-bpm-val">{tapBpm}</span>
-                <span className="tap-bpm-unit">BPM</span>
-                <span
-                  className="tap-bpm-badge"
-                  style={{ backgroundColor: getCatInfo(tapBpm).color + '20', color: getCatInfo(tapBpm).color }}
-                >
-                  {getCatInfo(tapBpm).label}
-                </span>
-              </div>
-              <div className="tap-meta-info">
-                <span>Konsistensi Ketukan: {tapConfidence}%</span>
-                {tapTimestamps.length >= 8 && (
-                  <span className="text-green font-bold">✓ Ritme Nadi Cukup Akurat</span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {tapTimestamps.length > 0 && (
-            <button className="btn-secondary-reset" onClick={handleResetTap}>
-              <RotateCcw size={14} /> Reset Ketukan
-            </button>
-          )}
-        </div>
-      )}
 
       {/* MODE 3: BLUETOOTH SMARTWATCH */}
       {activeMode === 'bluetooth' && (
@@ -653,7 +516,6 @@ export default function HeartRateMonitor({
               </span>
               <span className="final-method-tag">
                 {finalResult.method === 'camera_ppg' && '📷 Kamera AI'}
-                {finalResult.method === 'tactile_tap' && '👆 Ketuk Nadi Taktil'}
                 {finalResult.method === 'ble_watch' && '⌚ Smartwatch BLE'}
               </span>
             </div>
@@ -708,7 +570,6 @@ export default function HeartRateMonitor({
               onClick={() => {
                 setFinalResult(null);
                 setSavedSuccess(false);
-                if (activeMode === 'tap') handleResetTap();
               }}
             >
               <RotateCcw size={14} /> Ukur Ulang
