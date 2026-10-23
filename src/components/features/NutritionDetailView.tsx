@@ -25,6 +25,46 @@ interface NutritionDetailViewProps {
   onShowToast: (msg: string) => void;
 }
 
+// Static Indonesian local healthy food recommendations
+const HEALTHY_RECOMMENDATIONS = [
+  {
+    name: 'Dada Ayam Panggang Herbal',
+    cals: 220,
+    protein: 36,
+    carbs: 2,
+    fat: 4,
+    desc: 'Tinggi protein murni & rendah lemak jenuh.',
+    badge: 'High Protein',
+  },
+  {
+    name: 'Tempe Bacem Bakar & Nasi Merah',
+    cals: 310,
+    protein: 18,
+    carbs: 42,
+    fat: 6,
+    desc: 'Probiotik nabati alami & karbohidrat kompleks berserat.',
+    badge: 'Fiber Rich',
+  },
+  {
+    name: 'Gado-Gado Telur Rebus (Saus Kacang Ringan)',
+    cals: 280,
+    protein: 16,
+    carbs: 26,
+    fat: 9,
+    desc: 'Kaya vitamin antioksidan & fitonutrien sayuran hijau.',
+    badge: 'Nutrient Dense',
+  },
+  {
+    name: 'Pepes Ikan Kembung Daun Kemangi',
+    cals: 240,
+    protein: 28,
+    carbs: 3,
+    fat: 8,
+    desc: 'Omega-3 tinggi untuk kesehatan jantung dan pemulihan otot.',
+    badge: 'Omega-3',
+  },
+];
+
 export default function NutritionDetailView({
   data,
   consumedCalories,
@@ -36,10 +76,14 @@ export default function NutritionDetailView({
 }: NutritionDetailViewProps) {
   const [selectedMealFilter, setSelectedMealFilter] = useState<'all' | 'breakfast' | 'lunch' | 'dinner' | 'snack'>('all');
 
-  // Compute total macros consumed from logs
-  const protein_g = data.nutrition_logs.reduce((s, i) => s + (i.protein_g || 0), 0);
-  const carbs_g = data.nutrition_logs.reduce((s, i) => s + (i.carbs_g || 0), 0);
-  const fat_g = data.nutrition_logs.reduce((s, i) => s + (i.fat_g || 0), 0);
+  // Compute total macros consumed from logs (memoized for performance)
+  const { protein_g, carbs_g, fat_g } = React.useMemo(() => {
+    return {
+      protein_g: data.nutrition_logs.reduce((s, i) => s + (i.protein_g || 0), 0),
+      carbs_g: data.nutrition_logs.reduce((s, i) => s + (i.carbs_g || 0), 0),
+      fat_g: data.nutrition_logs.reduce((s, i) => s + (i.fat_g || 0), 0),
+    };
+  }, [data.nutrition_logs]);
 
   // Targets (standard 30% protein, 45% carbs, 25% fat)
   const targetProtein = Math.round((targetCalories * 0.3) / 4) || 135;
@@ -50,67 +94,33 @@ export default function NutritionDetailView({
   const carbsPct = Math.min(100, Math.round((carbs_g / (targetCarbs || 1)) * 100));
   const fatPct = Math.min(100, Math.round((fat_g / (targetFat || 1)) * 100));
 
-  // Filter food logs by meal type
-  const filteredMeals = data.nutrition_logs.filter((item) => {
-    if (selectedMealFilter === 'all') return true;
-    return item.meal_type === selectedMealFilter;
-  });
+  // Filter food logs by meal type (memoized)
+  const filteredMeals = React.useMemo(() => {
+    return data.nutrition_logs.filter((item) => {
+      if (selectedMealFilter === 'all') return true;
+      return item.meal_type === selectedMealFilter;
+    });
+  }, [data.nutrition_logs, selectedMealFilter]);
 
-  // Calculate calories per meal category
-  const mealCalSummary = {
-    breakfast: data.nutrition_logs
-      .filter((i) => i.meal_type === 'breakfast')
-      .reduce((s, i) => s + i.calories, 0),
-    lunch: data.nutrition_logs
-      .filter((i) => i.meal_type === 'lunch')
-      .reduce((s, i) => s + i.calories, 0),
-    dinner: data.nutrition_logs
-      .filter((i) => i.meal_type === 'dinner')
-      .reduce((s, i) => s + i.calories, 0),
-    snack: data.nutrition_logs
-      .filter((i) => i.meal_type === 'snack')
-      .reduce((s, i) => s + i.calories, 0),
-  };
+  // Calculate calories per meal category (memoized)
+  const mealCalSummary = React.useMemo(() => {
+    return {
+      breakfast: data.nutrition_logs
+        .filter((i) => i.meal_type === 'breakfast')
+        .reduce((s, i) => s + i.calories, 0),
+      lunch: data.nutrition_logs
+        .filter((i) => i.meal_type === 'lunch')
+        .reduce((s, i) => s + i.calories, 0),
+      dinner: data.nutrition_logs
+        .filter((i) => i.meal_type === 'dinner')
+        .reduce((s, i) => s + i.calories, 0),
+      snack: data.nutrition_logs
+        .filter((i) => i.meal_type === 'snack')
+        .reduce((s, i) => s + i.calories, 0),
+    };
+  }, [data.nutrition_logs]);
 
-  // Healthy food recommendation data (Indonesian local nutrition)
-  const healthyRecommendations = [
-    {
-      name: 'Dada Ayam Panggang Herbal',
-      cals: 220,
-      protein: 36,
-      carbs: 2,
-      fat: 4,
-      desc: 'Tinggi protein murni & rendah lemak jenuh.',
-      badge: 'High Protein',
-    },
-    {
-      name: 'Tempe Bacem Bakar & Nasi Merah',
-      cals: 310,
-      protein: 18,
-      carbs: 42,
-      fat: 6,
-      desc: 'Probiotik nabati alami & karbohidrat kompleks berserat.',
-      badge: 'Fiber Rich',
-    },
-    {
-      name: 'Gado-Gado Telur Rebus (Saus Kacang Ringan)',
-      cals: 280,
-      protein: 16,
-      carbs: 26,
-      fat: 9,
-      desc: 'Kaya vitamin antioksidan & fitonutrien sayuran hijau.',
-      badge: 'Nutrient Dense',
-    },
-    {
-      name: 'Pepes Ikan Kembung Daun Kemangi',
-      cals: 240,
-      protein: 28,
-      carbs: 3,
-      fat: 8,
-      desc: 'Omega-3 tinggi untuk kesehatan jantung dan pemulihan otot.',
-      badge: 'Omega-3',
-    },
-  ];
+  const healthyRecommendations = HEALTHY_RECOMMENDATIONS;
 
   return (
     <div className="feature-detail-page nutrition-detail-page">

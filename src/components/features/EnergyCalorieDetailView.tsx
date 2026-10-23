@@ -44,14 +44,17 @@ export default function EnergyCalorieDetailView({
 
   // Total daily expenditure: BMR + Active Burn
   const totalTDEE = bmrValue + burnedCalories;
-  const netCalories = consumedCalories - burnedCalories;
   const calorieDeficit = totalTDEE - consumedCalories;
 
-  // Simulated metrics
-  const simTotalConsumed = consumedCalories + simFood;
-  const simTotalBurned = burnedCalories + simBurn;
-  const simRemaining = Math.max(0, targetCalories - simTotalConsumed + simTotalBurned);
-  const simDeficit = bmrValue + simTotalBurned - simTotalConsumed;
+  // Simulated metrics (memoized for smooth slider rendering)
+  const { simRemaining, simDeficit } = useMemo(() => {
+    const totalConsumed = consumedCalories + simFood;
+    const totalBurned = burnedCalories + simBurn;
+    return {
+      simRemaining: Math.max(0, targetCalories - totalConsumed + totalBurned),
+      simDeficit: bmrValue + totalBurned - totalConsumed,
+    };
+  }, [consumedCalories, simFood, burnedCalories, simBurn, targetCalories, bmrValue]);
 
   // 24-Hour hourly energy fluctuation simulation based on user logs
   const hourlyData = useMemo(() => {

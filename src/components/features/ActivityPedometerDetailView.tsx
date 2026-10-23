@@ -59,15 +59,13 @@ export default function ActivityPedometerDetailView({
     ];
   }, [totalSteps]);
 
-  // Milestone tier calculation
-  const getMilestoneTier = () => {
+  // Milestone tier calculation (memoized)
+  const tier = useMemo(() => {
     if (totalSteps >= 10000) return { name: 'Platinum Walker', color: '#10B981', badge: '🏆 Juara Harian' };
     if (totalSteps >= 7500) return { name: 'Gold Stride', color: '#F59E0B', badge: '🥇 Hebat!' };
     if (totalSteps >= 5000) return { name: 'Silver Active', color: '#0284C7', badge: '🥈 Menanjak' };
     return { name: 'Bronze Starter', color: '#64748B', badge: '🥉 Mulai Melangkah' };
-  };
-
-  const tier = getMilestoneTier();
+  }, [totalSteps]);
 
   return (
     <div className="feature-detail-page activity-detail-page">

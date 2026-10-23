@@ -4256,6 +4256,39 @@ body.fullscreen-mode .app-frame {
   color: #FFFFFF;
 }
 
+/* Mobile compact responsiveness for narrow Android/iOS devices */
+@media (max-width: 375px) {
+  .feature-hero-stage {
+    height: 300px;
+  }
+  .stage-overlay-bottom {
+    padding: 8px 10px;
+    gap: 6px;
+    border-radius: 14px;
+  }
+  .stage-bottom-text {
+    font-size: 10.5px;
+    line-height: 1.3;
+  }
+  .stage-cta-btn {
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+  .flank-glass-chip {
+    padding: 6px 8px;
+    max-width: 96px;
+  }
+  .flank-chip-val {
+    font-size: 13px;
+  }
+  .flank-chip-header {
+    font-size: 8.5px;
+  }
+  .flank-chip-sub {
+    font-size: 8.5px;
+  }
+}
+
 /* Quick Summary Row Below Stage (if used) */
 .hero-quick-stats {
   display: grid;
