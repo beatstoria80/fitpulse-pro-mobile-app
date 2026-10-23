@@ -58,6 +58,9 @@ interface DashboardTabProps {
   onUndoWater: () => void;
   onNavigateToActivities: () => void;
   onShowToast: (msg: string) => void;
+  onOpenEnergyDetail?: () => void;
+  onOpenNutritionDetail?: () => void;
+  onOpenActivityDetail?: () => void;
 }
 
 export const DashboardTab: React.FC<DashboardTabProps> = ({
@@ -96,6 +99,9 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   onUndoWater,
   onNavigateToActivities,
   onShowToast,
+  onOpenEnergyDetail,
+  onOpenNutritionDetail,
+  onOpenActivityDetail,
 }) => {
   const userInitials = (data.user_profile.name || 'ND')
     .trim()
@@ -142,9 +148,16 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       {/* Hero: Calorie & Energy Balance Glass Card */}
       <div className={`glass-card hero-energy-card${dashboardVfxActive ? ' stagger-reveal delay-2' : ''}`}>
         <div className="card-header-clean">
-          <div className="card-title-group">
+          <div
+            className="card-title-group clickable-header-title"
+            onClick={onOpenEnergyDetail}
+            title="Klik untuk membuka Halaman Analitik & Karakter 3D Kalori"
+          >
             <span className="badge-mini badge-cyan">Keseimbangan Energi</span>
-            <h2>Target Kalori Harian</h2>
+            <div className="title-with-arrow">
+              <h2>Target Kalori Harian</h2>
+              <ChevronRight size={17} className="text-secondary" />
+            </div>
           </div>
           <button
             className="icon-action-btn"
@@ -160,8 +173,12 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         </div>
 
         <div className="energy-visual-container">
-          {/* Circular Animated Gauge */}
-          <div className="circle-gauge-wrap">
+          {/* Circular Animated Gauge (Clickable to Energy Detail) */}
+          <div
+            className="circle-gauge-wrap clickable-gauge-link"
+            onClick={onOpenEnergyDetail}
+            title="Klik untuk membuka Halaman Analitik Kalori"
+          >
             <svg className="progress-ring" width="180" height="180" viewBox="0 0 180 180">
               <defs>
                 <linearGradient id="calorieGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -196,7 +213,12 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
           {/* Side Metric Column */}
           <div className="energy-metrics-col">
-            <div className="metric-mini-box intake" onClick={onOpenFood} style={{ cursor: 'pointer' }}>
+            <div
+              className="metric-mini-box intake"
+              onClick={onOpenNutritionDetail || onOpenFood}
+              style={{ cursor: 'pointer' }}
+              title="Klik untuk membuka Halaman Detail Nutrisi & Makanan"
+            >
               <div className="metric-icon-wrap intake-icon">
                 <Utensils size={18} />
               </div>
@@ -208,7 +230,12 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               </div>
             </div>
 
-            <div className="metric-mini-box burn" onClick={onOpenActivity} style={{ cursor: 'pointer' }}>
+            <div
+              className="metric-mini-box burn"
+              onClick={onOpenActivityDetail || onOpenActivity}
+              style={{ cursor: 'pointer' }}
+              title="Klik untuk membuka Halaman Detail Aktivitas & Langkah"
+            >
               <div className="metric-icon-wrap burn-icon">
                 <Flame size={18} />
               </div>
@@ -220,7 +247,12 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               </div>
             </div>
 
-            <div className="metric-mini-box net">
+            <div
+              className="metric-mini-box net"
+              onClick={onOpenEnergyDetail}
+              style={{ cursor: 'pointer' }}
+              title="Klik untuk melihat rincian BMR & TDEE"
+            >
               <div className="metric-icon-wrap net-icon">
                 <Activity size={18} />
               </div>
@@ -235,8 +267,13 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           </div>
         </div>
 
-        {/* Macro Distribution Mini Bars */}
-        <div className={`macro-breakdown-row${dashboardVfxActive ? ' stagger-reveal delay-4' : ''}`}>
+        {/* Macro Distribution Mini Bars (Clickable to Nutrition Detail) */}
+        <div
+          className={`macro-breakdown-row clickable-macro-preview${dashboardVfxActive ? ' stagger-reveal delay-4' : ''}`}
+          onClick={onOpenNutritionDetail}
+          style={{ cursor: 'pointer' }}
+          title="Klik untuk membuka Halaman Detail Nutrisi & Makronutrien"
+        >
           <div className="macro-item">
             <div className="macro-labels">
               <span className="macro-name">
@@ -394,9 +431,15 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
       {/* Today's Activities Preview */}
       <div className="section-title-row">
-        <h3>Aktivitas Hari Ini ({data.activity_logs.reduce((s, a) => s + a.metrics.duration_minutes, 0)} mnt)</h3>
-        <button className="text-link-btn" onClick={onNavigateToActivities}>
-          Lihat Semua <ChevronRight size={14} />
+        <h3
+          onClick={onOpenActivityDetail}
+          style={{ cursor: 'pointer' }}
+          title="Klik untuk membuka Halaman Detail Aktivitas & Pedometer"
+        >
+          Aktivitas Hari Ini ({data.activity_logs.reduce((s, a) => s + a.metrics.duration_minutes, 0)} mnt)
+        </h3>
+        <button className="text-link-btn" onClick={onOpenActivityDetail || onNavigateToActivities}>
+          Detail 3D <ChevronRight size={14} />
         </button>
       </div>
 

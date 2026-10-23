@@ -17,6 +17,9 @@ import DashboardTab from '../components/tabs/DashboardTab';
 import ActivitiesTab from '../components/tabs/ActivitiesTab';
 import NutritionTab from '../components/tabs/NutritionTab';
 import AnalyticsTab from '../components/tabs/AnalyticsTab';
+import EnergyCalorieDetailView from '../components/features/EnergyCalorieDetailView';
+import NutritionDetailView from '../components/features/NutritionDetailView';
+import ActivityPedometerDetailView from '../components/features/ActivityPedometerDetailView';
 import {
   initSupabase,
   getSupabaseConfig,
@@ -32,6 +35,7 @@ import {
 export default function Home() {
   const [data, setData] = useState<AppFitnessData>(initialFitnessData);
   const [activeTab, setActiveTab] = useState<TabType>('tabDashboard');
+  const [activeFeatureDetail, setActiveFeatureDetail] = useState<'energy' | 'nutrition' | 'activity' | null>(null);
   const [clock, setClock] = useState('14:04');
   const [toast, setToast] = useState<string | null>(null);
 
@@ -575,56 +579,46 @@ export default function Home() {
       <main className="app-frame" id="appFrame">
         {/* Main Scrollable App Content */}
         <div className={`app-content${dashboardVfxActive ? ' dashboard-vfx-enter' : ''}`} id="appContent">
-          {/* TAB 1: DASHBOARD */}
-          {activeTab === 'tabDashboard' && (
-            <DashboardTab
+          {/* DEDICATED FEATURE DETAIL PAGES (WITH 3D LOOPING VIDEOS) */}
+          {activeFeatureDetail === 'energy' && (
+            <EnergyCalorieDetailView
               data={data}
-              dashboardVfxActive={dashboardVfxActive}
-              todayFormatted={todayFormatted}
-              isCloudSync={isCloudSync}
-              ringAnimated={ringAnimated}
-              openingComplete={openingComplete}
-              ringOffset={ringOffset}
               targetCalories={targetCalories}
               consumedCalories={consumedCalories}
               burnedCalories={burnedCalories}
-              remainingCalories={remainingCalories}
               bmrValue={bmrValue}
-              totalProtein={totalProtein}
-              proteinTarget={proteinTarget}
-              totalCarbs={totalCarbs}
-              carbsTarget={carbsTarget}
-              totalFat={totalFat}
-              fatTarget={fatTarget}
-              remainingWeightKg={remainingWeightKg}
-              weightProgressPercent={weightProgressPercent}
-              bodyFatProgressPercent={bodyFatProgressPercent}
-              waterIntake={waterIntake}
-              targetWater={targetWater}
-              waterPercent={waterPercent}
-              hasProfile={hasProfile}
-              hasActivities={hasActivities}
-              hasNutrition={hasNutrition}
-              onOpenProfile={() => setModalProfileOpen(true)}
-              onOpenSupabase={() => setModalSupabaseOpen(true)}
+              remainingCalories={remainingCalories}
+              onBack={() => setActiveFeatureDetail(null)}
               onOpenFood={() => {
                 setModalFoodDefaultMeal('lunch');
                 setModalFoodOpen(true);
               }}
               onOpenActivity={() => setModalActivityOpen(true)}
-              onAddWater={handleAddWater}
-              onUndoWater={handleUndoWater}
-              onNavigateToActivities={() => setActiveTab('tabActivities')}
               onShowToast={showToast}
             />
           )}
 
-          {/* TAB 2: AKTIVITAS */}
-          {activeTab === 'tabActivities' && (
-            <ActivitiesTab
+          {activeFeatureDetail === 'nutrition' && (
+            <NutritionDetailView
               data={data}
-              burnedCalories={burnedCalories}
+              consumedCalories={consumedCalories}
+              targetCalories={targetCalories}
+              onBack={() => setActiveFeatureDetail(null)}
+              onOpenFoodModal={(mealType) => {
+                if (mealType) setModalFoodDefaultMeal(mealType);
+                setModalFoodOpen(true);
+              }}
+              onDeleteFood={handleDeleteNutrition}
+              onShowToast={showToast}
+            />
+          )}
+
+          {activeFeatureDetail === 'activity' && (
+            <ActivityPedometerDetailView
+              data={data}
               totalSteps={totalSteps}
+              burnedCalories={burnedCalories}
+              onBack={() => setActiveFeatureDetail(null)}
               onOpenActivityModal={() => setModalActivityOpen(true)}
               onDeleteActivity={handleDeleteActivity}
               onStepUpdate={(steps, calories, distance) => {
@@ -636,60 +630,138 @@ export default function Home() {
                   },
                 };
                 saveUpdatedData(updated);
-                showToast(`Sesi berjalan: ${steps} langkah, ${calories} kkal, ${(distance / 1000).toFixed(2)} km`);
+                showToast(`Pedometer: ${steps} langkah, ${calories} kkal terupdate`);
               }}
-              onHeartRateComplete={(bpm, confidence) => {
-                showToast(`Detak jantung terukur: ${bpm} BPM (Akurasi: ${confidence}%)`);
-              }}
-              onSaveHeartRate={handleSaveHeartRate}
-              onDeleteHeartRate={handleDeleteHeartRate}
+              onShowToast={showToast}
             />
           )}
 
-          {/* TAB 3: NUTRISI */}
-          {activeTab === 'tabNutrition' && (
-            <NutritionTab
-              data={data}
-              consumedCalories={consumedCalories}
-              targetCalories={targetCalories}
-              remainingCalories={remainingCalories}
-              totalProtein={totalProtein}
-              proteinTarget={proteinTarget}
-              totalCarbs={totalCarbs}
-              carbsTarget={carbsTarget}
-              totalFat={totalFat}
-              fatTarget={fatTarget}
-              onOpenFoodModal={(mealType) => {
-                if (mealType) setModalFoodDefaultMeal(mealType);
-                setModalFoodOpen(true);
-              }}
-              onDeleteNutrition={handleDeleteNutrition}
-              onSuggestLunch={handleSuggestLunch}
-            />
-          )}
+          {/* NORMAL TAB VIEWS (WHEN NO FEATURE DETAIL PAGE IS OPEN) */}
+          {activeFeatureDetail === null && (
+            <>
+              {/* TAB 1: DASHBOARD */}
+              {activeTab === 'tabDashboard' && (
+                <DashboardTab
+                  data={data}
+                  dashboardVfxActive={dashboardVfxActive}
+                  todayFormatted={todayFormatted}
+                  isCloudSync={isCloudSync}
+                  ringAnimated={ringAnimated}
+                  openingComplete={openingComplete}
+                  ringOffset={ringOffset}
+                  targetCalories={targetCalories}
+                  consumedCalories={consumedCalories}
+                  burnedCalories={burnedCalories}
+                  remainingCalories={remainingCalories}
+                  bmrValue={bmrValue}
+                  totalProtein={totalProtein}
+                  proteinTarget={proteinTarget}
+                  totalCarbs={totalCarbs}
+                  carbsTarget={carbsTarget}
+                  totalFat={totalFat}
+                  fatTarget={fatTarget}
+                  remainingWeightKg={remainingWeightKg}
+                  weightProgressPercent={weightProgressPercent}
+                  bodyFatProgressPercent={bodyFatProgressPercent}
+                  waterIntake={waterIntake}
+                  targetWater={targetWater}
+                  waterPercent={waterPercent}
+                  hasProfile={hasProfile}
+                  hasActivities={hasActivities}
+                  hasNutrition={hasNutrition}
+                  onOpenProfile={() => setModalProfileOpen(true)}
+                  onOpenSupabase={() => setModalSupabaseOpen(true)}
+                  onOpenFood={() => {
+                    setModalFoodDefaultMeal('lunch');
+                    setModalFoodOpen(true);
+                  }}
+                  onOpenActivity={() => setModalActivityOpen(true)}
+                  onAddWater={handleAddWater}
+                  onUndoWater={handleUndoWater}
+                  onNavigateToActivities={() => setActiveTab('tabActivities')}
+                  onShowToast={showToast}
+                  onOpenEnergyDetail={() => setActiveFeatureDetail('energy')}
+                  onOpenNutritionDetail={() => setActiveFeatureDetail('nutrition')}
+                  onOpenActivityDetail={() => setActiveFeatureDetail('activity')}
+                />
+              )}
 
-          {/* TAB 4: ANALISIS & PROYEKSI */}
-          {activeTab === 'tabAnalytics' && (
-            <AnalyticsTab
-              data={data}
-              currentWeight={currentWeight}
-              targetWeight={targetWeight}
-              weightDiff={weightDiff}
-              remainingWeightKg={remainingWeightKg}
-              estimatedWeeks={estimatedWeeks}
-              milestone1={milestone1}
-              milestone2={milestone2}
-              roadmapProgressPercent={roadmapProgressPercent}
-              onResetTodayData={handleResetTodayData}
-              onExportJson={handleExportJson}
-            />
+              {/* TAB 2: AKTIVITAS */}
+              {activeTab === 'tabActivities' && (
+                <ActivitiesTab
+                  data={data}
+                  burnedCalories={burnedCalories}
+                  totalSteps={totalSteps}
+                  onOpenActivityModal={() => setModalActivityOpen(true)}
+                  onDeleteActivity={handleDeleteActivity}
+                  onStepUpdate={(steps, calories, distance) => {
+                    const updated = {
+                      ...data,
+                      daily_summary: {
+                        ...data.daily_summary,
+                        calories_burned: data.daily_summary.calories_burned + calories,
+                      },
+                    };
+                    saveUpdatedData(updated);
+                    showToast(`Sesi berjalan: ${steps} langkah, ${calories} kkal, ${(distance / 1000).toFixed(2)} km`);
+                  }}
+                  onHeartRateComplete={(bpm, confidence) => {
+                    showToast(`Detak jantung terukur: ${bpm} BPM (Akurasi: ${confidence}%)`);
+                  }}
+                  onSaveHeartRate={handleSaveHeartRate}
+                  onDeleteHeartRate={handleDeleteHeartRate}
+                />
+              )}
+
+              {/* TAB 3: NUTRISI */}
+              {activeTab === 'tabNutrition' && (
+                <NutritionTab
+                  data={data}
+                  consumedCalories={consumedCalories}
+                  targetCalories={targetCalories}
+                  remainingCalories={remainingCalories}
+                  totalProtein={totalProtein}
+                  proteinTarget={proteinTarget}
+                  totalCarbs={totalCarbs}
+                  carbsTarget={carbsTarget}
+                  totalFat={totalFat}
+                  fatTarget={fatTarget}
+                  onOpenFoodModal={(mealType) => {
+                    if (mealType) setModalFoodDefaultMeal(mealType);
+                    setModalFoodOpen(true);
+                  }}
+                  onDeleteNutrition={handleDeleteNutrition}
+                  onSuggestLunch={handleSuggestLunch}
+                />
+              )}
+
+              {/* TAB 4: ANALISIS & PROYEKSI */}
+              {activeTab === 'tabAnalytics' && (
+                <AnalyticsTab
+                  data={data}
+                  currentWeight={currentWeight}
+                  targetWeight={targetWeight}
+                  weightDiff={weightDiff}
+                  remainingWeightKg={remainingWeightKg}
+                  estimatedWeeks={estimatedWeeks}
+                  milestone1={milestone1}
+                  milestone2={milestone2}
+                  roadmapProgressPercent={roadmapProgressPercent}
+                  onResetTodayData={handleResetTodayData}
+                  onExportJson={handleExportJson}
+                />
+              )}
+            </>
           )}
         </div>
 
         {/* Mobile Bottom Navigation Bar */}
         <BottomNav
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={(tab) => {
+            setActiveFeatureDetail(null);
+            setActiveTab(tab);
+          }}
           dashboardVfxActive={dashboardVfxActive}
         />
       </main>
