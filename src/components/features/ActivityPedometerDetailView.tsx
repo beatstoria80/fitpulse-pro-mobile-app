@@ -100,51 +100,88 @@ export default function ActivityPedometerDetailView({
       </div>
 
       <div className="feature-detail-content">
-        {/* HERO 3D CHARACTER VIDEO CARD */}
-        <div className="video-hero-card activity-glow">
-          <div className="video-frame-container">
-            <video
-              className="character-loop-video"
-              src="/character_3d_walking.mp4"
-              autoPlay
-              loop
-              muted
-              playsInline
-            />
-            <div className="video-overlay-gradient" />
-            <div className="video-ambient-badge">
-              <span className="live-video-dot orange" />
-              <span>3D Motion Cadence</span>
+        {/* HERO 3D CHARACTER STAGE WITH PERIMETER OVERLAY HUD */}
+        <div className="feature-hero-stage activity-theme">
+          {/* Ambient Floor Shadow */}
+          <div className="character-stage-shadow" />
+
+          {/* 3D Character Looping Video - Blended seamlessly without black box */}
+          <video
+            className="character-stage-video"
+            src="/character_3d_walking.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+          />
+
+          {/* Floating UI/UX Perimeter Overlay (Does not cover/touch character) */}
+          <div className="stage-overlay-container">
+            {/* Top Bar Overlay */}
+            <div className="stage-overlay-top">
+              <div className="overlay-pill-badge orange">
+                <Footprints size={13} />
+                <span>Gerak & Langkah</span>
+              </div>
+              <div className="overlay-live-indicator">
+                <span className="live-video-dot orange" />
+                <span>3D Motion Cadence</span>
+              </div>
+            </div>
+
+            {/* Mid Flank Floating Metric Chips (Left & Right safe zones) */}
+            <div className="stage-overlay-flanks">
+              <div className="flank-glass-chip left">
+                <div className="flank-chip-header">
+                  <Footprints size={11} className="text-orange" />
+                  <span>Langkah</span>
+                </div>
+                <div className="flank-chip-val text-orange">{totalSteps.toLocaleString('id-ID')}</div>
+                <div className="flank-chip-sub">{stepPercent}% target</div>
+              </div>
+
+              <div className="flank-glass-chip right">
+                <div className="flank-chip-header">
+                  <Activity size={11} className="text-cyan" />
+                  <span>Jarak</span>
+                </div>
+                <div className="flank-chip-val text-cyan">{distanceKm}</div>
+                <div className="flank-chip-sub">kilometer</div>
+              </div>
+            </div>
+
+            {/* Bottom Floating Bar */}
+            <div className="stage-overlay-bottom">
+              <p className="stage-bottom-text">
+                <strong>{totalSteps >= targetSteps ? 'Target Tercapai!' : `Level: ${tier.name}`}</strong> {stepPercent}% dari target {targetSteps.toLocaleString('id-ID')} langkah.
+              </p>
+              <button
+                className="stage-cta-btn orange"
+                onClick={onOpenActivityModal}
+              >
+                <Plus size={13} />
+                <span>Catat Latihan</span>
+              </button>
             </div>
           </div>
+        </div>
 
-          <div className="video-hero-info">
-            <div className="speech-bubble orange-border">
-              <p>
-                <strong>Setiap langkah diperhitungkan!</strong> Anda telah mengumpulkan{' '}
-                <span className="hl-orange">{totalSteps.toLocaleString('id-ID')} langkah</span> hari ini.
-                Tingkat pencapaian target Anda saat ini adalah{' '}
-                <strong>{stepPercent}%</strong> menuju level <strong>{tier.name}</strong>.
-              </p>
-            </div>
-
-            <div className="hero-quick-stats">
-              <div className="h-stat-box">
-                <span className="h-stat-label">Total Langkah</span>
-                <span className="h-stat-num text-orange">{totalSteps.toLocaleString('id-ID')}</span>
-                <span className="h-stat-unit">/ {targetSteps.toLocaleString('id-ID')}</span>
-              </div>
-              <div className="h-stat-box">
-                <span className="h-stat-label">Jarak Tempuh</span>
-                <span className="h-stat-num text-cyan">{distanceKm}</span>
-                <span className="h-stat-unit">kilometer</span>
-              </div>
-              <div className="h-stat-box">
-                <span className="h-stat-label">Kalori Terbakar</span>
-                <span className="h-stat-num text-rose">{burnedCalories}</span>
-                <span className="h-stat-unit">kkal aktif</span>
-              </div>
-            </div>
+        {/* QUICK STEP STATS BAR */}
+        <div className="hero-quick-stats">
+          <div className="h-stat-box">
+            <span className="h-stat-label">Total Langkah</span>
+            <span className="h-stat-num text-orange">{totalSteps.toLocaleString('id-ID')}</span>
+            <span className="h-stat-unit">/ {targetSteps.toLocaleString('id-ID')}</span>
+          </div>
+          <div className="h-stat-box">
+            <span className="h-stat-label">Jarak Tempuh</span>
+            <span className="h-stat-num text-cyan">{distanceKm}</span>
+            <span className="h-stat-unit">kilometer</span>
+          </div>
+          <div className="h-stat-box">
+            <span className="h-stat-label">Kalori Terbakar</span>
+            <span className="h-stat-num text-rose">{burnedCalories}</span>
+            <span className="h-stat-unit">kkal aktif</span>
           </div>
         </div>
 

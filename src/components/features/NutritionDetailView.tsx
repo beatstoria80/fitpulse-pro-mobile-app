@@ -143,50 +143,88 @@ export default function NutritionDetailView({
       </div>
 
       <div className="feature-detail-content">
-        {/* HERO 3D CHARACTER VIDEO CARD */}
-        <div className="video-hero-card nutrition-glow">
-          <div className="video-frame-container">
-            <video
-              className="character-loop-video"
-              src="/character_eating_healthy_food.mp4"
-              autoPlay
-              loop
-              muted
-              playsInline
-            />
-            <div className="video-overlay-gradient" />
-            <div className="video-ambient-badge">
-              <span className="live-video-dot green" />
-              <span>Healthy Meal Master</span>
+        {/* HERO 3D CHARACTER STAGE WITH PERIMETER OVERLAY HUD */}
+        <div className="feature-hero-stage nutrition-theme">
+          {/* Ambient Floor Shadow */}
+          <div className="character-stage-shadow" />
+
+          {/* 3D Character Looping Video - Blended seamlessly without black box */}
+          <video
+            className="character-stage-video"
+            src="/character_eating_healthy_food.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+          />
+
+          {/* Floating UI/UX Perimeter Overlay (Does not cover/touch character) */}
+          <div className="stage-overlay-container">
+            {/* Top Bar Overlay */}
+            <div className="stage-overlay-top">
+              <div className="overlay-pill-badge green">
+                <Utensils size={13} />
+                <span>Nutrisi & Diet Sehat</span>
+              </div>
+              <div className="overlay-live-indicator">
+                <span className="live-video-dot green" />
+                <span>3D Companion</span>
+              </div>
+            </div>
+
+            {/* Mid Flank Floating Metric Chips (Left & Right safe zones) */}
+            <div className="stage-overlay-flanks">
+              <div className="flank-glass-chip left">
+                <div className="flank-chip-header">
+                  <Apple size={11} className="text-green" />
+                  <span>Asupan</span>
+                </div>
+                <div className="flank-chip-val text-green">{consumedCalories}</div>
+                <div className="flank-chip-sub">/ {targetCalories} kkal</div>
+              </div>
+
+              <div className="flank-glass-chip right">
+                <div className="flank-chip-header">
+                  <Sparkles size={11} className="text-cyan" />
+                  <span>Protein</span>
+                </div>
+                <div className="flank-chip-val text-cyan">{protein_g}g</div>
+                <div className="flank-chip-sub">{proteinPct}% target</div>
+              </div>
+            </div>
+
+            {/* Bottom Floating Bar */}
+            <div className="stage-overlay-bottom">
+              <p className="stage-bottom-text">
+                <strong>Bahan bakar metabolisme prima!</strong> Asupan tercatat {consumedCalories} kkal hari ini.
+              </p>
+              <button
+                className="stage-cta-btn green"
+                onClick={() => onOpenFoodModal('lunch')}
+              >
+                <Plus size={13} />
+                <span>Catat Menu</span>
+              </button>
             </div>
           </div>
+        </div>
 
-          <div className="video-hero-info">
-            <div className="speech-bubble green-border">
-              <p>
-                <strong>Makanan adalah bahan bakar tubuh!</strong> Anda telah mencatat{' '}
-                <span className="hl-green">{consumedCalories} kkal</span> dari target{' '}
-                {targetCalories} kkal. Pastikan asupan protein tercukupi untuk mendukung perbaikan sel dan metabolisme prima.
-              </p>
-            </div>
-
-            <div className="hero-quick-stats">
-              <div className="h-stat-box">
-                <span className="h-stat-label">Protein</span>
-                <span className="h-stat-num text-green">{protein_g}g</span>
-                <span className="h-stat-unit">/ {targetProtein}g ({proteinPct}%)</span>
-              </div>
-              <div className="h-stat-box">
-                <span className="h-stat-label">Karbohidrat</span>
-                <span className="h-stat-num text-cyan">{carbs_g}g</span>
-                <span className="h-stat-unit">/ {targetCarbs}g ({carbsPct}%)</span>
-              </div>
-              <div className="h-stat-box">
-                <span className="h-stat-label">Lemak Sehat</span>
-                <span className="h-stat-num text-orange">{fat_g}g</span>
-                <span className="h-stat-unit">/ {targetFat}g ({fatPct}%)</span>
-              </div>
-            </div>
+        {/* QUICK MACRO BREAKDOWN CHIPS */}
+        <div className="hero-quick-stats">
+          <div className="h-stat-box">
+            <span className="h-stat-label">Protein</span>
+            <span className="h-stat-num text-green">{protein_g}g</span>
+            <span className="h-stat-unit">/ {targetProtein}g ({proteinPct}%)</span>
+          </div>
+          <div className="h-stat-box">
+            <span className="h-stat-label">Karbohidrat</span>
+            <span className="h-stat-num text-cyan">{carbs_g}g</span>
+            <span className="h-stat-unit">/ {targetCarbs}g ({carbsPct}%)</span>
+          </div>
+          <div className="h-stat-box">
+            <span className="h-stat-label">Lemak Sehat</span>
+            <span className="h-stat-num text-orange">{fat_g}g</span>
+            <span className="h-stat-unit">/ {targetFat}g ({fatPct}%)</span>
           </div>
         </div>
 

@@ -4007,72 +4007,118 @@ body.fullscreen-mode .app-frame {
 }
 
 /* ================= HERO 3D CHARACTER VIDEO CARD ================= */
-.video-hero-card {
-  position: relative;
-  background: #FFFFFF;
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border-subtle);
-  padding: 14px;
-  overflow: hidden;
-  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.06);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.video-hero-card.energy-glow {
-  background: linear-gradient(180deg, #F0F9FF 0%, #FFFFFF 65%);
-  border-color: #BAE6FD;
-}
-.video-hero-card.nutrition-glow {
-  background: linear-gradient(180deg, #F0FDF4 0%, #FFFFFF 65%);
-  border-color: #BBF7D0;
-}
-.video-hero-card.activity-glow {
-  background: linear-gradient(180deg, #FFF7ED 0%, #FFFFFF 65%);
-  border-color: #FED7AA;
-}
-
-.video-frame-container {
+/* ================= HERO 3D CHARACTER STAGE WITH PERIMETER OVERLAY UI/UX ================= */
+.feature-hero-stage {
   position: relative;
   width: 100%;
-  border-radius: 18px;
+  height: 330px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  background: #000000;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(226, 232, 240, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #FFFFFF;
 }
 
-.character-loop-video {
-  width: 100%;
-  max-height: 220px;
-  object-fit: contain;
-  display: block;
+.feature-hero-stage.nutrition-theme {
+  background: radial-gradient(circle at 50% 40%, #ECFDF5 0%, #F0FDF4 55%, #FFFFFF 100%);
+  border-color: rgba(52, 211, 153, 0.25);
+  box-shadow: 0 12px 32px rgba(16, 185, 129, 0.08);
 }
 
-.video-overlay-gradient {
+.feature-hero-stage.energy-theme {
+  background: radial-gradient(circle at 50% 40%, #F0F9FF 0%, #E0F2FE 55%, #FFFFFF 100%);
+  border-color: rgba(56, 189, 248, 0.25);
+  box-shadow: 0 12px 32px rgba(2, 132, 199, 0.08);
+}
+
+.feature-hero-stage.activity-theme {
+  background: radial-gradient(circle at 50% 40%, #EFE8DC 0%, #E8E0D1 55%, #F5EFE7 100%);
+  border-color: rgba(245, 158, 11, 0.25);
+  box-shadow: 0 12px 32px rgba(217, 119, 6, 0.08);
+}
+
+/* 3D Character Video - perfectly centered, zero black bars, seamless blending */
+.character-stage-video {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0) 65%, rgba(0,0,0,0.4) 100%);
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  mix-blend-mode: multiply;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Ambient floor shadow below the character */
+.character-stage-shadow {
+  position: absolute;
+  bottom: 54px;
+  width: 130px;
+  height: 16px;
+  background: radial-gradient(ellipse at center, rgba(15, 23, 42, 0.12) 0%, rgba(15, 23, 42, 0) 70%);
+  border-radius: 50%;
+  z-index: 0;
   pointer-events: none;
 }
 
-.video-ambient-badge {
+/* Overlay UI/UX - Structured so it floats cleanly WITHOUT touching or covering the 3D character in center */
+.stage-overlay-container {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
+  inset: 0;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Top bar overlay */
+.stage-overlay-top {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  pointer-events: auto;
+}
+
+.overlay-pill-badge {
+  display: inline-flex;
+  align-items: center;
   gap: 6px;
-  font-size: 10.5px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
   font-weight: 700;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  color: var(--text-primary);
+}
+
+.overlay-pill-badge.green { color: #059669; }
+.overlay-pill-badge.cyan { color: #0284C7; }
+.overlay-pill-badge.orange { color: #EA580C; }
+
+.overlay-live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 700;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(15, 23, 42, 0.75);
   color: #FFFFFF;
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
@@ -4087,35 +4133,137 @@ body.fullscreen-mode .app-frame {
 .live-video-dot.green { background: #34D399; }
 .live-video-dot.orange { background: #FB923C; }
 
-/* Speech Bubble */
-.speech-bubble {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid #BAE6FD;
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
-  font-size: 12px;
-  line-height: 1.5;
+/* Mid Flank Floating Metric Chips (Left & Right - leaving center safe zone for the 3D character) */
+.stage-overlay-flanks {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  pointer-events: none;
+  margin-top: auto;
+  margin-bottom: auto;
+  padding: 0 2px;
+}
+
+.flank-glass-chip {
+  pointer-events: auto;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 110px;
+  transition: transform 0.2s ease;
+}
+
+.flank-glass-chip:hover {
+  transform: translateY(-2px);
+}
+
+.flank-glass-chip.left {
+  text-align: left;
+}
+
+.flank-glass-chip.right {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.flank-chip-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+}
+
+.flank-chip-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.flank-chip-sub {
+  font-size: 9.5px;
   color: var(--text-secondary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  font-weight: 500;
 }
-.speech-bubble.green-border { border-color: #A7F3D0; }
-.speech-bubble.orange-border { border-color: #FED7AA; }
 
-.speech-bubble p {
+/* Bottom Floating Bar / Capsule */
+.stage-overlay-bottom {
+  pointer-events: auto;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stage-bottom-text {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--text-secondary);
   margin: 0;
+  flex: 1;
 }
-.hl-cyan { color: #0284C7; font-weight: 800; }
-.hl-green { color: #059669; font-weight: 800; }
-.hl-orange { color: #EA580C; font-weight: 800; }
 
-/* Quick Stats Bar in Hero */
+.stage-bottom-text strong {
+  color: var(--text-primary);
+}
+
+.stage-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stage-cta-btn.green {
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+  color: #FFFFFF;
+}
+
+.stage-cta-btn.cyan {
+  background: linear-gradient(135deg, #0284C7 0%, #0EA5E9 100%);
+  color: #FFFFFF;
+}
+
+.stage-cta-btn.orange {
+  background: linear-gradient(135deg, #EA580C 0%, #F97316 100%);
+  color: #FFFFFF;
+}
+
+/* Quick Summary Row Below Stage (if used) */
 .hero-quick-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 .h-stat-box {
-  background: #F8FAFC;
+  background: #FFFFFF;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 8px 10px;
@@ -4123,6 +4271,7 @@ body.fullscreen-mode .app-frame {
   flex-direction: column;
   align-items: center;
   text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
 }
 .h-stat-label {
   font-size: 9.5px;

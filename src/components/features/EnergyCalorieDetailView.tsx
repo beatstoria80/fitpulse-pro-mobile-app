@@ -121,60 +121,94 @@ export default function EnergyCalorieDetailView({
       </div>
 
       <div className="feature-detail-content">
-        {/* HERO 3D CHARACTER VIDEO CARD */}
-        <div className="video-hero-card energy-glow">
-          <div className="video-frame-container">
-            <video
-              className="character-loop-video"
-              src="/character_pointing_calorie.mp4"
-              autoPlay
-              loop
-              muted
-              playsInline
-            />
-            <div className="video-overlay-gradient" />
-            <div className="video-ambient-badge">
-              <span className="live-video-dot" />
-              <span>3D AI Coach</span>
+        {/* HERO 3D CHARACTER STAGE WITH PERIMETER OVERLAY HUD */}
+        <div className="feature-hero-stage energy-theme">
+          {/* Ambient Floor Shadow */}
+          <div className="character-stage-shadow" />
+
+          {/* 3D Character Looping Video - Blended seamlessly without black box */}
+          <video
+            className="character-stage-video"
+            src="/character_pointing_calorie.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+          />
+
+          {/* Floating UI/UX Perimeter Overlay (Does not cover/touch character) */}
+          <div className="stage-overlay-container">
+            {/* Top Bar Overlay */}
+            <div className="stage-overlay-top">
+              <div className="overlay-pill-badge cyan">
+                <Flame size={13} />
+                <span>Telemetri Energi</span>
+              </div>
+              <div className="overlay-live-indicator">
+                <span className="live-video-dot" />
+                <span>3D AI Coach</span>
+              </div>
+            </div>
+
+            {/* Mid Flank Floating Metric Chips (Left & Right safe zones) */}
+            <div className="stage-overlay-flanks">
+              <div className="flank-glass-chip left">
+                <div className="flank-chip-header">
+                  <Sparkles size={11} className="text-cyan" />
+                  <span>Sisa</span>
+                </div>
+                <div className="flank-chip-val text-cyan">{remainingCalories.toLocaleString('id-ID')}</div>
+                <div className="flank-chip-sub">kkal tersisa</div>
+              </div>
+
+              <div className="flank-glass-chip right">
+                <div className="flank-chip-header">
+                  <Flame size={11} className="text-orange" />
+                  <span>TDEE</span>
+                </div>
+                <div className="flank-chip-val text-orange">{totalTDEE.toLocaleString('id-ID')}</div>
+                <div className="flank-chip-sub">kkal keluar</div>
+              </div>
+            </div>
+
+            {/* Bottom Floating Bar */}
+            <div className="stage-overlay-bottom">
+              <p className="stage-bottom-text">
+                <strong>{calorieDeficit >= 0 ? `Defisit Sehat (${calorieDeficit} kkal)` : `Surplus Kalori (${Math.abs(calorieDeficit)} kkal)`}!</strong> Target {data.user_profile.fitness_goals.target_weight_kg} kg terkawal.
+              </p>
+              <button
+                className="stage-cta-btn cyan"
+                onClick={onOpenFood}
+              >
+                <Utensils size={13} />
+                <span>Catat Kalori</span>
+              </button>
             </div>
           </div>
+        </div>
 
-          <div className="video-hero-info">
-            <div className="speech-bubble">
-              <p>
-                <strong>Halo {data.user_profile.name}!</strong> Target harian Anda{' '}
-                <span className="hl-cyan">{targetCalories.toLocaleString('id-ID')} kkal</span>.
-                {calorieDeficit > 0 ? (
-                  <> Anda saat ini dalam mode <strong>Defisit Sehat ({calorieDeficit} kkal)</strong>, sangat bagus untuk mencapai target {data.user_profile.fitness_goals.target_weight_kg} kg!</>
-                ) : (
-                  <> Perhatikan asupan sore ini agar tetap selaras dengan target kebugaran Anda.</>
-                )}
-              </p>
-            </div>
-
-            <div className="hero-quick-stats">
-              <div className="h-stat-box">
-                <span className="h-stat-label">Sisa Kalori</span>
-                <span className="h-stat-num text-cyan">
-                  {remainingCalories.toLocaleString('id-ID')}
-                </span>
-                <span className="h-stat-unit">kkal</span>
-              </div>
-              <div className="h-stat-box">
-                <span className="h-stat-label">Pengeluaran (TDEE)</span>
-                <span className="h-stat-num text-orange">
-                  {totalTDEE.toLocaleString('id-ID')}
-                </span>
-                <span className="h-stat-unit">kkal</span>
-              </div>
-              <div className="h-stat-box">
-                <span className="h-stat-label">Status Energi</span>
-                <span className={`h-stat-num ${calorieDeficit >= 0 ? 'text-green' : 'text-rose'}`}>
-                  {calorieDeficit >= 0 ? 'Defisit' : 'Surplus'}
-                </span>
-                <span className="h-stat-unit">{Math.abs(calorieDeficit)} kkal</span>
-              </div>
-            </div>
+        {/* QUICK ENERGY STATS BAR */}
+        <div className="hero-quick-stats">
+          <div className="h-stat-box">
+            <span className="h-stat-label">Sisa Kalori</span>
+            <span className="h-stat-num text-cyan">
+              {remainingCalories.toLocaleString('id-ID')}
+            </span>
+            <span className="h-stat-unit">kkal</span>
+          </div>
+          <div className="h-stat-box">
+            <span className="h-stat-label">Pengeluaran (TDEE)</span>
+            <span className="h-stat-num text-orange">
+              {totalTDEE.toLocaleString('id-ID')}
+            </span>
+            <span className="h-stat-unit">kkal</span>
+          </div>
+          <div className="h-stat-box">
+            <span className="h-stat-label">Status Energi</span>
+            <span className={`h-stat-num ${calorieDeficit >= 0 ? 'text-green' : 'text-rose'}`}>
+              {calorieDeficit >= 0 ? 'Defisit' : 'Surplus'}
+            </span>
+            <span className="h-stat-unit">{Math.abs(calorieDeficit)} kkal</span>
           </div>
         </div>
 
