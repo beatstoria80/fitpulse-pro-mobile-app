@@ -2754,10 +2754,6 @@ body.fullscreen-mode .app-frame {
   padding: 2px 6px;
   border-radius: var(--radius-full);
 }
-.badge-blue { background: #E0F2FE; color: #0284C7; }
-.badge-green { background: #ECFDF5; color: #059669; }
-.badge-orange { background: #FEF3C7; color: #D97706; }
-.badge-rose { background: #FFE4E6; color: #E11D48; }
 
 .hr-log-meta {
   display: flex;

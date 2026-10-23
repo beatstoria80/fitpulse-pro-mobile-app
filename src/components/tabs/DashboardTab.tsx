@@ -97,6 +97,14 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   onNavigateToActivities,
   onShowToast,
 }) => {
+  const userInitials = (data.user_profile.name || 'ND')
+    .trim()
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'FP';
+
   return (
     <section className="tab-pane active" id="tabDashboard">
       {/* Header User Greeting */}
@@ -123,7 +131,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         </div>
         <button className="avatar-btn" onClick={onOpenProfile} aria-label="Buka Profil">
           <div className="avatar-circle">
-            <span>ND</span>
+            <span>{userInitials}</span>
           </div>
           <span className="avatar-edit-badge">
             <Edit3 size={11} />

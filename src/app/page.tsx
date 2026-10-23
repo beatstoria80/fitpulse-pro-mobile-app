@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 import { initialFitnessData, calculateBMR, formatDateIndonesian, getTodayDateStr } from '../lib/initialData';
 import { mapCloudNutritionToApp, mapCloudActivityToApp } from '../lib/supabase';
@@ -232,18 +232,29 @@ export default function Home() {
   const caloriePercent = targetCalories > 0 ? Math.min(1, consumedCalories / targetCalories) : 0;
   const ringOffset = 477.5 - 477.5 * caloriePercent;
 
-  // Macros Total (computed from actual nutrition_logs)
-  const totalProtein = data.nutrition_logs.reduce((s, n) => s + (n.protein_g || 0), 0);
-  const totalCarbs = data.nutrition_logs.reduce((s, n) => s + (n.carbs_g || 0), 0);
-  const totalFat = data.nutrition_logs.reduce((s, n) => s + (n.fat_g || 0), 0);
+  // Macros Total (memoized from actual nutrition_logs)
+  const { totalProtein, totalCarbs, totalFat } = useMemo(() => {
+    return {
+      totalProtein: data.nutrition_logs.reduce((s, n) => s + (n.protein_g || 0), 0),
+      totalCarbs: data.nutrition_logs.reduce((s, n) => s + (n.carbs_g || 0), 0),
+      totalFat: data.nutrition_logs.reduce((s, n) => s + (n.fat_g || 0), 0),
+    };
+  }, [data.nutrition_logs]);
 
-  // Real-time BMR using Mifflin-St Jeor equation
-  const bmrValue = calculateBMR(
+  // Real-time BMR using Mifflin-St Jeor equation (memoized)
+  const bmrValue = useMemo(() => {
+    return calculateBMR(
+      data.user_profile.biometrics.weight_kg,
+      data.user_profile.biometrics.height_cm,
+      data.user_profile.demographics.age,
+      data.user_profile.demographics.gender
+    );
+  }, [
     data.user_profile.biometrics.weight_kg,
     data.user_profile.biometrics.height_cm,
     data.user_profile.demographics.age,
-    data.user_profile.demographics.gender
-  );
+    data.user_profile.demographics.gender,
+  ]);
 
   // Real-time weight progress
   const currentWeight = data.user_profile.biometrics.weight_kg;
@@ -271,11 +282,12 @@ export default function Home() {
   const estimatedWeeks = weightDiff > 0 ? Math.round(weightDiff / weeklyLossRate) : 0;
   const milestone1 = weightDiff > 0 ? Math.round(currentWeight - weightDiff * 0.33) : currentWeight;
   const milestone2 = weightDiff > 0 ? Math.round(currentWeight - weightDiff * 0.66) : currentWeight;
-  const roadmapProgressPercent =
-    weightDiff > 0 ? Math.min(100, Math.round(((currentWeight - currentWeight) / weightDiff) * 100)) : 100;
+  const roadmapProgressPercent = weightDiff > 0 ? Math.min(100, Math.max(10, Math.round(weightProgressPercent))) : 100;
 
-  // Steps total from activity logs
-  const totalSteps = data.activity_logs.reduce((s, a) => s + (a.metrics.steps_counted || 0), 0);
+  // Steps total from activity logs (memoized)
+  const totalSteps = useMemo(() => {
+    return data.activity_logs.reduce((s, a) => s + (a.metrics.steps_counted || 0), 0);
+  }, [data.activity_logs]);
 
   // Check for data availability
   const hasActivities = data.activity_logs.length > 0;
