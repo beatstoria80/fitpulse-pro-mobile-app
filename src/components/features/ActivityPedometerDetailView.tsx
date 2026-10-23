@@ -10,23 +10,9 @@ import {
   Info,
   Trash2,
 } from 'lucide-react';
-import { AppFitnessData, ActivityLog, HeartRateLog } from '../../types/fitness';
+import { AppFitnessData } from '../../types/fitness';
 import StepCounter from '../StepCounter';
-
-const BackIcon = ({ size = 20 }: { size?: number }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="15 18 9 12 15 6" />
-  </svg>
-);
+import { BackIcon } from '../icons/FeatureIcons';
 
 interface ActivityPedometerDetailViewProps {
   data: AppFitnessData;

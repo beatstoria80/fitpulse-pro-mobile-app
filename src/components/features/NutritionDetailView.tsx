@@ -12,42 +12,8 @@ import {
   Moon,
   Trash2,
 } from 'lucide-react';
-import { AppFitnessData, NutritionLog } from '../../types/fitness';
-
-const BackIcon = ({ size = 20 }: { size?: number }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="15 18 9 12 15 6" />
-  </svg>
-);
-
-const SnackIcon = ({ size = 18, className = "" }: { size?: number; className?: string }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <circle cx="12" cy="12" r="10" />
-    <circle cx="8" cy="9" r="1" fill="currentColor" />
-    <circle cx="15" cy="8" r="1" fill="currentColor" />
-    <circle cx="10" cy="14" r="1" fill="currentColor" />
-    <circle cx="15" cy="15" r="1" fill="currentColor" />
-  </svg>
-);
+import { AppFitnessData } from '../../types/fitness';
+import { BackIcon, SnackIcon } from '../icons/FeatureIcons';
 
 interface NutritionDetailViewProps {
   data: AppFitnessData;

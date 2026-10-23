@@ -558,6 +558,19 @@ export default function Home() {
     showToast('Data FitPulse Pro berhasil diekspor ke file JSON!');
   };
 
+  // Shared step update handler (used by both ActivitiesTab and ActivityPedometerDetailView)
+  const handleStepUpdate = (steps: number, calories: number, distance: number) => {
+    const updated = {
+      ...data,
+      daily_summary: {
+        ...data.daily_summary,
+        calories_burned: data.daily_summary.calories_burned + calories,
+      },
+    };
+    saveUpdatedData(updated);
+    showToast(`Pedometer: ${steps} langkah, ${calories} kkal, ${(distance / 1000).toFixed(2)} km`);
+  };
+
   return (
     <>
       {/* ================= OPENING VIDEO ================= */}
@@ -621,17 +634,7 @@ export default function Home() {
               onBack={() => setActiveFeatureDetail(null)}
               onOpenActivityModal={() => setModalActivityOpen(true)}
               onDeleteActivity={handleDeleteActivity}
-              onStepUpdate={(steps, calories, distance) => {
-                const updated = {
-                  ...data,
-                  daily_summary: {
-                    ...data.daily_summary,
-                    calories_burned: data.daily_summary.calories_burned + calories,
-                  },
-                };
-                saveUpdatedData(updated);
-                showToast(`Pedometer: ${steps} langkah, ${calories} kkal terupdate`);
-              }}
+              onStepUpdate={handleStepUpdate}
               onShowToast={showToast}
             />
           )}
@@ -694,17 +697,7 @@ export default function Home() {
                   totalSteps={totalSteps}
                   onOpenActivityModal={() => setModalActivityOpen(true)}
                   onDeleteActivity={handleDeleteActivity}
-                  onStepUpdate={(steps, calories, distance) => {
-                    const updated = {
-                      ...data,
-                      daily_summary: {
-                        ...data.daily_summary,
-                        calories_burned: data.daily_summary.calories_burned + calories,
-                      },
-                    };
-                    saveUpdatedData(updated);
-                    showToast(`Sesi berjalan: ${steps} langkah, ${calories} kkal, ${(distance / 1000).toFixed(2)} km`);
-                  }}
+                  onStepUpdate={handleStepUpdate}
                   onHeartRateComplete={(bpm, confidence) => {
                     showToast(`Detak jantung terukur: ${bpm} BPM (Akurasi: ${confidence}%)`);
                   }}
