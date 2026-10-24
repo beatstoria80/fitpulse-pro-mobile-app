@@ -10,6 +10,8 @@ import {
   Heart,
   TrendingUp,
   Activity,
+  CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 import {
   VIDEO_SRC,
@@ -33,12 +35,13 @@ interface OpeningVideoProps {
 }
 
 /**
- * OpeningVideo — Mobile Smartphone Framed Overlay
+ * OpeningVideo — Mobile Smartphone Framed Overlay with High-End UI/UX Telemetry Docking
  *
  * Fully contained inside a native mobile smartphone frame:
  * - On mobile: Fullscreen native 100vw / 100dvh.
  * - On desktop: Centered 440px phone container with rounded corners and ambient backdrop.
  * - Video, progress bar, skip button, hero copy, and feature cards are strictly inside the phone frame.
+ * - Seamless handoff: Replaces archaic particle explosions with a sophisticated UI handshake sequence.
  */
 const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -129,7 +132,7 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
       style={{ transitionDuration: `${CROSSFADE_DURATION_MS}ms` }}
     >
       {/* ── Native Smartphone Frame Container ── */}
-      <div className="op-phone-frame">
+      <div className={`op-phone-frame ${fading ? 'op-docking-out' : ''}`}>
         {/* Full-bleed Video strictly inside phone frame */}
         <video
           ref={videoRef}
@@ -155,7 +158,7 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
         </div>
 
         {/* Skip Button inside phone frame (top-right) */}
-        {showSkip && (
+        {showSkip && !showClosing && (
           <button className="op-skip-btn" onClick={triggerFade} aria-label="Lewati intro">
             Lewati
           </button>
@@ -271,14 +274,47 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
             </div>
           )}
 
-          {/* ── CLOSING: Sync Complete (8.8s – 10s) ── */}
+          {/* ── CLOSING: High-End UI/UX Telemetry Handshake & Docking (8.8s – 10s) ── */}
           {showClosing && (
-            <div className="op-closing op-anim-card-in" key="closing">
-              <div className="op-closing-ring" />
-              <div className="op-closing-ring op-ring-delay" />
-              <div className="op-closing-text">
-                <span className="op-closing-badge">SYNC COMPLETE</span>
-                <strong>Dashboard Siap</strong>
+            <div className="op-dock-container op-anim-dock" key="closing">
+              <div className="op-dock-card">
+                <div className="op-dock-header">
+                  <div className="op-dock-badge">
+                    <Sparkles size={12} className="op-badge-spin" />
+                    <span>HANDSHAKE TELEMETRI</span>
+                  </div>
+                  <span className="op-dock-ready-tag">SINKRONISASI</span>
+                </div>
+
+                {/* Staggered System Telemetry Chips */}
+                <div className="op-dock-chips-list">
+                  <div className="op-dock-chip op-chip-delay-1">
+                    <CheckCircle2 size={13} className="op-chip-icon-cyan" />
+                    <span className="op-chip-name">Keseimbangan Energi</span>
+                    <span className="op-chip-status">Terkalibrasi</span>
+                  </div>
+                  <div className="op-dock-chip op-chip-delay-2">
+                    <CheckCircle2 size={13} className="op-chip-icon-green" />
+                    <span className="op-chip-name">Target Kalori & Defisit</span>
+                    <span className="op-chip-status">1.800 kkal</span>
+                  </div>
+                  <div className="op-dock-chip op-chip-delay-3">
+                    <CheckCircle2 size={13} className="op-chip-icon-amber" />
+                    <span className="op-chip-name">Pedometer & Hidrasi</span>
+                    <span className="op-chip-status">Aktif</span>
+                  </div>
+                </div>
+
+                {/* Micro Telemetry Scanner Bar */}
+                <div className="op-dock-footer">
+                  <div className="op-dock-scanner-track">
+                    <div className="op-dock-scanner-fill" />
+                  </div>
+                  <div className="op-dock-footer-text">
+                    <span>Mempersiapkan Dashboard...</span>
+                    <strong>100%</strong>
+                  </div>
+                </div>
               </div>
             </div>
           )}

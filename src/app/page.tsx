@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import confetti from 'canvas-confetti';
 import { initialFitnessData, calculateBMR, formatDateIndonesian, getTodayDateStr } from '../lib/initialData';
 import { mapCloudNutritionToApp, mapCloudActivityToApp } from '../lib/supabase';
 import { AppFitnessData, ActivityLog, NutritionLog, UserProfile, HeartRateLog } from '../types/fitness';
@@ -79,30 +78,21 @@ export default function Home() {
     return () => cancelAnimationFrame(handle);
   }, []);
 
-  // Handle opening completion — trigger VFX shockwave handoff, stagger & celebratory confetti
+  // Handle opening completion — trigger high-precision UI element cascade handoff
   const handleOpeningComplete = useCallback(() => {
     setShowOpening(false);
     setOpeningComplete(true);
     setDashboardVfxActive(true);
 
-    try {
-      confetti({
-        particleCount: 75,
-        spread: 70,
-        origin: { y: 0.62 },
-        colors: ['#0284C7', '#38BDF8', '#10B981', '#F59E0B'],
-      });
-    } catch {
-      // ignore in SSR / unsupported environments
-    }
-
+    // Staggered ring and gauge animation
     setTimeout(() => {
       setRingAnimated(true);
-    }, 280);
+    }, 180);
 
+    // End active VFX class after cascade completes
     setTimeout(() => {
       setDashboardVfxActive(false);
-    }, 1400);
+    }, 1200);
   }, []);
 
   // Clock & Storage Initialization
@@ -313,10 +303,6 @@ export default function Home() {
     saveUpdatedData(updated);
     showToast(`Asupan air +${ml} ml dicatat!`);
 
-    if (waterIntake + ml >= targetWater) {
-      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
-    }
-
     const client = initSupabase();
     if (client && isCloudSync) {
       syncHydrationToCloud(client, data.user_profile.user_id, ml).catch(console.error);
@@ -358,7 +344,6 @@ export default function Home() {
       },
     };
     saveUpdatedData(updated);
-    confetti({ particleCount: 60, spread: 60, origin: { y: 0.7 } });
     showToast('Menu Makan Siang Sehat (+485 kkal, 38g Protein) ditambahkan!');
 
     const client = initSupabase();
@@ -459,11 +444,6 @@ export default function Home() {
       heart_rate_logs: [newLog, ...existingLogs],
     };
     saveUpdatedData(updated);
-    try {
-      confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
-    } catch {
-      // ignore in environments without confetti canvas
-    }
     showToast(`Detak jantung ${newLog.bpm} BPM tersimpan di Buku Vitals! ❤️`);
   };
 
