@@ -106,12 +106,16 @@ export default function ActivityPedometerDetailView({
           {/* 3D Character Looping Video - Blended seamlessly without black box */}
           <video
             className="character-stage-video"
-            src="/character_running.mp4"
+            src="/3D_character_running_animation_s._20261024121611.mp4"
             autoPlay
             loop
             muted
             playsInline
-          />
+            preload="auto"
+          >
+            <source src="/3D_character_running_animation_s._20261024121611.mp4" type="video/mp4" />
+            <source src="/character_running.mp4" type="video/mp4" />
+          </video>
 
           {/* Floating UI/UX Perimeter Overlay (Does not cover/touch character) */}
           <div className="stage-overlay-container">
@@ -121,7 +125,7 @@ export default function ActivityPedometerDetailView({
                 <Footprints size={13} />
                 <span>Gerak & Langkah</span>
               </div>
-              <div className="overlay-live-indicator">
+              <div className="overlay-live-indicator orange">
                 <span className="live-video-dot orange" />
                 <span>3D Motion Cadence</span>
               </div>

@@ -3951,31 +3951,83 @@ body.fullscreen-mode .app-frame {
 .overlay-pill-badge.green { color: #059669; }
 .overlay-pill-badge.cyan { color: #0284C7; }
 .overlay-pill-badge.orange { color: #EA580C; }
+.overlay-pill-badge.blue { color: #0284C7; }
 
 .overlay-live-indicator {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
+  gap: 6px;
+  padding: 6px 12px;
   border-radius: var(--radius-full);
-  font-size: 10px;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.2px;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  background: rgba(15, 23, 42, 0.75);
-  color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.92);
+  color: #0F172A;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+.overlay-live-indicator.green {
+  background: rgba(236, 253, 245, 0.92);
+  border-color: rgba(167, 243, 208, 0.85);
+  color: #065F46;
+}
+
+.overlay-live-indicator.orange {
+  background: rgba(255, 247, 237, 0.92);
+  border-color: rgba(254, 215, 170, 0.85);
+  color: #9A3412;
+}
+
+.overlay-live-indicator.cyan {
+  background: rgba(240, 249, 255, 0.92);
+  border-color: rgba(186, 230, 253, 0.85);
+  color: #0369A1;
+}
+
+.overlay-live-indicator.blue {
+  background: rgba(240, 249, 255, 0.92);
+  border-color: rgba(186, 230, 253, 0.85);
+  color: #0284C7;
 }
 
 .live-video-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #38BDF8;
-  animation: pulse-ring 1.8s infinite;
+  background: #0284C7;
+  box-shadow: 0 0 6px rgba(2, 132, 199, 0.6);
+  animation: liveDotPulse 1.8s ease-in-out infinite;
+  display: inline-block;
+  flex-shrink: 0;
 }
-.live-video-dot.green { background: #34D399; }
-.live-video-dot.orange { background: #FB923C; }
+.live-video-dot.green {
+  background: #10B981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
+}
+.live-video-dot.orange {
+  background: #F97316;
+  box-shadow: 0 0 8px rgba(249, 115, 22, 0.7);
+}
+.live-video-dot.blue {
+  background: #0284C7;
+  box-shadow: 0 0 8px rgba(2, 132, 199, 0.7);
+}
+
+@keyframes liveDotPulse {
+  0%, 100% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
 
 /* Mid Flank Floating Metric Chips (Left & Right - leaving center safe zone for the 3D character) */
 .stage-overlay-flanks {

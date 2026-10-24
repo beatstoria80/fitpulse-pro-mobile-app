@@ -119,7 +119,7 @@ export default function HydrationDetailView({
                 <Droplet size={13} />
                 <span>Asupan Air Minum</span>
               </div>
-              <div className="overlay-live-indicator">
+              <div className="overlay-live-indicator blue">
                 <span className="live-video-dot blue" />
                 <span>3D Hydration Coach</span>
               </div>

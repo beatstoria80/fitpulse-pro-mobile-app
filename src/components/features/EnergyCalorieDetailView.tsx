@@ -147,7 +147,7 @@ export default function EnergyCalorieDetailView({
                 <Flame size={13} />
                 <span>Telemetri Energi</span>
               </div>
-              <div className="overlay-live-indicator">
+              <div className="overlay-live-indicator cyan">
                 <span className="live-video-dot" />
                 <span>3D AI Coach</span>
               </div>
