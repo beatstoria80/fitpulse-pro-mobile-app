@@ -26,7 +26,7 @@ export const SKIP_BUTTON_DELAY_MS = 1000;
 export const VIDEO_READY_TIMEOUT_MS = 300;
 
 /** Video source path (relative to public/) */
-export const VIDEO_SRC = '/opening_1_3D_walking.mp4';
+export const VIDEO_SRC = '/character_3d_walking.mp4';
 
 /** Poster image path (white first frame) */
 export const VIDEO_POSTER = '';  // empty = use solid white bg as fallback
