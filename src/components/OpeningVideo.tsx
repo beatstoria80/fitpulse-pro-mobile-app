@@ -33,14 +33,12 @@ interface OpeningVideoProps {
 }
 
 /**
- * OpeningVideo — Full-bleed 3D walking character with overlay hero copy + animated feature cards.
+ * OpeningVideo — Mobile Smartphone Framed Overlay
  *
- * Layout:
- *  - Video fills entire viewport, object-fit: cover, background matched to video edges.
- *  - Hero copy (badge + headline + subtitle) overlaid at bottom-left, appears immediately.
- *  - Feature cards appear/disappear on the RIGHT side in timed phases, each relating to a real app feature.
- *  - Skip button top-right, progress bar top.
- *  - Closing VFX phase with crossfade to dashboard.
+ * Fully contained inside a native mobile smartphone frame:
+ * - On mobile: Fullscreen native 100vw / 100dvh.
+ * - On desktop: Centered 440px phone container with rounded corners and ambient backdrop.
+ * - Video, progress bar, skip button, hero copy, and feature cards are strictly inside the phone frame.
  */
 const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -128,158 +126,164 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
   return (
     <div
       className={`op-overlay ${fading ? 'op-fade-out' : ''}`}
-      style={{ transitionDuration: `${CROSSFADE_DURATION_MS}ms`, backgroundColor: SURFACE_COLOR }}
+      style={{ transitionDuration: `${CROSSFADE_DURATION_MS}ms` }}
     >
-      {/* Full-bleed Video */}
-      <video
-        ref={videoRef}
-        className="op-video"
-        src={VIDEO_SRC}
-        muted
-        playsInline
-        autoPlay
-        preload="auto"
-        poster={`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='${encodeURIComponent(SURFACE_COLOR)}'/%3E%3C/svg%3E`}
-        onTimeUpdate={handleTimeUpdate}
-        onEnded={() => { if (!hasCompletedRef.current) triggerFade(); }}
-        onCanPlay={() => { timeUpdateRef.current = true; }}
-        onError={() => { if (!hasCompletedRef.current) triggerFade(); }}
-      />
+      {/* ── Native Smartphone Frame Container ── */}
+      <div className="op-phone-frame">
+        {/* Full-bleed Video strictly inside phone frame */}
+        <video
+          ref={videoRef}
+          className="op-video"
+          src={VIDEO_SRC}
+          muted
+          playsInline
+          autoPlay
+          preload="auto"
+          poster={`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='${encodeURIComponent(SURFACE_COLOR)}'/%3E%3C/svg%3E`}
+          onTimeUpdate={handleTimeUpdate}
+          onEnded={() => { if (!hasCompletedRef.current) triggerFade(); }}
+          onCanPlay={() => { timeUpdateRef.current = true; }}
+          onError={() => { if (!hasCompletedRef.current) triggerFade(); }}
+        />
 
-      {/* Progress Bar */}
-      <div className="op-progress-track">
-        <div className="op-progress-fill" style={{ width: `${progressPercent}%` }} />
-      </div>
+        {/* Cinematic Vignette for maximum text contrast */}
+        <div className="op-vignette" />
 
-      {/* Skip Button */}
-      {showSkip && (
-        <button className="op-skip-btn" onClick={triggerFade}>
-          Lewati
-        </button>
-      )}
+        {/* 2px Progress Bar at very top of phone */}
+        <div className="op-progress-track">
+          <div className="op-progress-fill" style={{ width: `${progressPercent}%` }} />
+        </div>
 
-      {/* ── Overlay Stage (max 430px, centered) ── */}
-      <div className="op-stage">
-
-        {/* Hero Copy — Bottom Left, appears immediately with video */}
-        {showHeroCopy && (
-          <div className="op-hero-copy op-anim-rise">
-            <div className="op-hero-badge">
-              <span className="op-badge-dot" />
-              FITPULSE PRO
-            </div>
-            <h1 className="op-hero-headline">
-              Kontrol Energi,<br />Kuasai Harimu.
-            </h1>
-            <p className="op-hero-sub">
-              Pelacakan kalori, nutrisi & kebugaran berbasis data tubuhmu.
-            </p>
-          </div>
+        {/* Skip Button inside phone frame (top-right) */}
+        {showSkip && (
+          <button className="op-skip-btn" onClick={triggerFade} aria-label="Lewati intro">
+            Lewati
+          </button>
         )}
 
-        {/* ── PHASE 1: Target Kalori & Defisit (1.4s – 4.0s) ── */}
-        {showPhase1 && (
-          <div className="op-card op-card-right op-anim-card-in" key="p1">
-            <div className="op-card-header">
-              <div className="op-card-icon op-icon-amber"><Target size={14} /></div>
-              <span className="op-card-tag">TARGET KALORI</span>
-            </div>
-            <div className="op-card-body">
-              <div className="op-card-metric">
-                <span className="op-metric-val">1.800</span>
-                <span className="op-metric-unit">kkal / hari</span>
-              </div>
-              <div className="op-card-row">
-                <div className="op-mini-badge op-badge-green">
-                  <TrendingUp size={10} /> Defisit 400 kkal
-                </div>
-                <div className="op-mini-badge op-badge-orange">
-                  <Flame size={10} /> Bakar 520 kkal
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* ── Overlay Content Area ── */}
+        <div className="op-stage">
 
-        {/* ── PHASE 2: Aktivitas, Langkah & Detak Jantung (4.0s – 6.8s) ── */}
-        {showPhase2 && (
-          <div className="op-card op-card-right-low op-anim-card-in" key="p2">
-            <div className="op-card-header">
-              <div className="op-card-icon op-icon-rose"><Heart size={14} /></div>
-              <span className="op-card-tag">AKTIVITAS & VITAL</span>
-            </div>
-            <div className="op-card-body">
-              <div className="op-card-split">
-                <div className="op-split-item">
-                  <Footprints size={13} className="op-text-orange" />
-                  <span className="op-split-val">8.240</span>
-                  <span className="op-split-label">langkah</span>
-                </div>
-                <div className="op-split-divider" />
-                <div className="op-split-item">
-                  <Activity size={13} className="op-text-rose" />
-                  <span className="op-split-val">72</span>
-                  <span className="op-split-label">bpm</span>
-                </div>
+          {/* Hero Copy — Bottom of Mobile Screen */}
+          {showHeroCopy && (
+            <div className="op-hero-copy op-anim-rise">
+              <div className="op-hero-badge">
+                <span className="op-badge-dot" />
+                FITPULSE PRO
               </div>
-              <div className="op-card-bar-row">
-                <div className="op-bar-track">
-                  <div className="op-bar-fill op-fill-orange" style={{ width: '82%' }} />
-                </div>
-                <span className="op-bar-label">82% target</span>
-              </div>
+              <h1 className="op-hero-headline">
+                Kontrol Energi,<br />Kuasai Harimu.
+              </h1>
+              <p className="op-hero-sub">
+                Pelacakan kalori, nutrisi & kebugaran berbasis data tubuhmu.
+              </p>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ── PHASE 3: Nutrisi Makro & Hidrasi (6.8s – 8.8s) ── */}
-        {showPhase3 && (
-          <div className="op-card op-card-center op-anim-card-in" key="p3">
-            <div className="op-card-header">
-              <div className="op-card-icon op-icon-emerald"><Utensils size={14} /></div>
-              <span className="op-card-tag">NUTRISI & HIDRASI</span>
-            </div>
-            <div className="op-card-body">
-              <div className="op-macro-row">
-                <div className="op-macro-item">
-                  <span className="op-macro-dot op-dot-green" />
-                  <span className="op-macro-name">Protein</span>
-                  <span className="op-macro-val">85g</span>
+          {/* ── PHASE 1: Target Kalori & Defisit (1.4s – 4.0s) ── */}
+          {showPhase1 && (
+            <div className="op-card op-card-top-right op-anim-card-in" key="p1">
+              <div className="op-card-header">
+                <div className="op-card-icon op-icon-amber"><Target size={13} /></div>
+                <span className="op-card-tag">TARGET KALORI</span>
+              </div>
+              <div className="op-card-body">
+                <div className="op-card-metric">
+                  <span className="op-metric-val">1.800</span>
+                  <span className="op-metric-unit">kkal / hari</span>
                 </div>
-                <div className="op-macro-item">
-                  <span className="op-macro-dot op-dot-yellow" />
-                  <span className="op-macro-name">Karbo</span>
-                  <span className="op-macro-val">210g</span>
-                </div>
-                <div className="op-macro-item">
-                  <span className="op-macro-dot op-dot-red" />
-                  <span className="op-macro-name">Lemak</span>
-                  <span className="op-macro-val">52g</span>
+                <div className="op-card-row">
+                  <div className="op-mini-badge op-badge-green">
+                    <TrendingUp size={10} /> Defisit 400 kkal
+                  </div>
+                  <div className="op-mini-badge op-badge-orange">
+                    <Flame size={10} /> Bakar 520 kkal
+                  </div>
                 </div>
               </div>
-              <div className="op-hydration-row">
-                <Droplet size={13} className="op-text-blue" />
-                <div className="op-bar-track op-bar-sm">
-                  <div className="op-bar-fill op-fill-blue" style={{ width: '65%' }} />
+            </div>
+          )}
+
+          {/* ── PHASE 2: Aktivitas, Langkah & Detak Jantung (4.0s – 6.8s) ── */}
+          {showPhase2 && (
+            <div className="op-card op-card-mid-right op-anim-card-in" key="p2">
+              <div className="op-card-header">
+                <div className="op-card-icon op-icon-rose"><Heart size={13} /></div>
+                <span className="op-card-tag">AKTIVITAS & VITAL</span>
+              </div>
+              <div className="op-card-body">
+                <div className="op-card-split">
+                  <div className="op-split-item">
+                    <Footprints size={12} className="op-text-orange" />
+                    <span className="op-split-val">8.240</span>
+                    <span className="op-split-label">langkah</span>
+                  </div>
+                  <div className="op-split-divider" />
+                  <div className="op-split-item">
+                    <Activity size={12} className="op-text-rose" />
+                    <span className="op-split-val">72</span>
+                    <span className="op-split-label">bpm</span>
+                  </div>
                 </div>
-                <span className="op-hydration-label">1.300 / 2.000 ml</span>
+                <div className="op-card-bar-row">
+                  <div className="op-bar-track">
+                    <div className="op-bar-fill op-fill-orange" style={{ width: '82%' }} />
+                  </div>
+                  <span className="op-bar-label">82% target</span>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ── CLOSING: Sync Complete (8.8s – 10s) ── */}
-        {showClosing && (
-          <div className="op-closing op-anim-card-in" key="closing">
-            <div className="op-closing-ring" />
-            <div className="op-closing-ring op-ring-delay" />
-            <div className="op-closing-text">
-              <span className="op-closing-badge">SYNC COMPLETE</span>
-              <strong>Dashboard Siap</strong>
+          {/* ── PHASE 3: Nutrisi Makro & Hidrasi (6.8s – 8.8s) ── */}
+          {showPhase3 && (
+            <div className="op-card op-card-bottom-deck op-anim-card-in" key="p3">
+              <div className="op-card-header">
+                <div className="op-card-icon op-icon-emerald"><Utensils size={13} /></div>
+                <span className="op-card-tag">NUTRISI & HIDRASI</span>
+              </div>
+              <div className="op-card-body">
+                <div className="op-macro-row">
+                  <div className="op-macro-item">
+                    <span className="op-macro-dot op-dot-green" />
+                    <span className="op-macro-name">Protein</span>
+                    <span className="op-macro-val">85g</span>
+                  </div>
+                  <div className="op-macro-item">
+                    <span className="op-macro-dot op-dot-yellow" />
+                    <span className="op-macro-name">Karbo</span>
+                    <span className="op-macro-val">210g</span>
+                  </div>
+                  <div className="op-macro-item">
+                    <span className="op-macro-dot op-dot-red" />
+                    <span className="op-macro-name">Lemak</span>
+                    <span className="op-macro-val">52g</span>
+                  </div>
+                </div>
+                <div className="op-hydration-row">
+                  <Droplet size={12} className="op-text-blue" />
+                  <div className="op-bar-track op-bar-sm">
+                    <div className="op-bar-fill op-fill-blue" style={{ width: '65%' }} />
+                  </div>
+                  <span className="op-hydration-label">1.300 / 2.000 ml</span>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
+          {/* ── CLOSING: Sync Complete (8.8s – 10s) ── */}
+          {showClosing && (
+            <div className="op-closing op-anim-card-in" key="closing">
+              <div className="op-closing-ring" />
+              <div className="op-closing-ring op-ring-delay" />
+              <div className="op-closing-text">
+                <span className="op-closing-badge">SYNC COMPLETE</span>
+                <strong>Dashboard Siap</strong>
+              </div>
+            </div>
+          )}
+
+        </div>
       </div>
     </div>
   );
