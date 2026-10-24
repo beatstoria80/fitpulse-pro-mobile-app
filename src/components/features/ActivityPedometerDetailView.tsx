@@ -106,7 +106,7 @@ export default function ActivityPedometerDetailView({
           {/* 3D Character Looping Video - Blended seamlessly without black box */}
           <video
             className="character-stage-video"
-            src="/character_3d_walking.mp4"
+            src="/character_running.mp4"
             autoPlay
             loop
             muted

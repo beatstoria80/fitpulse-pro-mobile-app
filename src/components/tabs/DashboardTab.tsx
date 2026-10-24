@@ -61,6 +61,7 @@ interface DashboardTabProps {
   onOpenEnergyDetail?: () => void;
   onOpenNutritionDetail?: () => void;
   onOpenActivityDetail?: () => void;
+  onOpenHydrationDetail?: () => void;
 }
 
 export const DashboardTab: React.FC<DashboardTabProps> = ({
@@ -102,6 +103,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   onOpenEnergyDetail,
   onOpenNutritionDetail,
   onOpenActivityDetail,
+  onOpenHydrationDetail,
 }) => {
   const userInitials = (data.user_profile.name || 'ND')
     .trim()
@@ -393,14 +395,22 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         </div>
       </div>
 
-      {/* Hydration Water Tracker Card */}
+      {/* Hydration Water Tracker Card (Clickable to 3D Hydration Detail) */}
       <div className={`glass-card water-tracker-card${dashboardVfxActive ? ' stagger-reveal delay-5' : ''}`}>
-        <div className="card-header-clean">
+        <div
+          className="card-header-clean"
+          onClick={onOpenHydrationDetail}
+          style={{ cursor: onOpenHydrationDetail ? 'pointer' : 'default' }}
+          title="Klik untuk membuka Halaman Detail Hidrasi 3D"
+        >
           <div className="card-title-group">
             <span className="badge-mini badge-blue">
               <Droplet size={13} /> Target Hidrasi
             </span>
-            <h2>Asupan Air Minum</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <h2>Asupan Air Minum</h2>
+              {onOpenHydrationDetail && <ChevronRight size={15} className="text-secondary" />}
+            </div>
           </div>
           <span className="water-target-label">
             <strong>{waterIntake.toLocaleString('id-ID')}</strong> / {targetWater.toLocaleString('id-ID')} ml

@@ -20,6 +20,7 @@ import AnalyticsTab from '../components/tabs/AnalyticsTab';
 import EnergyCalorieDetailView from '../components/features/EnergyCalorieDetailView';
 import NutritionDetailView from '../components/features/NutritionDetailView';
 import ActivityPedometerDetailView from '../components/features/ActivityPedometerDetailView';
+import HydrationDetailView from '../components/features/HydrationDetailView';
 import {
   initSupabase,
   getSupabaseConfig,
@@ -35,7 +36,7 @@ import {
 export default function Home() {
   const [data, setData] = useState<AppFitnessData>(initialFitnessData);
   const [activeTab, setActiveTab] = useState<TabType>('tabDashboard');
-  const [activeFeatureDetail, setActiveFeatureDetail] = useState<'energy' | 'nutrition' | 'activity' | null>(null);
+  const [activeFeatureDetail, setActiveFeatureDetail] = useState<'energy' | 'nutrition' | 'activity' | 'hydration' | null>(null);
   const [clock, setClock] = useState('14:04');
   const [toast, setToast] = useState<string | null>(null);
 
@@ -639,6 +640,18 @@ export default function Home() {
             />
           )}
 
+          {activeFeatureDetail === 'hydration' && (
+            <HydrationDetailView
+              data={data}
+              waterIntake={waterIntake}
+              targetWater={targetWater}
+              onAddWater={handleAddWater}
+              onUndoWater={handleUndoWater}
+              onBack={() => setActiveFeatureDetail(null)}
+              onShowToast={showToast}
+            />
+          )}
+
           {/* NORMAL TAB VIEWS (WHEN NO FEATURE DETAIL PAGE IS OPEN) */}
           {activeFeatureDetail === null && (
             <>
@@ -686,6 +699,7 @@ export default function Home() {
                   onOpenEnergyDetail={() => setActiveFeatureDetail('energy')}
                   onOpenNutritionDetail={() => setActiveFeatureDetail('nutrition')}
                   onOpenActivityDetail={() => setActiveFeatureDetail('activity')}
+                  onOpenHydrationDetail={() => setActiveFeatureDetail('hydration')}
                 />
               )}
 

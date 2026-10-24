@@ -3038,213 +3038,261 @@ body.fullscreen-mode .app-frame {
   100% { transform: translateY(0); opacity: 1; }
 }
 
-/* ================= OPENING VIDEO & CINEMATIC SHOWCASE ================= */
-
-/* Full-screen white overlay — sits above everything, z-index 10000 */
-.opening-overlay {
+/* ================= OPENING HERO EXPERIENCE (RECOMPOSED) ================= */
+.hero-viewport-container {
   position: fixed;
   inset: 0;
   z-index: 10000;
+  width: 100%;
+  height: 100svh;
+  background-color: #EAEAEA;
   display: flex;
-  align-items: center;
   justify-content: center;
-  background: #FFFFFF;
+  align-items: center;
+  overflow: hidden;
   opacity: 1;
   transition-property: opacity;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  -webkit-font-smoothing: antialiased;
 }
 
-.opening-overlay.opening-fade-out {
+.hero-viewport-container.hero-fade-out {
   opacity: 0;
   pointer-events: none;
 }
 
-/* Video element: centered, no crop of mascot character */
-.opening-video {
+/* Mobile phone frame: full bleed on mobile, max 430px centered on desktop */
+.hero-mobile-frame {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  height: 100%;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background-color: #EAEAEA;
+  overflow: hidden;
+}
+
+/* 2px Progress Line Along Very Top */
+.hero-progress-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 100;
+  background-color: #A9C8F2;
+}
+
+.hero-progress-fill {
+  height: 100%;
+  background-color: #4F7FD0;
+  transition: width 100ms linear;
+}
+
+/* Top Skip Button (44x44px min hit area, 14px text, 80% solid white, dark text) */
+.hero-skip-btn {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  right: 16px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.80);
+  color: #0F172A;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  border: none;
+  cursor: pointer;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.hero-skip-btn:active {
+  transform: scale(0.96);
+}
+
+/* 3D Character Video Stage: Full-bleed in Phase A, smoothly shifts up to occupy top 60% in Phase B/C */
+.hero-video-stage {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: center center;
-  background: #FFFFFF;
-  z-index: 0;
-}
-
-/* Stage container: locks width to mobile phone aspect ratio (max 440px) */
-.opening-tracking-stage {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  max-width: 440px;
-  height: 100%;
-  max-height: 920px;
-  perspective: 1000px;
-  transform-style: preserve-3d;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-/* 3D Motion Tracked Nodes */
-.tracking-node {
-  position: absolute;
-  pointer-events: auto;
+  background-color: #EAEAEA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  transition-property: transform, height;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: center top;
   will-change: transform;
-  transform-style: preserve-3d;
 }
 
-/* Hero Copy Headline: Di Sisi Kiri Bawah (Warna Kontras & Overlay pada Animasi Video Character) */
-.intro-hero-wrapper {
+.hero-video-stage.stage-cinematic {
+  height: 100%;
+  transform: translateY(0) scale(1);
+}
+
+.hero-video-stage.stage-shifted {
+  height: 60%;
+  transform: translateY(-2%) scale(0.96);
+}
+
+.hero-video-element {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  background-color: #EAEAEA;
+  border: none;
+  outline: none;
+  display: block;
+}
+
+.stage-shifted .hero-video-element {
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+/* Bottom 40% Panel: Solid #EAEAEA surface (no gradient, no blur, no glass) */
+.hero-bottom-panel {
   position: absolute;
-  bottom: 28px;
-  left: 16px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 42%;
+  background-color: #EAEAEA;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 24px calc(env(safe-area-inset-bottom, 0px) + 16px) 24px;
+  box-sizing: border-box;
+}
+
+.hero-bottom-panel.panel-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px);
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+
+.hero-bottom-panel.panel-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition: opacity 400ms ease, transform 400ms ease;
+}
+
+/* Stack Layout: 8px vertical grid */
+.hero-copy-stack {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
-  max-width: 220px;
-  z-index: 12;
-  pointer-events: none;
+  width: 100%;
 }
 
-.intro-hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 11px;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.90);
-  border: 1px solid rgba(56, 189, 248, 0.6);
-  font-family: 'Plus Jakarta Sans', monospace;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  color: #38BDF8;
-  text-transform: uppercase;
-  margin-bottom: 7px;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.25), 0 0 10px rgba(56, 189, 248, 0.35);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.icon-sparkle {
-  color: #38BDF8;
-  animation: sparkleSpin 3s linear infinite;
-}
-
-@keyframes sparkleSpin {
-  0% { transform: scale(0.9) rotate(0deg); }
-  50% { transform: scale(1.15) rotate(180deg); }
-  100% { transform: scale(0.9) rotate(360deg); }
-}
-
-.intro-hero-headline {
-  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 23px;
-  font-weight: 900;
-  line-height: 1.15;
-  letter-spacing: -0.6px;
+.hero-wordmark {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   color: #0F172A;
-  margin: 0 0 5px 0;
-  filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.95)) drop-shadow(0 1px 2px rgba(15, 23, 42, 0.25));
+  margin-bottom: 8px;
+  line-height: 1.2;
 }
 
-.intro-hero-sub {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 11px;
+.hero-headline {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 32px;
+  line-height: 36px;
   font-weight: 700;
-  color: #1E293B;
-  letter-spacing: 0.1px;
+  letter-spacing: -0.01em;
+  color: #0F172A;
+  max-width: 280px;
+  margin: 0 0 8px 0;
+  word-break: keep-all;
+}
+
+.hero-subtitle {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  color: rgba(15, 23, 42, 0.70);
   margin: 0;
-  filter: drop-shadow(0 1px 4px rgba(255, 255, 255, 0.9));
+  max-width: 320px;
 }
 
-/* Feature 1: Sisi Kanan Atas-Tengah (Torso / Hip Level, ~22% from top, right edge — fixed clipping) */
-.tracking-node.node-mid-right {
-  top: 22%;
-  right: 16px;
-  width: 220px;
-  max-width: 58%;
-  z-index: 10;
-}
-
-/* Feature 2: Sisi Kanan Tengah-Bawah (Torso/Legs Level, ~47% from top, right edge — tidak overlay teks copy hero di kiri bawah) */
-.tracking-node.node-lower-right {
-  top: 47%;
-  right: 16px;
-  width: 222px;
-  max-width: 58%;
-  z-index: 10;
-}
-
-/* Feature 3: Di Tengah Layar (Torso Level, Below Chin - Face Unobstructed) */
-.tracking-node.node-mid-center {
-  top: 36%;
-  left: 50%;
-  width: calc(100% - 40px);
-  max-width: 310px;
-  z-index: 10;
-}
-
-/* Card variants */
-.card-mid-flank {
+.hero-cta-wrapper {
   width: 100%;
-  padding: 8px 10px;
+  margin-top: 24px;
 }
 
-.card-lower-flank {
+.hero-primary-cta {
   width: 100%;
-  padding: 8px 10px;
+  height: 56px;
+  border-radius: 14px;
+  background-color: #4F7FD0;
+  color: #FFFFFF;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.hero-primary-cta:active {
+  transform: scale(0.98);
+  opacity: 0.92;
 }
 
-.card-bottom-flank {
+.hero-secondary-wrapper {
   width: 100%;
-  padding: 8px 10px;
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
 }
 
-.card-mid-center {
-  width: 100%;
+.hero-secondary-link {
+  min-height: 44px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: #0F172A;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+.hero-secondary-link:active {
+  opacity: 0.7;
 }
 
-/* Dynamic Rise-Style Content Animations */
-.anim-rise-spring {
-  animation: cardRiseSpring 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
+/* Staggered entrance animation: 60ms offset, 12px upward translate, 400ms ease-out */
+.panel-visible .anim-stagger-1 { animation: heroStaggerUp 400ms cubic-bezier(0.16, 1, 0.3, 1) 0ms both; }
+.panel-visible .anim-stagger-2 { animation: heroStaggerUp 400ms cubic-bezier(0.16, 1, 0.3, 1) 60ms both; }
+.panel-visible .anim-stagger-3 { animation: heroStaggerUp 400ms cubic-bezier(0.16, 1, 0.3, 1) 120ms both; }
+.panel-visible .anim-stagger-4 { animation: heroStaggerUp 400ms cubic-bezier(0.16, 1, 0.3, 1) 180ms both; }
+.panel-visible .anim-stagger-5 { animation: heroStaggerUp 400ms cubic-bezier(0.16, 1, 0.3, 1) 240ms both; }
 
-@keyframes cardRiseSpring {
-  0% {
-    opacity: 0;
-    transform: translateY(22px) scale(0.92);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.anim-rise-1 {
-  opacity: 0;
-  animation: riseIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.05s;
-}
-.anim-rise-2 {
-  opacity: 0;
-  animation: riseIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.12s;
-}
-.anim-rise-3 {
-  opacity: 0;
-  animation: riseIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.19s;
-}
-.anim-rise-4 {
-  opacity: 0;
-  animation: riseIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.26s;
-}
-.anim-rise-5 {
-  opacity: 0;
-  animation: riseIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.33s;
-}
-
-@keyframes riseIn {
+@keyframes heroStaggerUp {
   from {
     opacity: 0;
     transform: translateY(12px);
@@ -3255,579 +3303,32 @@ body.fullscreen-mode .app-frame {
   }
 }
 
-/* --- 10% Opacity Ultra-Translucent Frosted Glassmorphism --- */
-.glass-10-card {
-  position: relative;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.10); /* 10% Opacity Glassmorphism as requested */
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.5);
-  padding: 10px 12px;
-  box-sizing: border-box;
-}
-
-.glass-10-card.border-glow-amber {
-  border-color: rgba(245, 158, 11, 0.4);
-  box-shadow: 0 14px 30px -4px rgba(245, 158, 11, 0.16), 0 0 0 1px rgba(245, 158, 11, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.6);
-}
-
-.glass-10-card.border-glow-rose {
-  border-color: rgba(244, 63, 94, 0.4);
-  box-shadow: 0 14px 30px -4px rgba(244, 63, 94, 0.16), 0 0 0 1px rgba(244, 63, 94, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.6);
-}
-
-.glass-10-card.border-glow-emerald {
-  border-color: rgba(16, 185, 129, 0.4);
-  box-shadow: 0 14px 30px -4px rgba(16, 185, 129, 0.16), 0 0 0 1px rgba(16, 185, 129, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.6);
-}
-
-/* --- AR Motion Tracking Anchor & Target Reticle --- */
-.ar-anchor-group {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  pointer-events: none;
-  z-index: 5;
-}
-
-.ar-anchor-group.anchor-to-right {
-  top: 18px;
-  right: -36px;
-}
-
-.ar-anchor-group.anchor-to-left {
-  top: 18px;
-  left: -36px;
-}
-
-.ar-anchor-group.anchor-to-right-up {
-  top: 12px;
-  right: -36px;
-}
-
-.ar-target-reticle {
-  position: relative;
-  width: 14px;
-  height: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.reticle-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-}
-
-.reticle-ring {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 1.5px solid currentColor;
-  animation: reticleRadar 1.5s infinite ease-out;
-}
-
-.reticle-ring.ring-amber { color: #F59E0B; }
-.reticle-ring.ring-rose  { color: #F43F5E; }
-.reticle-ring.ring-emerald { color: #10B981; }
-
-@keyframes reticleRadar {
-  0% { transform: scale(0.6); opacity: 1; }
-  100% { transform: scale(2.2); opacity: 0; }
-}
-
-.ar-dash-anim {
-  animation: dashMarch 1.2s linear infinite;
-}
-
-@keyframes dashMarch {
-  to { stroke-dashoffset: -10; }
-}
-
-/* --- Track Header Meta --- */
-.track-header-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
-}
-
-.meta-left {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.ar-crosshair {
-  display: flex;
-  align-items: center;
-}
-
-.anim-spin-slow {
-  animation: spinSlow 8s linear infinite;
-}
-
-@keyframes spinSlow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.ar-tag {
-  font-family: 'Plus Jakarta Sans', monospace;
-  font-size: 8.5px;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-}
-
-.ar-live-pulse {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 8.5px;
-  font-weight: 800;
-  color: #64748B;
-  letter-spacing: 0.5px;
-}
-
-.pulse-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  animation: dotFlash 1s infinite alternate;
-}
-
-@keyframes dotFlash {
-  0% { opacity: 0.3; transform: scale(0.8); }
-  100% { opacity: 1; transform: scale(1.1); }
-}
-
-.dot-amber { background: #F59E0B; box-shadow: 0 0 5px #F59E0B; }
-.dot-rose { background: #F43F5E; box-shadow: 0 0 5px #F43F5E; }
-.dot-emerald { background: #10B981; box-shadow: 0 0 5px #10B981; }
-.dot-cyan { background: #38BDF8; box-shadow: 0 0 5px #38BDF8; }
-
-/* --- Phase 0 Intro Mini --- */
-.card-intro-mini {
-  padding: 8px 12px;
-}
-
-.ar-intro-title {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 13px;
-  font-weight: 800;
-  color: #0F172A;
-}
-
-/* --- Phase 1: Calorie Body --- */
-.track-body-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 7px;
-}
-
-.track-metric-left {
-  display: flex;
-  flex-direction: column;
-}
-
-.track-label {
-  font-size: 9.5px;
-  font-weight: 700;
-  color: #475569;
-  text-transform: uppercase;
-}
-
-.track-hero-num {
-  display: flex;
-  align-items: baseline;
-  gap: 3px;
-}
-
-.hero-val {
-  font-size: 24px;
-  font-weight: 800;
-  color: #0F172A;
-  line-height: 1;
-}
-
-.hero-unit {
-  font-size: 11px;
-  font-weight: 700;
-  color: #64748B;
-}
-
-.track-mini-gauge {
-  position: relative;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.gauge-svg {
-  transform: rotate(-90deg);
-  width: 100%;
-  height: 100%;
-}
-
-.gauge-bg {
-  fill: none;
-  stroke: rgba(226, 232, 240, 0.7);
-  stroke-width: 3.5;
-}
-
-.gauge-val {
-  fill: none;
-  stroke-width: 3.5;
-  stroke-linecap: round;
-}
-
-.stroke-amber {
-  stroke: #F59E0B;
-}
-
-.anim-gauge-fill {
-  stroke-dasharray: 107;
-  stroke-dashoffset: 107;
-  animation: fillCalorieGauge 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.1s;
-}
-
-@keyframes fillCalorieGauge {
-  to { stroke-dashoffset: 26; }
-}
-
-.gauge-icon {
-  position: absolute;
-}
-
-.track-bottom-badges {
-  display: flex;
-  gap: 6px;
-}
-
-.ar-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 9px;
-  font-weight: 700;
-  padding: 2.5px 6px;
-  border-radius: 6px;
-}
-
-.badge-emerald {
-  background: rgba(16, 185, 129, 0.15);
-  color: #059669;
-}
-
-.badge-amber {
-  background: rgba(245, 158, 11, 0.15);
-  color: #D97706;
-}
-
-/* --- Phase 2: Vitals & ECG --- */
-.track-grid-split {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.split-column {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  padding: 6px 8px;
-}
-
-.split-label-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 9px;
-  font-weight: 700;
-  color: #475569;
-}
-
-.split-val-row {
-  display: flex;
-  align-items: baseline;
-  gap: 2px;
-  margin: 1px 0 2px 0;
-}
-
-.split-big-val {
-  font-size: 17px;
-  font-weight: 800;
-  color: #0F172A;
-  line-height: 1;
-}
-
-.split-unit {
-  font-size: 9.5px;
-  font-weight: 700;
-  color: #64748B;
-}
-
-.anim-heart-beat {
-  animation: heartRatePulse 0.8s ease-in-out infinite;
-}
-
-@keyframes heartRatePulse {
-  0%, 100% { transform: scale(1); }
-  25% { transform: scale(1.25); }
-  45% { transform: scale(1.05); }
-  65% { transform: scale(1.2); }
-}
-
-.ecg-track-wrap {
-  width: 100%;
-  height: 12px;
-  overflow: hidden;
-}
-
-.ecg-mini-svg {
-  width: 100%;
-  height: 100%;
-}
-
-.ecg-wave-line {
-  stroke-dasharray: 60;
-  stroke-dashoffset: 60;
-  animation: runECG 1.3s linear infinite;
-}
-
-@keyframes runECG {
-  0% { stroke-dashoffset: 60; }
-  100% { stroke-dashoffset: 0; }
-}
-
-.track-progress-bar {
-  width: 100%;
-  height: 4px;
-  background: rgba(226, 232, 240, 0.7);
-  border-radius: 999px;
-  overflow: hidden;
-  margin-top: 4px;
-}
-
-.track-progress-fill.fill-cyan {
-  position: relative;
-  height: 100%;
-  background: linear-gradient(90deg, #38BDF8, #0284C7);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.bar-sweep-light {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
-  animation: sweepLight 1.5s infinite;
-}
-
-@keyframes sweepLight {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(200%); }
-}
-
-/* --- Phase 3: Macros --- */
-.track-macro-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  margin-bottom: 5px;
-}
-
-.macro-bar-line {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 9.5px;
-}
-
-.m-name {
-  width: 44px;
-  font-weight: 700;
-  color: #334155;
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.m-dot { width: 4.5px; height: 4.5px; border-radius: 50%; }
-.dot-protein { background: #10B981; }
-.dot-carbs { background: #F59E0B; }
-.dot-fat { background: #F43F5E; }
-
-.m-bar {
-  flex: 1;
-  height: 4px;
-  background: rgba(226, 232, 240, 0.7);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.m-fill {
-  height: 100%;
-  border-radius: 999px;
-  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.fill-protein { background: #10B981; }
-.fill-carbs { background: #F59E0B; }
-.fill-fat { background: #F43F5E; }
-
-.m-num {
-  font-size: 9px;
-  font-weight: 700;
-  color: #64748B;
-  width: 25px;
-  text-align: right;
-}
-
-.ar-hydration-pill {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(56, 189, 248, 0.12);
-  border-radius: 7px;
-  padding: 2.5px 7px;
-  font-size: 9.5px;
-  color: #0284C7;
-}
-
-/* ================= PHASE 4: PROFESSIONAL VFX CLOSING PORTAL ================= */
-
-.vfx-closing-stage {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 15;
-  pointer-events: none;
-}
-
-.anim-vfx-shockwave {
-  animation: vfxStageFadeIn 0.35s ease-out forwards;
-}
-
-@keyframes vfxStageFadeIn {
-  from { opacity: 0; transform: scale(0.94); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.vfx-energy-ring {
-  position: absolute;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  border: 2px solid rgba(56, 189, 248, 0.85);
-  box-shadow: 0 0 35px rgba(56, 189, 248, 0.7), inset 0 0 25px rgba(2, 132, 199, 0.45);
-  animation: portalShockwave 1.1s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-}
-
-.vfx-energy-ring.ring-delay {
-  animation-delay: 0.45s;
-}
-
-@keyframes portalShockwave {
-  0% {
-    transform: scale(0.4);
-    opacity: 1;
+/* Viewport compact adjustment for small screens (360x640) */
+@media (max-height: 670px) {
+  .hero-headline {
+    font-size: 26px;
+    line-height: 30px;
   }
-  100% {
-    transform: scale(3.4);
-    opacity: 0;
+  .hero-subtitle {
+    font-size: 14px;
+    line-height: 20px;
+  }
+  .hero-cta-wrapper {
+    margin-top: 16px;
+  }
+  .hero-primary-cta {
+    height: 50px;
+    font-size: 16px;
+  }
+  .hero-bottom-panel {
+    height: 44%;
+    padding: 0 20px calc(env(safe-area-inset-bottom, 0px) + 12px) 20px;
+  }
+  .hero-video-stage.stage-shifted {
+    height: 56%;
   }
 }
 
-.vfx-laser-scan {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, #38BDF8, #818CF8, transparent);
-  box-shadow: 0 0 18px #38BDF8, 0 0 36px #818CF8;
-  animation: laserScan 1.2s ease-in-out infinite alternate;
-}
-
-@keyframes laserScan {
-  0% { top: 15%; opacity: 0.8; }
-  100% { top: 85%; opacity: 0.8; }
-}
-
-.vfx-sync-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 18px 22px;
-  width: 290px;
-  border-color: rgba(56, 189, 248, 0.5);
-  box-shadow: 0 20px 42px rgba(2, 132, 199, 0.25), 0 0 26px rgba(56, 189, 248, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.vfx-sync-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #0284C7, #38BDF8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #FFFFFF;
-  margin-bottom: 10px;
-  box-shadow: 0 0 20px rgba(56, 189, 248, 0.7);
-}
-
-.icon-zap-pulse {
-  animation: zapPulse 0.8s ease-in-out infinite alternate;
-}
-
-@keyframes zapPulse {
-  from { transform: scale(0.9); }
-  to { transform: scale(1.18); filter: drop-shadow(0 0 8px #FFFFFF); }
-}
-
-.vfx-sync-badge {
-  font-family: 'Plus Jakarta Sans', monospace;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  color: #0284C7;
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-
-.vfx-sync-title {
-  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 19px;
-  font-weight: 900;
-  letter-spacing: -0.3px;
-  color: #0F172A;
-  margin: 0 0 4px 0;
-}
-
-.vfx-sync-sub {
-  font-size: 11px;
-  color: #475569;
-  font-weight: 600;
-  margin: 0;
-}
 
 /* ================= PROFESSIONAL DASHBOARD ENTRANCE VFX ================= */
 
@@ -4038,6 +3539,12 @@ body.fullscreen-mode .app-frame {
   background: radial-gradient(circle at 50% 40%, #EFE8DC 0%, #E8E0D1 55%, #F5EFE7 100%);
   border-color: rgba(245, 158, 11, 0.25);
   box-shadow: 0 12px 32px rgba(217, 119, 6, 0.08);
+}
+
+.feature-hero-stage.hydration-theme {
+  background: radial-gradient(circle at 50% 40%, #E0F2FE 0%, #BAE6FD 55%, #F0F9FF 100%);
+  border-color: rgba(14, 165, 233, 0.25);
+  box-shadow: 0 12px 32px rgba(2, 132, 199, 0.08);
 }
 
 /* 3D Character Video - perfectly centered, zero black bars, seamless blending */
@@ -5042,6 +4549,214 @@ body.fullscreen-mode .app-frame {
 .btn-feature-action:hover {
   transform: translateY(-1px);
 }
+
+/* ================= HYDRATION DETAIL PAGE STYLES ================= */
+.hydration-tank-card {
+  padding: 18px;
+}
+.hydration-tank-body {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 14px;
+}
+.water-tank-visual {
+  flex-shrink: 0;
+  width: 90px;
+  height: 140px;
+}
+.tank-glass-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: 2px solid rgba(2, 132, 199, 0.4);
+  border-radius: 16px 16px 20px 20px;
+  background: rgba(224, 242, 254, 0.35);
+  overflow: hidden;
+  box-shadow: inset 0 2px 8px rgba(2, 132, 199, 0.15), 0 8px 20px rgba(2, 132, 199, 0.1);
+  display: flex;
+  align-items: flex-end;
+}
+.tank-water-fluid {
+  width: 100%;
+  background: linear-gradient(180deg, #38BDF8 0%, #0284C7 60%, #0369A1 100%);
+  position: relative;
+  transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: 0 0 16px 16px;
+}
+.tank-graduations {
+  position: absolute;
+  right: 6px;
+  top: 8px;
+  bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 8px;
+  font-weight: 800;
+  color: rgba(2, 132, 199, 0.6);
+  pointer-events: none;
+  z-index: 2;
+}
+.tank-info-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tank-big-number {
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #0284C7;
+  line-height: 1.1;
+}
+.tank-big-number small {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+.tank-description {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0;
+}
+.tank-log-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.btn-water-quick.primary {
+  background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+  color: #FFFFFF;
+}
+
+/* Schedule Timeline Grid */
+.schedule-timeline-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.schedule-slot-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: #F8FAFC;
+  border: 1px solid var(--border-subtle);
+  transition: all 0.2s ease;
+}
+.schedule-slot-item:hover {
+  background: #F0F9FF;
+  border-color: rgba(2, 132, 199, 0.3);
+}
+.schedule-slot-item.done {
+  background: rgba(240, 253, 250, 0.6);
+  border-color: rgba(20, 184, 166, 0.25);
+  opacity: 0.85;
+}
+.slot-check-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.slot-circle-empty {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.slot-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.slot-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.slot-time {
+  font-size: 11px;
+  font-weight: 800;
+  color: #0284C7;
+  font-family: 'Outfit', sans-serif;
+}
+.slot-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+.slot-desc {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+.slot-amount {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-family: 'Outfit', sans-serif;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 4px 8px;
+  border-radius: 20px;
+}
+
+/* Hydration Science Benefits */
+.science-benefits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+.benefit-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: #F8FAFC;
+  border: 1px solid var(--border-subtle);
+}
+.benefit-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.benefit-icon-box.orange { background: #FFEDD5; color: #EA580C; }
+.benefit-icon-box.rose { background: #FFE4E6; color: #E11D48; }
+.benefit-icon-box.blue { background: #E0F2FE; color: #0284C7; }
+.benefit-text strong {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  display: block;
+}
+.benefit-text p {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  margin: 3px 0 0 0;
+  line-height: 1.4;
+}
+
 
 
 /* ==========================================================================

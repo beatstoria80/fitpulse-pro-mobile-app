@@ -2,57 +2,49 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Flame,
-  Heart,
-  Footprints,
-  Utensils,
-  Droplet,
-  Sparkles,
-  TrendingUp,
-  Target,
-  Activity
-} from 'lucide-react';
-import {
-  VIDEO_SRC,
-  CROSSFADE_START_S,
+  OPENING_DURATION_S,
+  CINEMATIC_END_S,
+  HERO_SETTLE_S,
+  STAGE_TRANSFORM_DURATION_MS,
+  SKIP_BUTTON_DELAY_MS,
   CROSSFADE_DURATION_MS,
   VIDEO_READY_TIMEOUT_MS,
+  VIDEO_SRC,
+  HERO_THEME,
+  HERO_COPY,
   markOpeningSeen,
 } from '../lib/openingController';
 
 interface OpeningVideoProps {
-  /** Called when the opening is fully dismissed (video ended or skipped) */
+  /** Called when the opening is fully dismissed (CTA clicked, skipped, or ended) */
   onComplete: () => void;
 }
 
 /**
- * OpeningVideo — Professional VFX 3D Motion Tracked Presentation.
+ * OpeningHero — Senior Product Design & Front-End Engineered Hero Experience.
  *
- * Feature Positioning:
- *  • 0.0s - 8.8s : Hero Copy Headline — SISI KIRI BAWAH (High contrast, overlay pada animasi 3D walking character).
- *  • 1.4s - 4.0s : Feature 1 — MID-RIGHT FLANK (Target Kalori & Defisit, amber glow, anti-clipping fixed).
- *  • 4.0s - 6.8s : Feature 2 — LOWER-RIGHT FLANK (Sensor Vitals & Langkah, rose ECG wave, no overlay with hero copy).
- *  • 6.8s - 8.8s : Feature 3 — MID-CENTER (Makro Nutrisi AI & Hidrasi, emerald rise, torso level).
- *  • 8.8s - 10.0s: VFX CLOSING PORTAL (Shockwave optical burst, laser scan, sync complete -> Dashboard warp).
- *
- * All cards utilize:
- *  - 10% Ultra-Translucent Frosted Glassmorphism (`rgba(255, 255, 255, 0.10)`).
- *  - High-impact dynamic RISE STYLE entry for all internal text, numbers, and icons.
- *  - Zero clipping on small screens and zero overlay with hero copy text.
- *  - Zero obstruction of mascot's face and head.
+ * Core Principle:
+ *  - Phase A (0.0s - 8.5s, Cinematic): Full-bleed video, no frame, no text over character.
+ *    Only (1) "Lewati" skip button top-right (after 1s) and (2) 2px progress bar along the top.
+ *  - Phase B (8.5s - 10.0s, Handoff): Smooth 700ms upward transform & scale so full character
+ *    (head to sneakers) occupies top 60%. Solid bottom panel (sampled #EAEAEA) holds copy.
+ *  - Phase C (10.0s+, Resting Hero): Video settles frontal, bottom panel copy staggers in.
+ *    High contrast typography, strict 8px grid stack, 56px CTA, secondary link, zero scroll on 360x640.
  */
 const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [fading, setFading] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [showSkipButton, setShowSkipButton] = useState(false);
+  const [isReducedMotion, setIsReducedMotion] = useState(false);
 
-  const timeUpdateRef = useRef<boolean>(false);
   const hasCompletedRef = useRef(false);
+  const timeUpdateRef = useRef(false);
   const rafIdRef = useRef<number | null>(null);
 
-  // ── Trigger the crossfade & cleanup ────────────────────────────────
-  const triggerFade = useCallback(() => {
+  // ── Dismiss & Handoff to Dashboard ───────────────────────────────────
+  const triggerDismiss = useCallback(() => {
     if (fading || hasCompletedRef.current) return;
     hasCompletedRef.current = true;
     setFading(true);
@@ -73,18 +65,42 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
     }, CROSSFADE_DURATION_MS);
   }, [fading, onComplete]);
 
-  // ── 60fps Animation Loop for silky smooth 3D tracking & parallax ────
+  // ── Check Accessibility (prefers-reduced-motion) ─────────────────────
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (mediaQuery.matches) {
+        setIsReducedMotion(true);
+        setCurrentTime(HERO_SETTLE_S);
+        setShowSkipButton(true);
+      }
+    }
+  }, []);
+
+  // ── Show Skip Button after Delay ─────────────────────────────────────
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSkipButton(true);
+    }, SKIP_BUTTON_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // ── 60fps Animation Loop for silky smooth progress & choreography ─────
+  useEffect(() => {
+    if (isReducedMotion) return;
+
     let active = true;
 
     const loop = () => {
       if (!active) return;
       const vid = videoRef.current;
       if (vid && !vid.paused && !vid.ended) {
-        setCurrentTime(vid.currentTime);
-        if (vid.currentTime >= CROSSFADE_START_S && !hasCompletedRef.current) {
-          triggerFade();
-          return;
+        const time = vid.currentTime;
+        setCurrentTime(time);
+
+        // When reaching 10.0s, keep character resting / subtle 1s loop at the hero frontal angle
+        if (time >= HERO_SETTLE_S) {
+          vid.currentTime = 9.1; // subtly loop the frontal hero stance
         }
       }
       rafIdRef.current = requestAnimationFrame(loop);
@@ -98,32 +114,32 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
         cancelAnimationFrame(rafIdRef.current);
       }
     };
-  }, [triggerFade]);
+  }, [isReducedMotion]);
 
-  // ── Fallback timer if autoplay fails ───────────────────────────────
+  // ── Fallback timer if autoplay fails ─────────────────────────────────
   useEffect(() => {
+    if (isReducedMotion) return;
+
     const video = videoRef.current;
     if (!video) return;
 
     const fallbackTimer = setTimeout(() => {
       if (!timeUpdateRef.current && !hasCompletedRef.current) {
-        triggerFade();
+        // Autoplay blocked: jump to resting hero state
+        setCurrentTime(HERO_SETTLE_S);
       }
-    }, VIDEO_READY_TIMEOUT_MS + 3500);
+    }, VIDEO_READY_TIMEOUT_MS);
 
     const playPromise = video.play();
     if (playPromise !== undefined) {
       playPromise.catch(() => {
-        if (!hasCompletedRef.current) {
-          triggerFade();
-        }
+        // Autoplay blocked by browser policy: settle into resting hero layout
+        setCurrentTime(HERO_SETTLE_S);
       });
     }
 
-    return () => {
-      clearTimeout(fallbackTimer);
-    };
-  }, [triggerFade]);
+    return () => clearTimeout(fallbackTimer);
+  }, [isReducedMotion]);
 
   const handleTimeUpdate = useCallback(() => {
     timeUpdateRef.current = true;
@@ -132,320 +148,125 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
     }
   }, []);
 
-  const handleEnded = useCallback(() => {
-    if (!hasCompletedRef.current) {
-      triggerFade();
-    }
-  }, [triggerFade]);
-
-  const handleCanPlay = useCallback(() => {
-    timeUpdateRef.current = true;
-  }, []);
-
-  const handleError = useCallback(() => {
-    if (!hasCompletedRef.current) {
-      triggerFade();
-    }
-  }, [triggerFade]);
-
   if (dismissed) return null;
 
-  // ── Determine Current Showcase Phase ─────────────────────────────
-  // 0: Intro Kinetic Headline (0.0s - 1.4s) — Top/Center
-  // 1: Feature 1 (1.4s - 4.0s) — MID-RIGHT FLANK (Calorie & Deficit)
-  // 2: Feature 2 (4.0s - 6.8s) — BOTTOM-LEFT (Sensor Vitals & Steps)
-  // 3: Feature 3 (6.8s - 8.8s) — MID-CENTER TORSO (Macro Nutrients)
-  // 4: VFX Closing Portal (8.8s - 10.0s) — Shockwave Handoff
-  let activePhase = 0;
-  if (currentTime >= 8.8) activePhase = 4;
-  else if (currentTime >= 6.8) activePhase = 3;
-  else if (currentTime >= 4.0) activePhase = 2;
-  else if (currentTime >= 1.4) activePhase = 1;
-
-  // Subtle 3D camera drift & walking cadence (continuous floating parallax)
-  const driftY = Math.sin(currentTime * 3.5) * 3;
-  const driftX = Math.cos(currentTime * 2.2) * 3;
+  // ── Phases ───────────────────────────────────────────────────────────
+  // Phase A: 0.0s - 8.5s (Cinematic)
+  // Phase B: 8.5s - 10.0s (Handoff to Hero)
+  // Phase C: 10.0s+ (Resting Hero)
+  const isHeroPhase = isReducedMotion || currentTime >= CINEMATIC_END_S;
+  const progressPercent = Math.min(100, (currentTime / OPENING_DURATION_S) * 100);
 
   return (
     <div
-      className={`opening-overlay ${fading ? 'opening-fade-out' : ''}`}
-      role="dialog"
-      aria-label="Presentasi Fitur Unggulan FitPulse 3D Motion Tracked"
-      aria-live="polite"
-      onClick={triggerFade}
-      title="Sentuh untuk langsung memulai"
+      className={`hero-viewport-container ${fading ? 'hero-fade-out' : ''}`}
       style={{
+        backgroundColor: HERO_THEME.surface,
         transitionDuration: `${CROSSFADE_DURATION_MS}ms`,
       }}
+      role="region"
+      aria-label="FitPulse App Hero"
     >
-      {/* 3D Mascot Walking Video */}
-      <video
-        ref={videoRef}
-        className="opening-video"
-        src={VIDEO_SRC}
-        muted
-        playsInline
-        autoPlay
-        preload="auto"
-        poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='%23FFFFFF'/%3E%3C/svg%3E"
-        onTimeUpdate={handleTimeUpdate}
-        onEnded={handleEnded}
-        onCanPlay={handleCanPlay}
-        onError={handleError}
-      />
+      {/* 2px Progress Line Along Top */}
+      <div
+        className="hero-progress-track"
+        style={{ backgroundColor: HERO_THEME.progressTrack }}
+        aria-hidden="true"
+      >
+        <div
+          className="hero-progress-fill"
+          style={{
+            width: `${progressPercent}%`,
+            backgroundColor: HERO_THEME.brandBlue,
+          }}
+        />
+      </div>
 
-      {/* 3D Multi-Position Tracking Stage */}
-      <div className="opening-tracking-stage">
+      {/* Top Safe-Area Skip Button (Appears after 1s, min 44x44px hit area) */}
+      {showSkipButton && (
+        <button
+          className="hero-skip-btn"
+          onClick={triggerDismiss}
+          aria-label="Lewati intro dan masuk ke aplikasi"
+        >
+          {HERO_COPY.skip}
+        </button>
+      )}
 
-        {/* ── HERO COPY HEADLINE: SISI KIRI BAWAH (0.0s - 8.8s) ── */}
-        {activePhase < 4 && (
-          <div className="intro-hero-wrapper anim-intro-hero">
-            <div className="intro-hero-badge anim-rise-1">
-              <Sparkles size={11} className="icon-sparkle" />
-              <span>FITPULSE PRO • AI HEALTH TRACKER</span>
-            </div>
-            <h1 className="intro-hero-headline anim-rise-2">
-              KONTROL ENERGI,<br />KUASAI HARI
+      {/* Hero Content Wrapper (Mobile constrained on desktop, full-bleed on mobile) */}
+      <div className={`hero-mobile-frame ${isHeroPhase ? 'phase-hero' : 'phase-cinematic'}`}>
+        {/* ── Top 60% Stage: 3D Character Video ── */}
+        <div
+          className={`hero-video-stage ${isHeroPhase ? 'stage-shifted' : 'stage-cinematic'}`}
+          style={{
+            transitionDuration: `${STAGE_TRANSFORM_DURATION_MS}ms`,
+          }}
+        >
+          <video
+            ref={videoRef}
+            className="hero-video-element"
+            src={VIDEO_SRC}
+            muted
+            playsInline
+            autoPlay
+            preload="auto"
+            onTimeUpdate={handleTimeUpdate}
+            onError={() => setCurrentTime(HERO_SETTLE_S)}
+          />
+        </div>
+
+        {/* ── Bottom 40% Panel: Solid Surface, High-Contrast Typography & CTA ── */}
+        <div
+          className={`hero-bottom-panel ${isHeroPhase ? 'panel-visible' : 'panel-hidden'}`}
+          style={{
+            backgroundColor: HERO_THEME.surface,
+          }}
+        >
+          <div className="hero-copy-stack">
+            {/* 1. Small Wordmark / App Name (13px semibold) */}
+            <span className="hero-wordmark anim-stagger-1">
+              {HERO_COPY.wordmark}
+            </span>
+
+            {/* 2. Headline (32/36px, weight 700, sentence case, tight tracking) */}
+            <h1 className="hero-headline anim-stagger-2">
+              {HERO_COPY.headline}
             </h1>
-            <p className="intro-hero-sub anim-rise-3">
-              Pelacakan Kalori & Kebugaran Generasi Baru
+
+            {/* 3. Subtitle (16/24px, regular, 70% ink color) */}
+            <p className="hero-subtitle anim-stagger-3">
+              {HERO_COPY.subtitle}
             </p>
-          </div>
-        )}
 
-        {/* ── PHASE 1: SISI TENGAH KANAN — TARGET KALORI & DEFISIT (1.4s - 4.0s) ── */}
-        {activePhase === 1 && (
-          <div
-            className="tracking-node node-mid-right anim-rise-spring"
-            style={{
-              transform: `translate3d(${driftX}px, ${driftY}px, 15px) perspective(900px) rotateY(-5deg) rotateX(2deg)`,
-              transformOrigin: 'right center',
-            }}
-          >
-            {/* AR Anchor crosshair pointing from left edge toward character */}
-            <div className="ar-anchor-group anchor-to-left">
-              <svg className="ar-line-svg" width="36" height="22" viewBox="0 0 36 22">
-                <polyline
-                  points="36,11 14,11 2,18"
-                  fill="none"
-                  stroke="#F59E0B"
-                  strokeWidth="1.6"
-                  strokeDasharray="3 2"
-                  className="ar-dash-anim"
-                />
-              </svg>
-              <div className="ar-target-reticle">
-                <span className="reticle-dot dot-amber" />
-                <span className="reticle-ring ring-amber" />
-              </div>
+            {/* 4 & 5. 24px gap + Full-Width Primary CTA (56px height, 14px radius, brand blue) */}
+            <div className="hero-cta-wrapper anim-stagger-4">
+              <button
+                className="hero-primary-cta"
+                onClick={triggerDismiss}
+                style={{
+                  backgroundColor: HERO_THEME.brandBlue,
+                  color: HERO_THEME.white,
+                }}
+              >
+                {HERO_COPY.cta}
+              </button>
             </div>
 
-            {/* 10% Opacity Frosted Glass Card with Rise-Style Content */}
-            <div className="glass-10-card card-mid-flank border-glow-amber">
-              {/* Header meta */}
-              <div className="track-header-meta anim-rise-1">
-                <div className="meta-left">
-                  <span className="ar-crosshair"><Target size={11} className="text-amber" /></span>
-                  <span className="ar-tag text-amber">TRACK: #01_CALORIE_DEFICIT</span>
-                </div>
-                <span className="ar-live-pulse"><span className="pulse-dot dot-amber" /> LIVE</span>
-              </div>
-
-              {/* Body */}
-              <div className="track-body-row anim-rise-2">
-                <div className="track-metric-left">
-                  <span className="track-label">Target Kalori Harian</span>
-                  <div className="track-hero-num">
-                    <span className="hero-val">2,150</span>
-                    <span className="hero-unit">kkal</span>
-                  </div>
-                </div>
-
-                {/* Circular Gauge */}
-                <div className="track-mini-gauge anim-rise-3">
-                  <svg className="gauge-svg" viewBox="0 0 44 44">
-                    <circle cx="22" cy="22" r="18" className="gauge-bg" />
-                    <circle cx="22" cy="22" r="18" className="gauge-val stroke-amber anim-gauge-fill" />
-                  </svg>
-                  <Flame size={14} className="gauge-icon text-amber anim-flame-pulse" />
-                </div>
-              </div>
-
-              {/* Bottom stats row */}
-              <div className="track-bottom-badges anim-rise-4">
-                <div className="ar-badge badge-emerald">
-                  <TrendingUp size={10} />
-                  <span>Defisit <strong>-450 kkal</strong></span>
-                </div>
-                <div className="ar-badge badge-amber">
-                  <Flame size={10} />
-                  <span>Bakar <strong>380 kkal</strong></span>
-                </div>
-              </div>
+            {/* 6. Secondary Text Link (15px, 44px hit area) */}
+            <div className="hero-secondary-wrapper anim-stagger-5">
+              <button
+                className="hero-secondary-link"
+                onClick={triggerDismiss}
+                style={{ color: HERO_THEME.ink }}
+              >
+                {HERO_COPY.secondary}
+              </button>
             </div>
           </div>
-        )}
-
-        {/* ── PHASE 2: SISI KANAN BAWAH / RIGHT FLANK — SENSOR VITAL & LANGKAH (4.0s - 6.8s) ── */}
-        {activePhase === 2 && (
-          <div
-            className="tracking-node node-lower-right anim-rise-spring"
-            style={{
-              transform: `translate3d(${driftX}px, ${driftY}px, 15px) perspective(900px) rotateY(-5deg) rotateX(-2deg)`,
-              transformOrigin: 'right center',
-            }}
-          >
-            {/* AR Anchor crosshair pointing from left edge toward character */}
-            <div className="ar-anchor-group anchor-to-left">
-              <svg className="ar-line-svg" width="36" height="22" viewBox="0 0 36 22">
-                <polyline
-                  points="36,11 14,11 2,4"
-                  fill="none"
-                  stroke="#F43F5E"
-                  strokeWidth="1.6"
-                  strokeDasharray="3 2"
-                  className="ar-dash-anim"
-                />
-              </svg>
-              <div className="ar-target-reticle">
-                <span className="reticle-dot dot-rose" />
-                <span className="reticle-ring ring-rose" />
-              </div>
-            </div>
-
-            {/* 10% Opacity Frosted Glass Card with Rise-Style Content */}
-            <div className="glass-10-card card-lower-flank border-glow-rose">
-              {/* Header meta */}
-              <div className="track-header-meta anim-rise-1">
-                <div className="meta-left">
-                  <span className="ar-crosshair"><Activity size={11} className="text-rose" /></span>
-                  <span className="ar-tag text-rose">TRACK: #02_LIVE_VITALS</span>
-                </div>
-                <span className="ar-live-pulse"><span className="pulse-dot dot-rose" /> SENSOR</span>
-              </div>
-
-              {/* 2-Column Split: Heart Rate & Steps */}
-              <div className="track-grid-split">
-                {/* Heart Rate + ECG */}
-                <div className="split-column anim-rise-2">
-                  <div className="split-label-row">
-                    <Heart size={11} className="text-rose anim-heart-beat" />
-                    <span>Detak Jantung</span>
-                  </div>
-                  <div className="split-val-row">
-                    <span className="split-big-val">78</span>
-                    <span className="split-unit">BPM</span>
-                  </div>
-                  {/* Realtime ECG Path */}
-                  <div className="ecg-track-wrap">
-                    <svg className="ecg-mini-svg" viewBox="0 0 80 16" preserveAspectRatio="none">
-                      <path
-                        d="M0,8 L20,8 L24,2 L28,14 L32,6 L36,10 L40,8 L80,8"
-                        fill="none"
-                        stroke="#F43F5E"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        className="ecg-wave-line"
-                      />
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Steps Counter */}
-                <div className="split-column anim-rise-3">
-                  <div className="split-label-row">
-                    <Footprints size={11} className="text-cyan" />
-                    <span>Langkah Kaki</span>
-                  </div>
-                  <div className="split-val-row">
-                    <span className="split-big-val">8,420</span>
-                    <span className="split-unit">/ 10k</span>
-                  </div>
-                  {/* Shimmering step track */}
-                  <div className="track-progress-bar">
-                    <div className="track-progress-fill fill-cyan" style={{ width: '84%' }}>
-                      <span className="bar-sweep-light" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── PHASE 3: DI TENGAH LAYAR / TORSO LEVEL — MAKRO NUTRISI (6.8s - 8.8s) ── */}
-        {activePhase === 3 && (
-          <div
-            className="tracking-node node-mid-center anim-rise-spring"
-            style={{
-              transform: `translate(-50%, -50%) translate3d(${driftX}px, ${driftY}px, 15px) perspective(900px) rotateX(3deg)`,
-            }}
-          >
-            {/* 10% Opacity Frosted Glass Card with Rise-Style Content */}
-            <div className="glass-10-card card-mid-center border-glow-emerald">
-              {/* Header meta */}
-              <div className="track-header-meta anim-rise-1">
-                <div className="meta-left">
-                  <span className="ar-crosshair"><Utensils size={11} className="text-emerald" /></span>
-                  <span className="ar-tag text-emerald">TRACK: #03_MACRO_AI</span>
-                </div>
-                <span className="ar-live-pulse"><span className="pulse-dot dot-emerald" /> PRECISI</span>
-              </div>
-
-              {/* 3 Macro Lines */}
-              <div className="track-macro-stack">
-                <div className="macro-bar-line anim-rise-2">
-                  <span className="m-name"><span className="m-dot dot-protein" /> Protein</span>
-                  <div className="m-bar"><div className="m-fill fill-protein" style={{ width: '82%' }} /></div>
-                  <span className="m-num">140g</span>
-                </div>
-                <div className="macro-bar-line anim-rise-3">
-                  <span className="m-name"><span className="m-dot dot-carbs" /> Karbo</span>
-                  <div className="m-bar"><div className="m-fill fill-carbs" style={{ width: '70%' }} /></div>
-                  <span className="m-num">210g</span>
-                </div>
-                <div className="macro-bar-line anim-rise-4">
-                  <span className="m-name"><span className="m-dot dot-fat" /> Lemak</span>
-                  <div className="m-bar"><div className="m-fill fill-fat" style={{ width: '58%' }} /></div>
-                  <span className="m-num">52g</span>
-                </div>
-              </div>
-
-              {/* Hydration bar */}
-              <div className="ar-hydration-pill anim-rise-5">
-                <Droplet size={11} className="text-cyan" />
-                <span>Hidrasi: <strong>2,100 ml / 2,500 ml</strong> (84%)</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── PHASE 4: PROFESSIONAL VFX CLOSING PORTAL (8.8s - 10.0s) ── */}
-        {activePhase === 4 && (
-          <div className="vfx-closing-stage anim-vfx-shockwave">
-            {/* Expanding Optical Energy Ring */}
-            <div className="vfx-energy-ring" />
-            <div className="vfx-energy-ring ring-delay" />
-
-            {/* Laser Grid Scan Line */}
-            <div className="vfx-laser-scan" />
-
-            {/* Cinematic Sync Card */}
-            <div className="glass-10-card vfx-sync-card anim-rise-spring">
-              <div className="vfx-sync-icon">
-                <Sparkles size={22} className="icon-zap-pulse" />
-              </div>
-              <span className="vfx-sync-badge">SINKRONISASI AI SELESAI</span>
-              <h2 className="vfx-sync-title">MEMASUKI DASHBOARD</h2>
-              <p className="vfx-sync-sub">Menyiapkan metrik kesehatan personal Anda...</p>
-            </div>
-          </div>
-        )}
-
+        </div>
       </div>
     </div>
   );
 };
 
 export default OpeningVideo;
-

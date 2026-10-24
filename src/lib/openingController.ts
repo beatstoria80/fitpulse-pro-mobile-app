@@ -1,35 +1,66 @@
 /**
- * Opening Video Session Controller
- * ----------------------------------
- * Manages the once-per-cold-start session flag, user preference toggle,
- * and reduced-motion accessibility detection.
- *
- * Storage keys:
- *   - sessionStorage  "opening_seen_session"  — cleared on tab close (cold start)
- *   - localStorage    "fitpulse_show_opening"  — persistent user toggle (default: true)
+ * Opening Hero Session & Configuration Controller
+ * -----------------------------------------------
+ * Central configuration for the mobile app opening & hero experience.
+ * All timing constants, copy strings, colors, and session flags are exported here.
  */
 
-// ── Timing Constants (tweak here) ─────────────────────────────────────────
+// ── Timing Constants (editable) ─────────────────────────────────────────
 /** Total video duration in seconds */
-export const OPENING_DURATION_S = 10;
+export const OPENING_DURATION_S = 10.0;
 
-/** Seconds into the video when the crossfade starts */
-export const CROSSFADE_START_S = 9.4;
+/** Timestamp (in seconds) when cinematic phase ends and handoff begins */
+export const CINEMATIC_END_S = 8.5;
 
-/** Duration of the crossfade transition in milliseconds */
-export const CROSSFADE_DURATION_MS = 600;
+/** Timestamp (in seconds) when hero settles into final frontal resting state */
+export const HERO_SETTLE_S = 10.0;
 
-/** Delay before the "Lewati" (Skip) button appears, in ms */
+/** Duration of the video stage upward shift transition in milliseconds */
+export const STAGE_TRANSFORM_DURATION_MS = 700;
+
+/** Delay before the "Lewati" (Skip) button appears, in milliseconds */
 export const SKIP_BUTTON_DELAY_MS = 1000;
 
-/** Max wait for video readiness before showing the white fade fallback */
-export const VIDEO_READY_TIMEOUT_MS = 300;
+/** Duration of the final crossfade transition to the dashboard in milliseconds */
+export const CROSSFADE_DURATION_MS = 500;
+
+/** Max wait for video readiness before showing fallback */
+export const VIDEO_READY_TIMEOUT_MS = 3000;
 
 /** Video source path (relative to public/) */
 export const VIDEO_SRC = '/character_3d_walking.mp4';
 
-/** Poster image path (white first frame) */
-export const VIDEO_POSTER = '';  // empty = use solid white bg as fallback
+// ── Design Tokens & Colors (editable) ───────────────────────────────────
+export const HERO_THEME = {
+  /** Sampled background color of the character 3D video */
+  surface: '#EAEAEA',
+  /** Primary ink text color (#0F172A) */
+  ink: '#0F172A',
+  /** 70% ink color for subtitle text */
+  inkSecondary: 'rgba(15, 23, 42, 0.70)',
+  /** Mascot brand blue accent for primary CTA and progress fill */
+  brandBlue: '#4F7FD0',
+  /** Progress line background track */
+  progressTrack: '#A9C8F2',
+  /** Pure white */
+  white: '#FFFFFF',
+};
+
+// ── Copy Strings (editable, Indonesian) ──────────────────────────────────
+export const HERO_COPY = {
+  /** App wordmark displayed above headline */
+  wordmark: 'FitPulse',
+  /** Headline (max 2 lines, sentence case, tight tracking) */
+  headline: 'Catat makan, hitung kalori, tetap konsisten.',
+  /** Subtitle (1 sentence, max 2 lines, 70% ink) */
+  subtitle: 'Target harianmu dihitung dari tubuh dan aktivitasmu, bukan angka tebakan.',
+  /** Primary CTA label */
+  cta: 'Mulai sekarang',
+  /** Secondary text link label */
+  secondary: 'Sudah punya akun? Masuk',
+  /** Skip button label */
+  skip: 'Lewati',
+};
 
 // ── Session Logic ─────────────────────────────────────────────────────────
 
