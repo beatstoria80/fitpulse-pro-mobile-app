@@ -3873,9 +3873,9 @@ body.fullscreen-mode .app-frame {
 }
 
 .feature-hero-stage.activity-theme {
-  background: radial-gradient(circle at 50% 40%, #EFE8DC 0%, #E8E0D1 55%, #F5EFE7 100%);
-  border-color: rgba(245, 158, 11, 0.25);
-  box-shadow: 0 12px 32px rgba(217, 119, 6, 0.08);
+  background: #FFFFFF;
+  border-color: rgba(226, 232, 240, 0.8);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.05);
 }
 
 .feature-hero-stage.hydration-theme {
@@ -3893,8 +3893,6 @@ body.fullscreen-mode .app-frame {
   object-fit: contain;
   object-position: center bottom;
   mix-blend-mode: multiply;
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
-  mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
   pointer-events: none;
   z-index: 1;
 }

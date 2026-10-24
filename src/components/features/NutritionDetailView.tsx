@@ -176,10 +176,7 @@ export default function NutritionDetailView({
                 <Utensils size={13} />
                 <span>Nutrisi & Diet Sehat</span>
               </div>
-              <div className="overlay-live-indicator green">
-                <span className="live-video-dot green" />
-                <span>3D Companion</span>
-              </div>
+
             </div>
 
             {/* Mid Flank Floating Metric Chips (Left & Right safe zones) */}
