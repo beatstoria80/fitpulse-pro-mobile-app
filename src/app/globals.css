@@ -4152,10 +4152,10 @@ body.fullscreen-mode .app-frame {
   max-width: calc(100% - 28px);
 }
 
-/* Mid Left placement (tengah kiri - leaves 3D character face unobscured) */
+/* Mid Left placement (sisi kiri tengah - vertical center on the left, leaves 3D character face completely free) */
 .op-card-mid-left {
   position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + 180px);
+  top: calc(50% - 60px);
   left: 14px;
   right: auto;
   width: 210px;
@@ -4554,7 +4554,8 @@ body.fullscreen-mode .app-frame {
   .op-hero-sub { font-size: 11.5px; }
   .op-hero-copy { bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); }
   .op-card-top-right { width: 170px; top: 50px; }
-  .op-card-mid-right, .op-card-mid-left { width: 195px; top: 150px; }
+  .op-card-mid-right { width: 195px; top: 150px; }
+  .op-card-mid-left { width: 195px; top: calc(50% - 45px); }
   .op-card-bottom-deck { bottom: 130px; }
   .op-metric-val { font-size: 19px; }
   .op-dock-card { padding: 14px 16px; gap: 10px; }
