@@ -148,7 +148,6 @@ export default function HeartRateMonitor({
     setSavedSuccess(false);
     sessionBpmRef.current = [];
     readingRef.current = null;
-    setSessionBpm([]);
     setWaveform([]);
     setReading(null);
 
@@ -163,7 +162,6 @@ export default function HeartRateMonitor({
           setReading(newReading);
           if (newReading.bpm > 0) {
             sessionBpmRef.current.push(newReading.bpm);
-            setSessionBpm((prev) => [...prev, newReading.bpm]);
           }
 
           // Auto-finalize if ultra-stable after reaching 100% progress
