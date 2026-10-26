@@ -4817,6 +4817,25 @@ body.fullscreen-mode .app-frame {
   pointer-events: none;
 }
 
+/* Energy Theme 3D Character Video - Scaled & balanced to relate prominently with the hero card, with safe headroom so hair/head is completely unclipped */
+.feature-hero-stage.energy-theme .character-stage-video {
+  bottom: -6px;
+  width: 100%;
+  max-width: 440px;
+  height: 100%;
+  max-height: 360px;
+  transform: translateX(-50%) translateY(14px) scale(1.22);
+  transform-origin: center bottom;
+  filter: drop-shadow(0 10px 24px rgba(2, 132, 199, 0.10));
+}
+
+.feature-hero-stage.energy-theme .character-stage-shadow {
+  bottom: 40px;
+  width: 150px;
+  height: 16px;
+  background: radial-gradient(ellipse at center, rgba(15, 23, 42, 0.16) 0%, rgba(15, 23, 42, 0) 70%);
+}
+
 /* Overlay UI/UX - Structured so it floats cleanly WITHOUT touching or covering the 3D character in center */
 .stage-overlay-container {
   position: absolute;
@@ -5082,6 +5101,19 @@ body.fullscreen-mode .app-frame {
     bottom: 52px;
     width: 110px;
     height: 12px;
+  }
+  .feature-hero-stage.energy-theme .character-stage-video {
+    bottom: -4px;
+    max-width: 410px;
+    height: 100%;
+    max-height: 350px;
+    transform: translateX(-50%) translateY(12px) scale(1.18);
+    transform-origin: center bottom;
+  }
+  .feature-hero-stage.energy-theme .character-stage-shadow {
+    bottom: 36px;
+    width: 135px;
+    height: 14px;
   }
   .stage-overlay-container {
     padding: 10px;
