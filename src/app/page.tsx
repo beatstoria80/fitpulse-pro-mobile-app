@@ -1,23 +1,28 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { formatDateIndonesian } from '../lib/initialData';
 import OpeningVideo from '../components/OpeningVideo';
 import { shouldShowOpening } from '../lib/openingController';
 import DesktopBar from '../components/navigation/DesktopBar';
 import BottomNav, { TabType } from '../components/navigation/BottomNav';
-import ActivityModal from '../components/modals/ActivityModal';
-import NutritionModal from '../components/modals/NutritionModal';
-import ProfileModal from '../components/modals/ProfileModal';
-import SupabaseModal from '../components/modals/SupabaseModal';
 import DashboardTab from '../components/tabs/DashboardTab';
 import ActivitiesTab from '../components/tabs/ActivitiesTab';
 import NutritionTab from '../components/tabs/NutritionTab';
 import AnalyticsTab from '../components/tabs/AnalyticsTab';
-import EnergyCalorieDetailView from '../components/features/EnergyCalorieDetailView';
-import NutritionDetailView from '../components/features/NutritionDetailView';
-import ActivityPedometerDetailView from '../components/features/ActivityPedometerDetailView';
-import HydrationDetailView from '../components/features/HydrationDetailView';
+
+// Dynamic Code-Splitting for Modals (loaded on-demand)
+const ActivityModal = dynamic(() => import('../components/modals/ActivityModal'), { ssr: false });
+const NutritionModal = dynamic(() => import('../components/modals/NutritionModal'), { ssr: false });
+const ProfileModal = dynamic(() => import('../components/modals/ProfileModal'), { ssr: false });
+const SupabaseModal = dynamic(() => import('../components/modals/SupabaseModal'), { ssr: false });
+
+// Dynamic Code-Splitting for 3D Character Feature Detail Pages (loaded on-demand)
+const EnergyCalorieDetailView = dynamic(() => import('../components/features/EnergyCalorieDetailView'), { ssr: false });
+const NutritionDetailView = dynamic(() => import('../components/features/NutritionDetailView'), { ssr: false });
+const ActivityPedometerDetailView = dynamic(() => import('../components/features/ActivityPedometerDetailView'), { ssr: false });
+const HydrationDetailView = dynamic(() => import('../components/features/HydrationDetailView'), { ssr: false });
 import { useFitnessData } from '../hooks/useFitnessData';
 import { useCloudSync } from '../hooks/useCloudSync';
 
@@ -26,9 +31,9 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('tabDashboard');
   const [activeFeatureDetail, setActiveFeatureDetail] = useState<'energy' | 'nutrition' | 'activity' | 'hydration' | null>(null);
 
-  // System UI States
-  const [clock, setClock] = useState('14:04');
-  const [todayFormatted, setTodayFormatted] = useState<string>('');
+  // System UI States (Static defaults for Next.js 16 prerendering compatibility)
+  const [clock, setClock] = useState('12:00');
+  const [todayFormatted, setTodayFormatted] = useState('');
   const [toast, setToast] = useState<string | null>(null);
 
   // Opening & Animation Handoff States
@@ -50,18 +55,21 @@ export default function Home() {
     setTimeout(() => setToast(null), 3500);
   }, []);
 
-  // Clock Initialization
+  // Client-side Clock & Date Sync (deferred to avoid prerender & cascading render warnings)
   useEffect(() => {
-    const now = new Date();
-    setTodayFormatted(formatDateIndonesian(now));
-    setClock(now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':'));
+    const syncTime = () => {
+      const now = new Date();
+      setTodayFormatted(formatDateIndonesian(now));
+      setClock(now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':'));
+    };
 
-    const intervalId = setInterval(() => {
-      const tick = new Date();
-      setClock(tick.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':'));
-    }, 30000);
+    const initTimer = setTimeout(syncTime, 0);
+    const intervalId = setInterval(syncTime, 30000);
 
-    return () => clearInterval(intervalId);
+    return () => {
+      clearTimeout(initTimer);
+      clearInterval(intervalId);
+    };
   }, []);
 
   // Opening Animation Check
@@ -152,7 +160,6 @@ export default function Home() {
     handleConnectSupabase,
     handleDisconnectSupabase,
   } = useCloudSync({
-    data,
     setData,
     showToast,
   });
@@ -227,7 +234,6 @@ export default function Home() {
 
           {activeFeatureDetail === 'hydration' && (
             <HydrationDetailView
-              data={data}
               waterIntake={waterIntake}
               targetWater={targetWater}
               onAddWater={handleAddWater}

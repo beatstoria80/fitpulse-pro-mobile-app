@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   AppFitnessData,
   ActivityLog,
@@ -11,7 +11,6 @@ import {
 import {
   initialFitnessData,
   calculateBMR,
-  getTodayDateStr,
 } from '../lib/initialData';
 import {
   initSupabase,
@@ -29,20 +28,19 @@ interface UseFitnessDataProps {
 }
 
 export function useFitnessData({ showToast, clock }: UseFitnessDataProps) {
-  const [data, setData] = useState<AppFitnessData>(initialFitnessData);
-
-  // Load from LocalStorage on mount
-  useEffect(() => {
+  // Load from LocalStorage synchronously during state initialization (avoids cascading render)
+  const [data, setData] = useState<AppFitnessData>(() => {
+    if (typeof window === 'undefined') return initialFitnessData;
     try {
       const saved = localStorage.getItem('fitpulse_app_data');
       if (saved) {
-        const parsed = JSON.parse(saved);
-        setData(parsed);
+        return JSON.parse(saved);
       }
     } catch (e) {
       console.error('Failed to load LocalStorage data:', e);
     }
-  }, []);
+    return initialFitnessData;
+  });
 
   // Save to LocalStorage & state
   const saveUpdatedData = useCallback((newData: AppFitnessData) => {

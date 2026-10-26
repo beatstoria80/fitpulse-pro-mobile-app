@@ -79,3 +79,22 @@ export const SnackIcon = ({ size = 18, className = "" }: { size?: number; classN
     <circle cx="15" cy="15" r="1" fill="currentColor" />
   </svg>
 );
+
+export const WatchIcon = ({ size = 16, className = "" }: { size?: number; className?: string }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <circle cx="12" cy="12" r="7" />
+    <polyline points="12 9 12 12 13.5 13.5" />
+    <path d="M16.51 17.35l-.85 3.22a2 2 0 0 1-1.93 1.43H10.27a2 2 0 0 1-1.93-1.43l-.85-3.22" />
+    <path d="M7.49 6.65l.85-3.22A2 2 0 0 1 10.27 2h3.46a2 2 0 0 1 1.93 1.43l.85 3.22" />
+  </svg>
+);

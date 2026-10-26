@@ -325,4 +325,4 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({
   );
 };
 
-export default ActivitiesTab;
+export default React.memo(ActivitiesTab);

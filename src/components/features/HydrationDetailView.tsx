@@ -13,11 +13,9 @@ import {
   Flame,
   Award,
 } from 'lucide-react';
-import { AppFitnessData } from '../../types/fitness';
 import { BackIcon } from '../icons/FeatureIcons';
 
 interface HydrationDetailViewProps {
-  data: AppFitnessData;
   waterIntake: number;
   targetWater: number;
   onAddWater: (ml: number) => void;
@@ -27,7 +25,6 @@ interface HydrationDetailViewProps {
 }
 
 export default function HydrationDetailView({
-  data,
   waterIntake,
   targetWater,
   onAddWater,

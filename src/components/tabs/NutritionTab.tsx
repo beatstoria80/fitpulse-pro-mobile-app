@@ -289,4 +289,4 @@ export const NutritionTab: React.FC<NutritionTabProps> = ({
   );
 };
 
-export default NutritionTab;
+export default React.memo(NutritionTab);

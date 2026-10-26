@@ -12,27 +12,36 @@ import { AppFitnessData } from '../types/fitness';
 import { initialFitnessData, getTodayDateStr } from '../lib/initialData';
 
 interface UseCloudSyncProps {
-  data: AppFitnessData;
   setData: React.Dispatch<React.SetStateAction<AppFitnessData>>;
   showToast: (msg: string) => void;
 }
 
 export function useCloudSync({ setData, showToast }: UseCloudSyncProps) {
-  const [sbUrl, setSbUrl] = useState('');
-  const [sbKey, setSbKey] = useState('');
-  const [isCloudSync, setIsCloudSync] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [sbUrl, setSbUrl] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    return getSupabaseConfig().url || '';
+  });
+  const [sbKey, setSbKey] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    return getSupabaseConfig().key || '';
+  });
+  const [isCloudSync, setIsCloudSync] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const conf = getSupabaseConfig();
+    return Boolean(conf.url && conf.key && initSupabase(conf.url, conf.key));
+  });
+  const [isSyncing, setIsSyncing] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const conf = getSupabaseConfig();
+    return Boolean(conf.url && conf.key);
+  });
 
   // Initialize Supabase from storage config
   useEffect(() => {
     const conf = getSupabaseConfig();
     if (conf.url && conf.key) {
-      setSbUrl(conf.url);
-      setSbKey(conf.key);
       const client = initSupabase(conf.url, conf.key);
       if (client) {
-        setIsCloudSync(true);
-        setIsSyncing(true);
         fetchAllFromCloud(client, initialFitnessData.user_profile.user_id)
           .then((cloud) => {
             setData((prev) => {

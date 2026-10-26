@@ -17,25 +17,7 @@ import {
 } from 'lucide-react';
 import { HeartRatePPG, PPGReading, PPGPressureState } from '../lib/heartRatePPG';
 import { HeartRateLog, HeartRateMethod } from '../types/fitness';
-
-const WatchIcon = ({ size = 16, className = "" }: { size?: number; className?: string }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <circle cx="12" cy="12" r="7" />
-    <polyline points="12 9 12 12 13.5 13.5" />
-    <path d="M16.51 17.35l-.85 3.22a2 2 0 0 1-1.93 1.43H10.27a2 2 0 0 1-1.93-1.43l-.85-3.22" />
-    <path d="M7.49 6.65l.85-3.22A2 2 0 0 1 10.27 2h3.46a2 2 0 0 1 1.93 1.43l.85 3.22" />
-  </svg>
-);
+import { WatchIcon } from './icons/FeatureIcons';
 
 interface HeartRateMonitorProps {
   userAge: number;
@@ -56,7 +38,6 @@ export default function HeartRateMonitor({
   const [isActive, setIsActive] = useState(false);
   const [reading, setReading] = useState<PPGReading | null>(null);
   const [waveform, setWaveform] = useState<number[]>([]);
-  const [sessionBpm, setSessionBpm] = useState<number[]>([]);
 
 
 
@@ -78,6 +59,8 @@ export default function HeartRateMonitor({
 
   const ppgRef = useRef<HeartRatePPG | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const sessionBpmRef = useRef<number[]>([]);
+  const readingRef = useRef<PPGReading | null>(null);
 
   const maxHR = 220 - userAge;
 
@@ -144,16 +127,16 @@ export default function HeartRateMonitor({
     ctx.shadowBlur = 0;
   }, [waveform]);
 
-  // Handle Camera PPG start/stop
+  // Handle Camera PPG start/stop (optimized with stable dependencies)
   const handleToggleCamera = useCallback(async () => {
     if (isActive) {
       ppgRef.current?.stop();
       ppgRef.current = null;
       setIsActive(false);
 
-      if (sessionBpm.length > 0) {
-        const avgBpm = Math.round(sessionBpm.reduce((a, b) => a + b, 0) / sessionBpm.length);
-        const conf = reading?.confidence || 80;
+      if (sessionBpmRef.current.length > 0) {
+        const avgBpm = Math.round(sessionBpmRef.current.reduce((a, b) => a + b, 0) / sessionBpmRef.current.length);
+        const conf = readingRef.current?.confidence || 80;
         setFinalResult({ bpm: avgBpm, confidence: conf, method: 'camera_ppg' });
         setSavedSuccess(false);
         onMeasurementComplete?.(avgBpm, conf);
@@ -163,6 +146,8 @@ export default function HeartRateMonitor({
 
     setFinalResult(null);
     setSavedSuccess(false);
+    sessionBpmRef.current = [];
+    readingRef.current = null;
     setSessionBpm([]);
     setWaveform([]);
     setReading(null);
@@ -174,8 +159,10 @@ export default function HeartRateMonitor({
     try {
       await ppg.start(
         (newReading) => {
+          readingRef.current = newReading;
           setReading(newReading);
           if (newReading.bpm > 0) {
+            sessionBpmRef.current.push(newReading.bpm);
             setSessionBpm((prev) => [...prev, newReading.bpm]);
           }
 
@@ -196,7 +183,7 @@ export default function HeartRateMonitor({
     } catch {
       setIsActive(false);
     }
-  }, [isActive, sessionBpm, reading, onMeasurementComplete]);
+  }, [isActive, onMeasurementComplete]);
 
 
 

@@ -51,9 +51,14 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
             abadi di cloud PostgreSQL, sehingga dapat disinkronkan langsung saat dibuka di HP, laptop, atau tablet tanpa
             hilang saat cache dibersihkan.
           </p>
-          <span className="schema-hint">
-            <Activity size={13} /> Skrip database siap pakai: <code>schema.sql</code>
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+            <span className="schema-hint">
+              <Activity size={13} /> Skrip database siap pakai: <code>schema.sql</code>
+            </span>
+            <span style={{ fontSize: '10.5px', fontWeight: 700, color: '#059669', background: '#ECFDF5', padding: '2px 8px', borderRadius: '12px', border: '1px solid #A7F3D0' }}>
+              ✓ Supabase Oct 30 GRANT Ready
+            </span>
+          </div>
         </div>
         <form className="modal-form" onSubmit={handleSubmit}>
           <div className="form-group">

@@ -128,4 +128,4 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
   );
 };
 
-export default AnalyticsTab;
+export default React.memo(AnalyticsTab);

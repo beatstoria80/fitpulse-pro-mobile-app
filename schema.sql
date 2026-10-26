@@ -90,7 +90,44 @@ DROP POLICY IF EXISTS "Public access for water_logs" ON public.water_logs;
 CREATE POLICY "Public access for water_logs" ON public.water_logs FOR ALL USING (true) WITH CHECK (true);
 
 -- ============================================================================
--- 7. SEED DATA AWAL PAK NANDANG (USR-4616069)
+-- 7. EXPLICIT DATA API GRANTS (PERATURAN RESMI TERBARU SUPABASE - OKTOBER 30)
+-- Mulai 30 Oktober, Supabase TIDAK lagi memberikan grant otomatis pada tabel public.
+-- Wajib memberikan GRANT eksplisit agar supabase-js, PostgREST, & GraphQL dapat mengakses tabel.
+-- ============================================================================
+
+-- A. Berikan hak akses skema public
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+
+-- B. Explicit Grants untuk tabel PROFILES
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO service_role;
+
+-- C. Explicit Grants untuk tabel ACTIVITY_LOGS
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.activity_logs TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.activity_logs TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.activity_logs TO service_role;
+
+-- D. Explicit Grants untuk tabel NUTRITION_LOGS
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.nutrition_logs TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.nutrition_logs TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.nutrition_logs TO service_role;
+
+-- E. Explicit Grants untuk tabel WATER_LOGS
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.water_logs TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.water_logs TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.water_logs TO service_role;
+
+-- F. Berikan hak akses sequences (untuk auto-increment / serial jika digunakan)
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+
+-- G. Atur Default Privileges agar tabel baru di masa depan otomatis memiliki hak akses Data API
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO anon, authenticated, service_role;
+
+
+-- ============================================================================
+-- 8. SEED DATA AWAL PAK NANDANG (USR-4616069)
 -- ============================================================================
 
 INSERT INTO public.profiles (
