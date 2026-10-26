@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { ActivityLog, NutritionLog, UserProfile } from '../types/fitness';
+import { ActivityLog, NutritionLog, UserProfile, BloodPressureLog, BloodPressureCategory, BloodPressureMethod } from '../types/fitness';
 
 let supabaseClient: SupabaseClient | null = null;
 
@@ -129,22 +129,27 @@ export const syncHydrationToCloud = async (client: SupabaseClient, userId: strin
   if (error) throw error;
 };
 
-// Fixed: uses water_logs table, correct column ordering
+// Fixed: uses water_logs and blood_pressure_logs tables, correct column ordering
 export const fetchAllFromCloud = async (client: SupabaseClient, userId: string) => {
   const today = new Date().toISOString().slice(0, 10);
 
-  const [pRes, aRes, nRes, wRes] = await Promise.all([
+  const [pRes, aRes, nRes, wRes, bpRes] = await Promise.all([
     client.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
     client.from('activity_logs').select('*').eq('user_id', userId).order('timestamp_start', { ascending: false }),
     client.from('nutrition_logs').select('*').eq('user_id', userId).eq('log_date', today).order('created_at', { ascending: false }),
-    client.from('water_logs').select('*').eq('user_id', userId).eq('log_date', today).maybeSingle()
+    client.from('water_logs').select('*').eq('user_id', userId).eq('log_date', today).maybeSingle(),
+    client.from('blood_pressure_logs').select('*').eq('user_id', userId).order('measured_at', { ascending: false }).then(
+      (res) => res,
+      () => ({ data: [] })
+    )
   ]);
 
   return {
     profile: pRes.data,
     activities: aRes.data || [],
     nutritions: nRes.data || [],
-    waterLog: wRes.data || null
+    waterLog: wRes.data || null,
+    bloodPressures: bpRes?.data || []
   };
 };
 
@@ -186,6 +191,45 @@ export const mapCloudActivityToApp = (cloudAct: Record<string, unknown>): Activi
   };
 };
 
+// Transform cloud blood pressure data back to app format
+export const mapCloudBloodPressureToApp = (cloudBp: Record<string, unknown>): BloodPressureLog => {
+  const measuredAt = cloudBp.measured_at ? new Date(cloudBp.measured_at as string) : new Date();
+  return {
+    id: (cloudBp.id as string) || `bp-${Date.now()}`,
+    timestamp: measuredAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':'),
+    date: (cloudBp.measured_at as string)?.slice(0, 10) || measuredAt.toISOString().slice(0, 10),
+    systolic: Number(cloudBp.systolic) || 120,
+    diastolic: Number(cloudBp.diastolic) || 80,
+    pulse_bpm: cloudBp.pulse_bpm ? Number(cloudBp.pulse_bpm) : undefined,
+    category: (cloudBp.category as BloodPressureCategory) || 'normal',
+    method: (cloudBp.method as BloodPressureMethod) || 'manual',
+    confidence: cloudBp.confidence ? Number(cloudBp.confidence) : undefined,
+    is_calibrated: Boolean(cloudBp.is_calibrated),
+    notes: (cloudBp.notes as string) || undefined
+  };
+};
+
+export const syncBloodPressureToCloud = async (client: SupabaseClient, userId: string, bp: BloodPressureLog) => {
+  const { error } = await client.from('blood_pressure_logs').insert({
+    user_id: userId,
+    systolic: bp.systolic,
+    diastolic: bp.diastolic,
+    pulse_bpm: bp.pulse_bpm || null,
+    category: bp.category,
+    method: bp.method,
+    confidence: bp.confidence || 85,
+    is_calibrated: Boolean(bp.is_calibrated),
+    notes: bp.notes || null,
+    measured_at: new Date().toISOString()
+  });
+  if (error) throw error;
+};
+
+export const deleteBloodPressureFromCloud = async (client: SupabaseClient, id: string) => {
+  const { error } = await client.from('blood_pressure_logs').delete().eq('id', id);
+  if (error) throw error;
+};
+
 export const deleteActivityFromCloud = async (client: SupabaseClient, activityLogId: string) => {
   const { error } = await client.from('activity_logs').delete().eq('activity_log_id', activityLogId);
   if (error) throw error;
@@ -195,3 +239,4 @@ export const deleteNutritionFromCloud = async (client: SupabaseClient, nutrition
   const { error } = await client.from('nutrition_logs').delete().eq('nutrition_log_id', nutritionLogId);
   if (error) throw error;
 };
+

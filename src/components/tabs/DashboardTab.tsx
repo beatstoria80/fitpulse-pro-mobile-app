@@ -21,6 +21,7 @@ import {
   HeartPulse,
 } from 'lucide-react';
 import { AppFitnessData } from '../../types/fitness';
+import { BloodPressureEngine } from '../../lib/bloodPressurePPG';
 
 interface DashboardTabProps {
   data: AppFitnessData;
@@ -112,6 +113,12 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
     .join('')
     .slice(0, 2)
     .toUpperCase() || 'FP';
+
+  const bpLogs = data.blood_pressure_logs || [];
+  const latestBp = bpLogs.length > 0 ? bpLogs[0] : null;
+  const latestBpMeta = latestBp ? BloodPressureEngine.getCategoryMeta(latestBp.category) : null;
+  const hrLogs = data.heart_rate_logs || [];
+  const latestHr = hrLogs.length > 0 ? hrLogs[0] : null;
 
   return (
     <section className="tab-pane active" id="tabDashboard">
@@ -391,6 +398,67 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               </strong>{' '}
               lagi
             </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Vitals Telemetry Glance Banner: Blood Pressure & Pulse */}
+      <div
+        className={`glass-card vitals-glance-card${dashboardVfxActive ? ' stagger-reveal delay-4' : ''}`}
+        onClick={onNavigateToActivities}
+        style={{ cursor: 'pointer', marginTop: '12px' }}
+        title="Klik untuk membuka Monitor Tekanan Darah di Tab Aktivitas"
+      >
+        <div className="card-header-clean">
+          <div className="card-title-group">
+            <span className="badge-mini badge-rose">
+              <HeartPulse size={13} /> Telemetri Vitals Real-Time
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <h2>Tekanan Darah & Nadi</h2>
+              <ChevronRight size={15} className="text-secondary" />
+            </div>
+          </div>
+          <span className="badge-pill highlight">
+            {latestBp && latestBpMeta ? latestBpMeta.shortBadge : 'Ukur Sekarang'}
+          </span>
+        </div>
+
+        <div className="vitals-glance-body">
+          <div className="vitals-glance-main">
+            <div className="vitals-bp-digits">
+              <span className="val-sys">{latestBp ? latestBp.systolic : 120}</span>
+              <span className="val-sep">/</span>
+              <span className="val-dia">{latestBp ? latestBp.diastolic : 80}</span>
+              <small>mmHg</small>
+            </div>
+            <span
+              className="vitals-glance-status"
+              style={{ color: latestBpMeta ? latestBpMeta.textColor : '#059669' }}
+            >
+              {latestBp && latestBpMeta ? latestBpMeta.label : 'Normal Baseline (AHA 2017)'}
+            </span>
+          </div>
+
+          <div className="vitals-glance-side">
+            <div className="side-metric">
+              <span className="side-lbl">Denyut Nadi</span>
+              <strong>
+                {latestBp?.pulse_bpm || latestHr?.bpm || 72} <small>BPM</small>
+              </strong>
+            </div>
+            <div className="side-metric">
+              <span className="side-lbl">Metode</span>
+              <span>
+                {latestBp?.method === 'camera_ppg'
+                  ? '📷 Kamera AI'
+                  : latestBp?.method === 'ble_sphygmomanometer'
+                  ? '📡 Tensimeter BLE'
+                  : latestBp
+                  ? '✍️ Manual'
+                  : 'Belum diukur'}
+              </span>
+            </div>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Plus,
   Activity,
@@ -11,28 +11,13 @@ import {
   Camera,
   TrendingUp,
 } from 'lucide-react';
-import { AppFitnessData, HeartRateLog } from '../../types/fitness';
+import { AppFitnessData, HeartRateLog, BloodPressureLog } from '../../types/fitness';
 import HeartRateMonitor from '../HeartRateMonitor';
+import BloodPressureMonitor from '../BloodPressureMonitor';
 import StepCounter from '../StepCounter';
 import { HeartRatePPG } from '../../lib/heartRatePPG';
 
-const WatchIcon = ({ size = 12 }: { size?: number }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="12" cy="12" r="7" />
-    <polyline points="12 9 12 12 13.5 13.5" />
-    <path d="M16.51 17.35l-.85 3.22a2 2 0 0 1-1.93 1.43H10.27a2 2 0 0 1-1.93-1.43l-.85-3.22" />
-    <path d="M7.49 6.65l.85-3.22A2 2 0 0 1 10.27 2h3.46a2 2 0 0 1 1.93 1.43l.85 3.22" />
-  </svg>
-);
+import { WatchIcon } from '../icons/FeatureIcons';
 
 interface ActivitiesTabProps {
   data: AppFitnessData;
@@ -44,6 +29,8 @@ interface ActivitiesTabProps {
   onHeartRateComplete: (bpm: number, confidence: number) => void;
   onSaveHeartRate: (log: HeartRateLog) => void;
   onDeleteHeartRate: (id: string) => void;
+  onSaveBloodPressure: (log: BloodPressureLog) => void;
+  onDeleteBloodPressure: (id: string) => void;
 }
 
 export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({
@@ -56,8 +43,12 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({
   onHeartRateComplete,
   onSaveHeartRate,
   onDeleteHeartRate,
+  onSaveBloodPressure,
+  onDeleteBloodPressure,
 }) => {
+  const [activeVitalsTab, setActiveVitalsTab] = useState<'blood_pressure' | 'heart_rate'>('blood_pressure');
   const hrLogs = data.heart_rate_logs || [];
+  const bpLogs = data.blood_pressure_logs || [];
   const avgHeartRate =
     hrLogs.length > 0 ? Math.round(hrLogs.reduce((s, h) => s + h.bpm, 0) / hrLogs.length) : 0;
   const minHeartRate = hrLogs.length > 0 ? Math.min(...hrLogs.map((h) => h.bpm)) : 0;
@@ -118,15 +109,42 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({
         </span>
       </div>
 
-      {/* Multi-Modal Heart Rate Monitor */}
-      <HeartRateMonitor
-        userAge={data.user_profile.demographics.age}
-        onMeasurementComplete={onHeartRateComplete}
-        onSaveHeartRate={onSaveHeartRate}
-      />
+      {/* Vitals Segment Switcher */}
+      <div className="vitals-segment-control">
+        <button
+          className={`vitals-segment-btn ${activeVitalsTab === 'blood_pressure' ? 'active' : ''}`}
+          onClick={() => setActiveVitalsTab('blood_pressure')}
+        >
+          <Activity size={14} /> Tekanan Darah ({bpLogs.length})
+        </button>
+        <button
+          className={`vitals-segment-btn hr-mode ${activeVitalsTab === 'heart_rate' ? 'active' : ''}`}
+          onClick={() => setActiveVitalsTab('heart_rate')}
+        >
+          <HeartPulse size={14} /> Detak Jantung ({hrLogs.length})
+        </button>
+      </div>
 
-      {/* Vitals Hub: Heart Rate History & Trend */}
-      <div className="glass-card hr-history-hub-card">
+      {/* Active Vitals Monitor */}
+      {activeVitalsTab === 'blood_pressure' ? (
+        <BloodPressureMonitor
+          userAge={data.user_profile.demographics.age}
+          userBmi={data.user_profile.biometrics.bmi}
+          historyLogs={bpLogs}
+          onSaveBloodPressure={onSaveBloodPressure}
+          onDeleteBloodPressure={onDeleteBloodPressure}
+        />
+      ) : (
+        <>
+          {/* Multi-Modal Heart Rate Monitor */}
+          <HeartRateMonitor
+            userAge={data.user_profile.demographics.age}
+            onMeasurementComplete={onHeartRateComplete}
+            onSaveHeartRate={onSaveHeartRate}
+          />
+
+          {/* Vitals Hub: Heart Rate History & Trend */}
+          <div className="glass-card hr-history-hub-card">
         <div className="card-header-clean">
           <div className="card-title-group">
             <span className="badge-mini badge-rose">
@@ -242,6 +260,8 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({
           )}
         </div>
       </div>
+        </>
+      )}
 
       {/* Step Counter / Pedometer (REAL-TIME) */}
       <StepCounter

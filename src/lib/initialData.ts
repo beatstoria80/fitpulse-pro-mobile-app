@@ -56,6 +56,7 @@ export const initialFitnessData: AppFitnessData = {
   nutrition_logs: [],
   hydration_logs: [],
   heart_rate_logs: [],
+  blood_pressure_logs: [],
   daily_summary: {
     date: getTodayDateStr(),
     calories_consumed: 0,

@@ -7,6 +7,7 @@ import {
   NutritionLog,
   UserProfile,
   HeartRateLog,
+  BloodPressureLog,
 } from '../types/fitness';
 import {
   initialFitnessData,
@@ -18,8 +19,10 @@ import {
   syncNutritionToCloud,
   syncHydrationToCloud,
   syncProfileToCloud,
+  syncBloodPressureToCloud,
   deleteActivityFromCloud,
   deleteNutritionFromCloud,
+  deleteBloodPressureFromCloud,
 } from '../lib/supabase';
 
 interface UseFitnessDataProps {
@@ -327,6 +330,38 @@ export function useFitnessData({ showToast, clock }: UseFitnessDataProps) {
     showToast('Catatan detak jantung dihapus.');
   }, [data, saveUpdatedData, showToast]);
 
+  // Save Blood Pressure Log
+  const handleSaveBloodPressure = useCallback((newLog: BloodPressureLog) => {
+    const existingLogs = data.blood_pressure_logs || [];
+    const updated: AppFitnessData = {
+      ...data,
+      blood_pressure_logs: [newLog, ...existingLogs],
+    };
+    saveUpdatedData(updated);
+    showToast(`Tekanan darah ${newLog.systolic}/${newLog.diastolic} mmHg tersimpan di Buku Vitals! 🩸`);
+
+    const client = initSupabase();
+    if (client) {
+      syncBloodPressureToCloud(client, data.user_profile.user_id, newLog).catch(console.error);
+    }
+  }, [data, saveUpdatedData, showToast]);
+
+  // Delete Blood Pressure Log
+  const handleDeleteBloodPressure = useCallback((id: string) => {
+    const existingLogs = data.blood_pressure_logs || [];
+    const updated: AppFitnessData = {
+      ...data,
+      blood_pressure_logs: existingLogs.filter((b) => b.id !== id),
+    };
+    saveUpdatedData(updated);
+    showToast('Catatan tekanan darah dihapus.');
+
+    const client = initSupabase();
+    if (client) {
+      deleteBloodPressureFromCloud(client, id).catch(console.error);
+    }
+  }, [data, saveUpdatedData, showToast]);
+
   // Reset Today's Data
   const handleResetTodayData = useCallback(() => {
     if (confirm('Yakin ingin mereset log aktivitas dan makanan hari ini ke data awal?')) {
@@ -416,6 +451,8 @@ export function useFitnessData({ showToast, clock }: UseFitnessDataProps) {
     handleSaveProfile,
     handleSaveHeartRate,
     handleDeleteHeartRate,
+    handleSaveBloodPressure,
+    handleDeleteBloodPressure,
     handleResetTodayData,
     handleExportJson,
     handleStepUpdate,

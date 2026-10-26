@@ -70,11 +70,28 @@ CREATE TABLE IF NOT EXISTS public.water_logs (
     CONSTRAINT unique_user_water_day UNIQUE (user_id, log_date)
 );
 
+-- 5.1. Buat Tabel: BLOOD_PRESSURE_LOGS (Tekanan Darah)
+CREATE TABLE IF NOT EXISTS public.blood_pressure_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id TEXT REFERENCES public.profiles(user_id) ON DELETE CASCADE,
+    systolic INT NOT NULL CHECK (systolic BETWEEN 50 AND 300),
+    diastolic INT NOT NULL CHECK (diastolic BETWEEN 30 AND 200),
+    pulse_bpm INT,
+    category TEXT NOT NULL, -- 'normal' | 'elevated' | 'stage1' | 'stage2' | 'crisis'
+    method TEXT NOT NULL, -- 'camera_ppg' | 'ble_sphygmomanometer' | 'manual'
+    confidence INT DEFAULT 85,
+    is_calibrated BOOLEAN DEFAULT false,
+    notes TEXT,
+    measured_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- 6. Aktifkan Row Level Security (RLS) & Berikan Akses Publik / Anon untuk Pengujian Cepat
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.nutrition_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.water_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.blood_pressure_logs ENABLE ROW LEVEL SECURITY;
 
 -- Policy agar aplikasi frontend dapat membaca dan menulis data (menggunakan Anon Key)
 DROP POLICY IF EXISTS "Public access for profiles" ON public.profiles;
@@ -88,6 +105,9 @@ CREATE POLICY "Public access for nutrition_logs" ON public.nutrition_logs FOR AL
 
 DROP POLICY IF EXISTS "Public access for water_logs" ON public.water_logs;
 CREATE POLICY "Public access for water_logs" ON public.water_logs FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public access for blood_pressure_logs" ON public.blood_pressure_logs;
+CREATE POLICY "Public access for blood_pressure_logs" ON public.blood_pressure_logs FOR ALL USING (true) WITH CHECK (true);
 
 -- ============================================================================
 -- 7. EXPLICIT DATA API GRANTS (PERATURAN RESMI TERBARU SUPABASE - OKTOBER 30)
@@ -118,10 +138,15 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.water_logs TO anon;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.water_logs TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.water_logs TO service_role;
 
--- F. Berikan hak akses sequences (untuk auto-increment / serial jika digunakan)
+-- F. Explicit Grants untuk tabel BLOOD_PRESSURE_LOGS
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.blood_pressure_logs TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.blood_pressure_logs TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.blood_pressure_logs TO service_role;
+
+-- G. Berikan hak akses sequences (untuk auto-increment / serial jika digunakan)
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
 
--- G. Atur Default Privileges agar tabel baru di masa depan otomatis memiliki hak akses Data API
+-- H. Atur Default Privileges agar tabel baru di masa depan otomatis memiliki hak akses Data API
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO anon, authenticated, service_role;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO anon, authenticated, service_role;
 

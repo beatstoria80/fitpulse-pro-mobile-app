@@ -91,12 +91,30 @@ export interface HeartRateLog {
   notes?: string;
 }
 
+export type BloodPressureMethod = 'camera_ppg' | 'ble_sphygmomanometer' | 'manual';
+export type BloodPressureCategory = 'normal' | 'elevated' | 'stage1' | 'stage2' | 'crisis';
+
+export interface BloodPressureLog {
+  id: string;
+  timestamp: string; // e.g. "09:45"
+  date: string; // e.g. "2026-10-26"
+  systolic: number; // mmHg (e.g. 118)
+  diastolic: number; // mmHg (e.g. 78)
+  pulse_bpm?: number;
+  category: BloodPressureCategory;
+  method: BloodPressureMethod;
+  confidence?: number; // 0-100% for camera PPG
+  is_calibrated?: boolean;
+  notes?: string;
+}
+
 export interface AppFitnessData {
   user_profile: UserProfile;
   activity_logs: ActivityLog[];
   nutrition_logs: NutritionLog[];
   hydration_logs: HydrationLog[];
   heart_rate_logs?: HeartRateLog[];
+  blood_pressure_logs?: BloodPressureLog[];
   daily_summary: DailySummary;
 }
 

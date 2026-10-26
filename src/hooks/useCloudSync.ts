@@ -7,8 +7,9 @@ import {
   fetchAllFromCloud,
   mapCloudActivityToApp,
   mapCloudNutritionToApp,
+  mapCloudBloodPressureToApp,
 } from '../lib/supabase';
-import { AppFitnessData } from '../types/fitness';
+import { AppFitnessData, ActivityLog, NutritionLog } from '../types/fitness';
 import { initialFitnessData, getTodayDateStr } from '../lib/initialData';
 
 interface UseCloudSyncProps {
@@ -49,9 +50,13 @@ export function useCloudSync({ setData, showToast }: UseCloudSyncProps) {
                 cloud.activities.length > 0 ? cloud.activities.map(mapCloudActivityToApp) : prev.activity_logs;
               const mappedNutritions =
                 cloud.nutritions.length > 0 ? cloud.nutritions.map(mapCloudNutritionToApp) : prev.nutrition_logs;
-              const totalCaloriesConsumed = mappedNutritions.reduce((s, n) => s + (n.calories || 0), 0);
+              const mappedBloodPressures =
+                cloud.bloodPressures && cloud.bloodPressures.length > 0
+                  ? cloud.bloodPressures.map(mapCloudBloodPressureToApp)
+                  : prev.blood_pressure_logs || [];
+              const totalCaloriesConsumed = mappedNutritions.reduce((s: number, n: NutritionLog) => s + (n.calories || 0), 0);
               const totalCaloriesBurned = mappedActivities.reduce(
-                (s, a) => s + (a.metrics.calories_burned || 0),
+                (s: number, a: ActivityLog) => s + (a.metrics.calories_burned || 0),
                 0
               );
               const waterIntakeFromCloud = cloud.waterLog
@@ -94,6 +99,8 @@ export function useCloudSync({ setData, showToast }: UseCloudSyncProps) {
                 activity_logs: mappedActivities,
                 nutrition_logs: mappedNutritions,
                 hydration_logs: prev.hydration_logs,
+                heart_rate_logs: prev.heart_rate_logs || [],
+                blood_pressure_logs: mappedBloodPressures,
                 daily_summary: {
                   date: getTodayDateStr(),
                   calories_consumed: totalCaloriesConsumed,

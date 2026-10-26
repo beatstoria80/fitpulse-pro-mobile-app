@@ -143,6 +143,8 @@ export default function Home() {
     handleSaveProfile,
     handleSaveHeartRate,
     handleDeleteHeartRate,
+    handleSaveBloodPressure,
+    handleDeleteBloodPressure,
     handleResetTodayData,
     handleExportJson,
     handleStepUpdate,
@@ -305,6 +307,8 @@ export default function Home() {
                   }}
                   onSaveHeartRate={handleSaveHeartRate}
                   onDeleteHeartRate={handleDeleteHeartRate}
+                  onSaveBloodPressure={handleSaveBloodPressure}
+                  onDeleteBloodPressure={handleDeleteBloodPressure}
                 />
               )}
 
