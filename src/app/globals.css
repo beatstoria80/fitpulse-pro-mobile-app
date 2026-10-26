@@ -4140,6 +4140,7 @@ body.fullscreen-mode .app-frame {
   padding: 12px 14px;
   pointer-events: auto;
   z-index: 12;
+  overflow: hidden;
 }
 
 /* Top Right placement */
@@ -4151,12 +4152,23 @@ body.fullscreen-mode .app-frame {
   max-width: calc(100% - 28px);
 }
 
+/* Mid Left placement (tengah kiri - leaves 3D character face unobscured) */
+.op-card-mid-left {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 180px);
+  left: 14px;
+  right: auto;
+  width: 210px;
+  max-width: calc(100% - 28px);
+}
+
 /* Mid Right placement */
 .op-card-mid-right {
   position: absolute;
   top: calc(env(safe-area-inset-top, 0px) + 180px);
   right: 14px;
-  width: 190px;
+  left: auto;
+  width: 210px;
   max-width: calc(100% - 28px);
 }
 
@@ -4248,25 +4260,31 @@ body.fullscreen-mode .app-frame {
 .op-card-split {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 .op-split-item {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
+  min-width: 0;
+  flex-shrink: 1;
 }
 .op-split-val {
   font-family: 'Outfit', sans-serif;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 800;
   color: #FFFFFF;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .op-split-label {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.65);
+  white-space: nowrap;
 }
 .op-split-divider {
   width: 1px;
@@ -4536,7 +4554,7 @@ body.fullscreen-mode .app-frame {
   .op-hero-sub { font-size: 11.5px; }
   .op-hero-copy { bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); }
   .op-card-top-right { width: 170px; top: 50px; }
-  .op-card-mid-right { width: 170px; top: 150px; }
+  .op-card-mid-right, .op-card-mid-left { width: 195px; top: 150px; }
   .op-card-bottom-deck { bottom: 130px; }
   .op-metric-val { font-size: 19px; }
   .op-dock-card { padding: 14px 16px; gap: 10px; }

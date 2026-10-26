@@ -209,7 +209,7 @@ const OpeningVideo: React.FC<OpeningVideoProps> = ({ onComplete }) => {
 
           {/* ── PHASE 2: Aktivitas, Langkah & Detak Jantung (4.0s – 6.8s) ── */}
           {showPhase2 && (
-            <div className="op-card op-card-mid-right op-anim-card-in" key="p2">
+            <div className="op-card op-card-mid-left op-anim-card-in" key="p2">
               <div className="op-card-header">
                 <div className="op-card-icon op-icon-rose"><Heart size={13} /></div>
                 <span className="op-card-tag">AKTIVITAS & VITAL</span>
