@@ -47,6 +47,7 @@ export const getSupabase = (): SupabaseClient | null => {
 export const syncProfileToCloud = async (client: SupabaseClient, profile: UserProfile) => {
   const { error } = await client.from('profiles').upsert({
     user_id: profile.user_id,
+    name: profile.name || 'Pengguna',
     age: profile.demographics.age,
     gender: profile.demographics.gender,
     marital_status: profile.demographics.marital_status,

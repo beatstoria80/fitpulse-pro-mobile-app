@@ -11,6 +11,8 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id TEXT UNIQUE NOT NULL,
+    name TEXT DEFAULT 'Pengguna FitPulse',
+    device_id TEXT,
     age INT DEFAULT 46,
     gender TEXT DEFAULT 'male',
     marital_status TEXT DEFAULT 'single',
@@ -23,8 +25,29 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     target_weight_kg NUMERIC(5,2) DEFAULT 58.5,
     daily_calorie_target INT DEFAULT 1800,
     daily_water_target_ml INT DEFAULT 2500,
+    activity_level TEXT DEFAULT 'moderate',
+    device_info JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Migration safety for existing tables
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS name TEXT DEFAULT 'Pengguna FitPulse';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS device_id TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS activity_level TEXT DEFAULT 'moderate';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS device_info JSONB DEFAULT '{}'::jsonb;
+
+-- 2.1 Buat Tabel: DEVICE_SESSIONS (Melacak setiap link / device yang dibuka)
+CREATE TABLE IF NOT EXISTS public.device_sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    device_id TEXT NOT NULL,
+    user_id TEXT REFERENCES public.profiles(user_id) ON DELETE CASCADE,
+    device_name TEXT,
+    platform TEXT,
+    user_agent TEXT,
+    ip_address TEXT,
+    last_active_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 3. Buat Tabel: ACTIVITY_LOGS
@@ -88,6 +111,7 @@ CREATE TABLE IF NOT EXISTS public.blood_pressure_logs (
 
 -- 6. Aktifkan Row Level Security (RLS) & Berikan Akses Publik / Anon untuk Pengujian Cepat
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.device_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.nutrition_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.water_logs ENABLE ROW LEVEL SECURITY;
@@ -96,6 +120,9 @@ ALTER TABLE public.blood_pressure_logs ENABLE ROW LEVEL SECURITY;
 -- Policy agar aplikasi frontend dapat membaca dan menulis data (menggunakan Anon Key)
 DROP POLICY IF EXISTS "Public access for profiles" ON public.profiles;
 CREATE POLICY "Public access for profiles" ON public.profiles FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public access for device_sessions" ON public.device_sessions;
+CREATE POLICY "Public access for device_sessions" ON public.device_sessions FOR ALL USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Public access for activity_logs" ON public.activity_logs;
 CREATE POLICY "Public access for activity_logs" ON public.activity_logs FOR ALL USING (true) WITH CHECK (true);
@@ -118,10 +145,9 @@ CREATE POLICY "Public access for blood_pressure_logs" ON public.blood_pressure_l
 -- A. Berikan hak akses skema public
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 
--- B. Explicit Grants untuk tabel PROFILES
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO anon;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO service_role;
+-- B. Explicit Grants untuk tabel PROFILES & DEVICE_SESSIONS
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.device_sessions TO anon, authenticated, service_role;
 
 -- C. Explicit Grants untuk tabel ACTIVITY_LOGS
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.activity_logs TO anon;

@@ -17,6 +17,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   userProfile,
   onSave,
 }) => {
+  const [profName, setProfName] = useState(userProfile.name || 'Nandang');
   const [profAge, setProfAge] = useState(userProfile.demographics.age || 46);
   const [profGender, setProfGender] = useState(userProfile.demographics.gender || 'male');
   const [profHeight, setProfHeight] = useState(userProfile.biometrics.height_cm || 160);
@@ -39,6 +40,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
     const updated: UserProfile = {
       ...userProfile,
+      name: profName.trim() || 'Pengguna FitPulse',
       demographics: {
         ...userProfile.demographics,
         age: Number(profAge),
@@ -76,6 +78,21 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           </button>
         </div>
         <form className="modal-form" onSubmit={handleSubmit}>
+          <div className="form-group" style={{ marginBottom: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <label style={{ margin: 0 }}>Nama Lengkap</label>
+              <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#64748B', background: '#F1F5F9', padding: '2px 6px', borderRadius: '4px' }}>
+                ID: {userProfile.user_id}
+              </span>
+            </div>
+            <input
+              type="text"
+              value={profName}
+              onChange={(e) => setProfName(e.target.value)}
+              placeholder="Nama Anda"
+              required
+            />
+          </div>
           <div className="two-inputs-row">
             <div className="form-group">
               <label>Usia (Tahun)</label>

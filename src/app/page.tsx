@@ -17,6 +17,10 @@ const ActivityModal = dynamic(() => import('../components/modals/ActivityModal')
 const NutritionModal = dynamic(() => import('../components/modals/NutritionModal'), { ssr: false });
 const ProfileModal = dynamic(() => import('../components/modals/ProfileModal'), { ssr: false });
 const SupabaseModal = dynamic(() => import('../components/modals/SupabaseModal'), { ssr: false });
+const OnboardingModal = dynamic(
+  () => import('../components/modals/OnboardingModal').then((mod) => mod.OnboardingModal),
+  { ssr: false }
+);
 
 // Dynamic Code-Splitting for 3D Character Feature Detail Pages (loaded on-demand)
 const EnergyCalorieDetailView = dynamic(() => import('../components/features/EnergyCalorieDetailView'), { ssr: false });
@@ -25,6 +29,12 @@ const ActivityPedometerDetailView = dynamic(() => import('../components/features
 const HydrationDetailView = dynamic(() => import('../components/features/HydrationDetailView'), { ssr: false });
 import { useFitnessData } from '../hooks/useFitnessData';
 import { useCloudSync } from '../hooks/useCloudSync';
+import { 
+  mapCloudNutritionToApp, 
+  mapCloudActivityToApp, 
+  mapCloudBloodPressureToApp 
+} from '../lib/supabase';
+import { UserProfile } from '../types/fitness';
 
 export default function Home() {
   // Navigation & Feature Route States
@@ -48,6 +58,7 @@ export default function Home() {
   const [modalFoodDefaultMeal, setModalFoodDefaultMeal] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('lunch');
   const [modalProfileOpen, setModalProfileOpen] = useState(false);
   const [modalSupabaseOpen, setModalSupabaseOpen] = useState(false);
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
 
   // Toast Dispatcher
   const showToast = useCallback((msg: string) => {
@@ -97,8 +108,28 @@ export default function Home() {
 
     setTimeout(() => {
       setDashboardVfxActive(false);
-    }, 1200);
+      // Automatically prompt new devices to enter biometrics UI/UX
+      if (typeof window !== 'undefined') {
+        const isCompleted = localStorage.getItem('fitpulse_onboarding_completed');
+        if (!isCompleted) {
+          setShowOnboardingModal(true);
+        }
+      }
+    }, 800);
   }, []);
+
+  // Check onboarding on mount if opening is skipped
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !showOpening) {
+      const isCompleted = localStorage.getItem('fitpulse_onboarding_completed');
+      if (!isCompleted) {
+        const timer = setTimeout(() => {
+          setShowOnboardingModal(true);
+        }, 600);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [showOpening]);
 
   // Encapsulated Fitness Domain Hook
   const {
@@ -403,6 +434,46 @@ export default function Home() {
           initialKey={sbKey}
           onConnect={handleConnectSupabase}
           onDisconnect={handleDisconnectSupabase}
+        />
+      )}
+
+      {/* Multi-Device Onboarding Modal */}
+      {showOnboardingModal && (
+        <OnboardingModal
+          isOpen={showOnboardingModal}
+          onComplete={(newProfile) => {
+            setData((prev) => {
+              const updated = { ...prev, user_profile: newProfile };
+              try {
+                localStorage.setItem('fitpulse_app_data', JSON.stringify(updated));
+              } catch (e) {}
+              return updated;
+            });
+            setShowOnboardingModal(false);
+          }}
+          onRestoreFromCloud={(restoredProfile, cloudLogs) => {
+            setData((prev) => {
+              const updated = {
+                ...prev,
+                user_profile: restoredProfile,
+                activity_logs: cloudLogs.activities && cloudLogs.activities.length > 0
+                  ? cloudLogs.activities.map(mapCloudActivityToApp)
+                  : prev.activity_logs,
+                nutrition_logs: cloudLogs.nutritions && cloudLogs.nutritions.length > 0
+                  ? cloudLogs.nutritions.map(mapCloudNutritionToApp)
+                  : prev.nutrition_logs,
+                blood_pressure_logs: cloudLogs.bloodPressures && cloudLogs.bloodPressures.length > 0
+                  ? cloudLogs.bloodPressures.map(mapCloudBloodPressureToApp)
+                  : prev.blood_pressure_logs,
+              };
+              try {
+                localStorage.setItem('fitpulse_app_data', JSON.stringify(updated));
+              } catch (e) {}
+              return updated;
+            });
+            setShowOnboardingModal(false);
+          }}
+          showToast={showToast}
         />
       )}
 
