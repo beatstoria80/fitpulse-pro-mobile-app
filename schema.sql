@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     marital_status TEXT DEFAULT 'single',
     height_cm NUMERIC(5,2) DEFAULT 160.0,
     weight_kg NUMERIC(5,2) DEFAULT 69.0,
+    waist_circumference_cm NUMERIC(5,2) DEFAULT 80.0,
     estimated_body_fat_percentage NUMERIC(4,2) DEFAULT 26.7,
     target_body_fat_percentage NUMERIC(4,2) DEFAULT 22.0,
     bmi NUMERIC(4,2) DEFAULT 26.95,
@@ -34,6 +35,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 -- Migration safety for existing tables
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS name TEXT DEFAULT 'Pengguna FitPulse';
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS device_id TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS waist_circumference_cm NUMERIC(5,2) DEFAULT 80.0;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS activity_level TEXT DEFAULT 'moderate';
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS device_info JSONB DEFAULT '{}'::jsonb;
 

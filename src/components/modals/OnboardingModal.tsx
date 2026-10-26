@@ -40,6 +40,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const [gender, setGender] = useState<'male' | 'female'>('male');
   const [heightCm, setHeightCm] = useState<number>(170);
   const [weightKg, setWeightKg] = useState<number>(68);
+  const [waistCm, setWaistCm] = useState<number>(80);
   const [targetWeightKg, setTargetWeightKg] = useState<number>(65);
   const [activityLevel, setActivityLevel] = useState<'sedentary' | 'light' | 'moderate' | 'active'>('moderate');
 
@@ -125,6 +126,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       biometrics: {
         height_cm: Number(heightCm),
         weight_kg: Number(weightKg),
+        waist_circumference_cm: Number(waistCm),
         estimated_body_fat_percentage: bodyFatEstimate,
         target_body_fat_percentage: targetBodyFat,
         bmi: bmiData.bmi,
@@ -191,6 +193,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           biometrics: {
             height_cm: Number(p.height_cm) || 170,
             weight_kg: Number(p.weight_kg) || 70,
+            waist_circumference_cm: Number(p.waist_circumference_cm) || 80,
             estimated_body_fat_percentage: Number(p.estimated_body_fat_percentage) || 20,
             target_body_fat_percentage: Number(p.target_body_fat_percentage) || 18,
             bmi: Number(p.bmi) || 22.5,
@@ -464,8 +467,32 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               </div>
             </div>
 
-            {/* Target Berat & Aktivitas Harian */}
+            {/* Lingkar Perut & Target Berat */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.8)', marginBottom: '5px' }}>
+                  Lingkar Perut (cm)
+                </label>
+                <input
+                  type="number"
+                  step="0.5"
+                  min={40}
+                  max={200}
+                  value={waistCm}
+                  onChange={(e) => setWaistCm(Number(e.target.value))}
+                  required
+                  style={{
+                    width: '100%',
+                    background: 'rgba(255, 255, 255, 0.07)',
+                    border: '1px solid rgba(255, 255, 255, 0.14)',
+                    borderRadius: '10px',
+                    color: '#FFFFFF',
+                    padding: '10px 14px',
+                    fontSize: '13px'
+                  }}
+                />
+              </div>
+
               <div className="form-group" style={{ margin: 0 }}>
                 <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.8)', marginBottom: '5px' }}>
                   Target Berat (kg)
@@ -489,30 +516,31 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   }}
                 />
               </div>
+            </div>
 
-              <div className="form-group" style={{ margin: 0 }}>
-                <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.8)', marginBottom: '5px' }}>
-                  Aktivitas Fisik
-                </label>
-                <select
-                  value={activityLevel}
-                  onChange={(e) => setActivityLevel(e.target.value as any)}
-                  style={{
-                    width: '100%',
-                    background: '#1E293B',
-                    border: '1px solid rgba(255, 255, 255, 0.14)',
-                    borderRadius: '10px',
-                    color: '#FFFFFF',
-                    padding: '10px 14px',
-                    fontSize: '13px'
-                  }}
-                >
-                  <option value="sedentary">Duduk (Sedentary)</option>
-                  <option value="light">Ringan (1-2x/minggu)</option>
-                  <option value="moderate">Sedang (3-5x/minggu)</option>
-                  <option value="active">Sangat Aktif (Olahraga)</option>
-                </select>
-              </div>
+            {/* Aktivitas Harian */}
+            <div className="form-group" style={{ margin: 0 }}>
+              <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.8)', marginBottom: '5px' }}>
+                Aktivitas Fisik Harian
+              </label>
+              <select
+                value={activityLevel}
+                onChange={(e) => setActivityLevel(e.target.value as any)}
+                style={{
+                  width: '100%',
+                  background: '#1E293B',
+                  border: '1px solid rgba(255, 255, 255, 0.14)',
+                  borderRadius: '10px',
+                  color: '#FFFFFF',
+                  padding: '10px 14px',
+                  fontSize: '13px'
+                }}
+              >
+                <option value="sedentary">Duduk (Sedentary)</option>
+                <option value="light">Ringan (1-2x/minggu)</option>
+                <option value="moderate">Sedang (3-5x/minggu)</option>
+                <option value="active">Sangat Aktif (Olahraga Intens)</option>
+              </select>
             </div>
 
             {/* Live Telemetry Recommendation Box */}
@@ -590,7 +618,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 marginTop: '4px'
               }}
             >
-              <span>Simpan & Mulai di Device Ini</span>
+              <span>Mulai Sekarang</span>
               <ChevronRight size={16} />
             </button>
           </form>

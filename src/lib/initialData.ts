@@ -36,6 +36,7 @@ export const defaultUserProfile = {
   biometrics: {
     height_cm: 160.0,
     weight_kg: 69.0,
+    waist_circumference_cm: 82.0,
     estimated_body_fat_percentage: 26.7,
     target_body_fat_percentage: 22.0,
     bmi: 26.95,

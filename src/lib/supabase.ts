@@ -53,6 +53,7 @@ export const syncProfileToCloud = async (client: SupabaseClient, profile: UserPr
     marital_status: profile.demographics.marital_status,
     height_cm: profile.biometrics.height_cm,
     weight_kg: profile.biometrics.weight_kg,
+    waist_circumference_cm: profile.biometrics.waist_circumference_cm || null,
     estimated_body_fat_percentage: profile.biometrics.estimated_body_fat_percentage,
     target_body_fat_percentage: profile.biometrics.target_body_fat_percentage,
     bmi: profile.biometrics.bmi,

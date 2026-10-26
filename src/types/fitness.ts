@@ -7,6 +7,7 @@ export interface Demographics {
 export interface Biometrics {
   height_cm: number;
   weight_kg: number;
+  waist_circumference_cm?: number;
   estimated_body_fat_percentage: number;
   target_body_fat_percentage: number;
   bmi: number;

@@ -96,6 +96,26 @@ export default function Home() {
     return () => cancelAnimationFrame(handle);
   }, []);
 
+  // Check if this device or user has already registered or saved data
+  const isUserAlreadyRegistered = useCallback(() => {
+    if (typeof window === 'undefined') return true;
+    if (localStorage.getItem('fitpulse_onboarding_completed') === 'true') return true;
+    if (localStorage.getItem('fitpulse_device_user_id')) return true;
+    
+    // Check if fitpulse_app_data already exists
+    const savedAppData = localStorage.getItem('fitpulse_app_data');
+    if (savedAppData) {
+      try {
+        const parsed = JSON.parse(savedAppData);
+        if (parsed && parsed.user_profile) {
+          localStorage.setItem('fitpulse_onboarding_completed', 'true');
+          return true;
+        }
+      } catch (e) {}
+    }
+    return false;
+  }, []);
+
   // Opening Complete Handoff Sequence
   const handleOpeningComplete = useCallback(() => {
     setShowOpening(false);
@@ -108,28 +128,24 @@ export default function Home() {
 
     setTimeout(() => {
       setDashboardVfxActive(false);
-      // Automatically prompt new devices to enter biometrics UI/UX
-      if (typeof window !== 'undefined') {
-        const isCompleted = localStorage.getItem('fitpulse_onboarding_completed');
-        if (!isCompleted) {
-          setShowOnboardingModal(true);
-        }
+      // Only prompt new unregistered devices
+      if (!isUserAlreadyRegistered()) {
+        setShowOnboardingModal(true);
       }
     }, 800);
-  }, []);
+  }, [isUserAlreadyRegistered]);
 
   // Check onboarding on mount if opening is skipped
   useEffect(() => {
     if (typeof window !== 'undefined' && !showOpening) {
-      const isCompleted = localStorage.getItem('fitpulse_onboarding_completed');
-      if (!isCompleted) {
+      if (!isUserAlreadyRegistered()) {
         const timer = setTimeout(() => {
           setShowOnboardingModal(true);
         }, 600);
         return () => clearTimeout(timer);
       }
     }
-  }, [showOpening]);
+  }, [showOpening, isUserAlreadyRegistered]);
 
   // Encapsulated Fitness Domain Hook
   const {
