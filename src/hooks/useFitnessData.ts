@@ -402,7 +402,7 @@ export function useFitnessData({ showToast, clock }: UseFitnessDataProps) {
       }
       return updated;
     });
-    showToast(`Pedometer: ${steps} langkah, ${calories} kkal, ${(distance / 1000).toFixed(2)} km`);
+    showToast(`GPS Tracker: ${steps} langkah, ${calories} kkal, ${(distance / 1000).toFixed(2)} km`);
   }, [showToast]);
 
   return {

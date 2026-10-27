@@ -9,8 +9,11 @@ import {
   HeartPulse,
   Info,
   Trash2,
+  Navigation,
+  MapPin,
 } from 'lucide-react';
 import { AppFitnessData } from '../../types/fitness';
+import GPSTrackerView from '../GPSTracker';
 import StepCounter from '../StepCounter';
 import { BackIcon } from '../icons/FeatureIcons';
 
@@ -36,10 +39,13 @@ export default function ActivityPedometerDetailView({
   onShowToast,
 }: ActivityPedometerDetailViewProps) {
   const [activeHour, setActiveHour] = useState<number | null>(null);
+  const [trackingMode, setTrackingMode] = useState<'gps' | 'sensor'>('gps');
 
   const targetSteps = 10000;
+  const targetDistanceKm = 7.0; // Target 7 km per hari (≈ 10.000 langkah)
   const stepPercent = Math.min(100, Math.round((totalSteps / targetSteps) * 100));
   const distanceKm = ((totalSteps * 0.7) / 1000).toFixed(2);
+  const distancePercent = Math.min(100, Math.round((parseFloat(distanceKm) / targetDistanceKm) * 100));
 
   // Generate realistic hourly step distribution
   const hourlySteps = useMemo(() => {
@@ -80,18 +86,18 @@ export default function ActivityPedometerDetailView({
         </button>
         <div className="feature-header-titles">
           <span className="badge-mini badge-orange">
-            <Footprints size={12} /> Gerak & Langkah
+            <Navigation size={12} /> GPS Tracking
           </span>
-          <h2>Aktivitas Fisik & Pedometer</h2>
+          <h2>Aktivitas Fisik & GPS Tracker</h2>
         </div>
         <button
           className="feature-info-btn"
           onClick={() =>
             onShowToast(
-              `Target harian: ${targetSteps.toLocaleString('id-ID')} langkah. Target WHO: 7.000–10.000 langkah/hari untuk kesehatan jantung optimal.`
+              `Target harian: ${targetDistanceKm} km (≈${targetSteps.toLocaleString('id-ID')} langkah). GPS mengukur jarak presisi via satelit. Target WHO: 7–10 km/hari untuk kesehatan jantung optimal.`
             )
           }
-          title="Info Target Langkah"
+          title="Info Target GPS"
         >
           <Info size={18} />
         </button>
@@ -119,8 +125,8 @@ export default function ActivityPedometerDetailView({
             {/* Top Bar Overlay */}
             <div className="stage-overlay-top">
               <div className="overlay-pill-badge orange">
-                <Footprints size={13} />
-                <span>Gerak & Langkah</span>
+                <Navigation size={13} />
+                <span>GPS Tracking</span>
               </div>
 
             </div>
@@ -129,27 +135,27 @@ export default function ActivityPedometerDetailView({
             <div className="stage-overlay-flanks">
               <div className="flank-glass-chip left">
                 <div className="flank-chip-header">
-                  <Footprints size={11} className="text-orange" />
-                  <span>Langkah</span>
+                  <MapPin size={11} className="text-orange" />
+                  <span>Jarak GPS</span>
                 </div>
-                <div className="flank-chip-val text-orange">{totalSteps.toLocaleString('id-ID')}</div>
-                <div className="flank-chip-sub">{stepPercent}% target</div>
+                <div className="flank-chip-val text-orange">{distanceKm} km</div>
+                <div className="flank-chip-sub">{distancePercent}% target</div>
               </div>
 
               <div className="flank-glass-chip right">
                 <div className="flank-chip-header">
-                  <Activity size={11} className="text-cyan" />
-                  <span>Jarak</span>
+                  <Footprints size={11} className="text-cyan" />
+                  <span>Est. Langkah</span>
                 </div>
-                <div className="flank-chip-val text-cyan">{distanceKm}</div>
-                <div className="flank-chip-sub">kilometer</div>
+                <div className="flank-chip-val text-cyan">{totalSteps.toLocaleString('id-ID')}</div>
+                <div className="flank-chip-sub">dari jarak GPS</div>
               </div>
             </div>
 
             {/* Bottom Floating Bar */}
             <div className="stage-overlay-bottom">
               <p className="stage-bottom-text">
-                <strong>{totalSteps >= targetSteps ? 'Target Tercapai!' : `Level: ${tier.name}`}</strong> {stepPercent}% dari target {targetSteps.toLocaleString('id-ID')} langkah.
+                <strong>{totalSteps >= targetSteps ? 'Target Tercapai!' : `Level: ${tier.name}`}</strong> {distanceKm} km / {targetDistanceKm} km ({distancePercent}%)
               </p>
               <button
                 className="stage-cta-btn orange"
@@ -162,17 +168,17 @@ export default function ActivityPedometerDetailView({
           </div>
         </div>
 
-        {/* QUICK STEP STATS BAR */}
+        {/* QUICK GPS STATS BAR */}
         <div className="hero-quick-stats">
           <div className="h-stat-box">
-            <span className="h-stat-label">Total Langkah</span>
-            <span className="h-stat-num text-orange">{totalSteps.toLocaleString('id-ID')}</span>
-            <span className="h-stat-unit">/ {targetSteps.toLocaleString('id-ID')}</span>
+            <span className="h-stat-label">Jarak GPS</span>
+            <span className="h-stat-num text-orange">{distanceKm}</span>
+            <span className="h-stat-unit">/ {targetDistanceKm} km</span>
           </div>
           <div className="h-stat-box">
-            <span className="h-stat-label">Jarak Tempuh</span>
-            <span className="h-stat-num text-cyan">{distanceKm}</span>
-            <span className="h-stat-unit">kilometer</span>
+            <span className="h-stat-label">Est. Langkah</span>
+            <span className="h-stat-num text-cyan">{totalSteps.toLocaleString('id-ID')}</span>
+            <span className="h-stat-unit">dari GPS</span>
           </div>
           <div className="h-stat-box">
             <span className="h-stat-label">Kalori Terbakar</span>
@@ -181,21 +187,94 @@ export default function ActivityPedometerDetailView({
           </div>
         </div>
 
-        {/* REAL-TIME PEDOMETER SENSOR CONTROLLER */}
-        <StepCounter
-          weightKg={data.user_profile.biometrics.weight_kg}
-          heightCm={data.user_profile.biometrics.height_cm}
-          onStepUpdate={onStepUpdate}
-        />
+        {/* MODE SELECTOR: GPS TRACKING VS SENSOR GERAK */}
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          background: 'rgba(255, 255, 255, 0.04)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          padding: '4px',
+          borderRadius: '12px',
+          marginBottom: '14px',
+        }}>
+          <button
+            type="button"
+            onClick={() => setTrackingMode('gps')}
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '10px 14px',
+              borderRadius: '9px',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              border: 'none',
+              transition: 'all 0.2s ease',
+              background: trackingMode === 'gps'
+                ? 'linear-gradient(135deg, #10B981, #059669)'
+                : 'transparent',
+              color: trackingMode === 'gps' ? '#FFFFFF' : 'var(--text-secondary, #94A3B8)',
+              boxShadow: trackingMode === 'gps' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none',
+            }}
+          >
+            <Navigation size={14} />
+            <span>Mode GPS (Satelit Presisi)</span>
+          </button>
 
-        {/* HOURLY STEP DISTRIBUTION HISTOGRAM */}
+          <button
+            type="button"
+            onClick={() => setTrackingMode('sensor')}
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '10px 14px',
+              borderRadius: '9px',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              border: 'none',
+              transition: 'all 0.2s ease',
+              background: trackingMode === 'sensor'
+                ? 'linear-gradient(135deg, #F97316, #EA580C)'
+                : 'transparent',
+              color: trackingMode === 'sensor' ? '#FFFFFF' : 'var(--text-secondary, #94A3B8)',
+              boxShadow: trackingMode === 'sensor' ? '0 4px 12px rgba(249, 115, 22, 0.3)' : 'none',
+            }}
+          >
+            <Footprints size={14} />
+            <span>Sensor Gerak (Indoor)</span>
+          </button>
+        </div>
+
+        {/* REAL-TIME TRACKER COMPONENT (GPS OR PEDOMETER SENSOR) */}
+        {trackingMode === 'gps' ? (
+          <GPSTrackerView
+            weightKg={data.user_profile.biometrics.weight_kg}
+            heightCm={data.user_profile.biometrics.height_cm}
+            onStepUpdate={onStepUpdate}
+          />
+        ) : (
+          <StepCounter
+            weightKg={data.user_profile.biometrics.weight_kg}
+            heightCm={data.user_profile.biometrics.height_cm}
+            onStepUpdate={onStepUpdate}
+          />
+        )}
+
+        {/* HOURLY DISTANCE DISTRIBUTION HISTOGRAM */}
         <div className="glass-card feature-step-chart-card">
           <div className="card-header-clean">
             <div className="card-title-group">
               <span className="badge-mini badge-cyan">
                 <Activity size={12} /> Distribusi Waktu
               </span>
-              <h3>Aktivitas Langkah per Jam</h3>
+              <h3>Jarak Tempuh per Jam</h3>
             </div>
             <span className="badge-mini badge-green">{tier.badge}</span>
           </div>

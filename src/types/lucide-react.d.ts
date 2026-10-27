@@ -32,6 +32,7 @@ declare module 'lucide-react' {
   export const Flame: Icon;
   export const FolderOpen: Icon;
   export const Footprints: Icon;
+  export const Gauge: Icon;
   export const Globe: Icon;
   export const Hand: Icon;
   export const Heart: Icon;
@@ -43,9 +44,11 @@ declare module 'lucide-react' {
   export const LayoutDashboard: Icon;
   export const Link2: Icon;
   export const Loader2: Icon;
+  export const Locate: Icon;
   export const MapPin: Icon;
   export const Maximize2: Icon;
   export const Moon: Icon;
+  export const Navigation: Icon;
   export const PieChart: Icon;
   export const Play: Icon;
   export const Plus: Icon;
