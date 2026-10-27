@@ -10,11 +10,14 @@ import {
   HeartPulse,
   Camera,
   TrendingUp,
+  Navigation,
+  Footprints,
 } from 'lucide-react';
 import { AppFitnessData, HeartRateLog, BloodPressureLog } from '../../types/fitness';
 import HeartRateMonitor from '../HeartRateMonitor';
 import BloodPressureMonitor from '../BloodPressureMonitor';
 import StepCounter from '../StepCounter';
+import GPSTrackerView from '../GPSTracker';
 import { HeartRatePPG } from '../../lib/heartRatePPG';
 
 import { WatchIcon } from '../icons/FeatureIcons';
@@ -47,6 +50,7 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({
   onDeleteBloodPressure,
 }) => {
   const [activeVitalsTab, setActiveVitalsTab] = useState<'blood_pressure' | 'heart_rate'>('blood_pressure');
+  const [trackingMode, setTrackingMode] = useState<'gps' | 'sensor'>('gps');
   const hrLogs = data.heart_rate_logs || [];
   const bpLogs = data.blood_pressure_logs || [];
   const avgHeartRate =
@@ -263,12 +267,85 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({
         </>
       )}
 
-      {/* Step Counter / Pedometer (REAL-TIME) */}
-      <StepCounter
-        weightKg={data.user_profile.biometrics.weight_kg}
-        heightCm={data.user_profile.biometrics.height_cm}
-        onStepUpdate={onStepUpdate}
-      />
+      {/* MODE SELECTOR: GPS TRACKING VS SENSOR GERAK */}
+      <div style={{
+        display: 'flex',
+        gap: '8px',
+        background: 'rgba(255, 255, 255, 0.04)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        padding: '4px',
+        borderRadius: '12px',
+        marginBottom: '14px',
+      }}>
+        <button
+          type="button"
+          onClick={() => setTrackingMode('gps')}
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            padding: '10px 14px',
+            borderRadius: '9px',
+            fontSize: '0.8rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            border: 'none',
+            transition: 'all 0.2s ease',
+            background: trackingMode === 'gps'
+              ? 'linear-gradient(135deg, #10B981, #059669)'
+              : 'transparent',
+            color: trackingMode === 'gps' ? '#FFFFFF' : 'var(--text-secondary, #94A3B8)',
+            boxShadow: trackingMode === 'gps' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none',
+          }}
+        >
+          <Navigation size={14} />
+          <span>Mode GPS (Satelit Presisi)</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTrackingMode('sensor')}
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            padding: '10px 14px',
+            borderRadius: '9px',
+            fontSize: '0.8rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            border: 'none',
+            transition: 'all 0.2s ease',
+            background: trackingMode === 'sensor'
+              ? 'linear-gradient(135deg, #F97316, #EA580C)'
+              : 'transparent',
+            color: trackingMode === 'sensor' ? '#FFFFFF' : 'var(--text-secondary, #94A3B8)',
+            boxShadow: trackingMode === 'sensor' ? '0 4px 12px rgba(249, 115, 22, 0.3)' : 'none',
+          }}
+        >
+          <Footprints size={14} />
+          <span>Sensor Gerak (Indoor)</span>
+        </button>
+      </div>
+
+      {/* REAL-TIME TRACKER (GPS SATELLITE OR MOTION SENSOR) */}
+      {trackingMode === 'gps' ? (
+        <GPSTrackerView
+          weightKg={data.user_profile.biometrics.weight_kg}
+          heightCm={data.user_profile.biometrics.height_cm}
+          onStepUpdate={onStepUpdate}
+        />
+      ) : (
+        <StepCounter
+          weightKg={data.user_profile.biometrics.weight_kg}
+          heightCm={data.user_profile.biometrics.height_cm}
+          onStepUpdate={onStepUpdate}
+        />
+      )}
 
       {/* Full List of Activities */}
       <h3 className="subheading-list">Riwayat Sesi Latihan</h3>
