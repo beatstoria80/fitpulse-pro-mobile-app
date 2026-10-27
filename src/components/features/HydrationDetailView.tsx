@@ -145,28 +145,18 @@ export default function HydrationDetailView({
               </div>
             </div>
 
-            {/* Bottom Perimeter Floating HUD Bar */}
+            {/* Bottom Floating Bar */}
             <div className="stage-overlay-bottom">
-              <div className="stage-hud-bar">
-                <div className="hud-metric-pair">
-                  <span className="hud-label">SISA HARI INI</span>
-                  <span className="hud-val">{remainingWater.toLocaleString('id-ID')} ml</span>
-                </div>
-                <div className="hud-v-divider" />
-                <div className="hud-metric-pair">
-                  <span className="hud-label">TARGET TOTAL</span>
-                  <span className="hud-val">{targetWater.toLocaleString('id-ID')} ml</span>
-                </div>
-                <div className="hud-action-pill">
-                  <button
-                    className="hud-quick-btn"
-                    onClick={() => onAddWater(250)}
-                    title="Catat +250 ml (1 Gelas)"
-                  >
-                    <Plus size={13} /> +250 ml
-                  </button>
-                </div>
-              </div>
+              <p className="stage-bottom-text">
+                <strong>{remainingWater <= 0 ? 'Target Tercapai!' : `Sisa ${remainingWater.toLocaleString('id-ID')} ml`}</strong> {waterPercent}% dari target {targetWater.toLocaleString('id-ID')} ml.
+              </p>
+              <button
+                className="stage-cta-btn cyan"
+                onClick={() => onAddWater(250)}
+              >
+                <Plus size={13} />
+                <span>+250 ml</span>
+              </button>
             </div>
           </div>
         </div>
