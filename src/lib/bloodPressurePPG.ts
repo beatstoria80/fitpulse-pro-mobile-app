@@ -260,6 +260,28 @@ export class BloodPressureEngine {
   }
 
   /**
+   * Parse IEEE-11073 SFLOAT 16-bit format
+   * Layout: 4-bit exponent (signed) + 12-bit mantissa (signed)
+   * Ref: ISO/IEEE 11073-20601:2022 — Annex F
+   */
+  private static parseSFLOAT(raw: number): number {
+    // Special SFLOAT sentinel values
+    if (raw === 0x07FF || raw === 0x0800 || raw === 0x0801) return NaN;
+    if (raw === 0x07FE) return Infinity;
+    if (raw === 0x0802) return -Infinity;
+
+    let exponent = (raw >> 12) & 0x0F;
+    let mantissa = raw & 0x0FFF;
+
+    // Sign-extend 4-bit exponent
+    if (exponent >= 0x8) exponent -= 0x10;
+    // Sign-extend 12-bit mantissa
+    if (mantissa >= 0x800) mantissa -= 0x1000;
+
+    return mantissa * Math.pow(10, exponent);
+  }
+
+  /**
    * Hubungkan ke Tensimeter Nirkabel Bluetooth (Standard BLE Blood Pressure Service)
    * GATT Service UUID: 0x1810
    * Characteristic UUID: 0x2A35
@@ -304,12 +326,16 @@ export class BloodPressureEngine {
 
         try {
           // Parse IEEE-11073 Blood Pressure Measurement Characteristic (0x2A35)
+          // Data format: SFLOAT 16-bit (2 bytes per field), NOT Float32
           const flags = value.getUint8(0);
           const isKPa = (flags & 0x01) !== 0; // 0 = mmHg, 1 = kPa
+          const hasTimestamp = (flags & 0x02) !== 0;
           const hasPulseRate = (flags & 0x04) !== 0;
 
-          let systolic = value.getFloat32(1, true);
-          let diastolic = value.getFloat32(3, true);
+          // Systolic @ offset 1 (SFLOAT 2 bytes), Diastolic @ offset 3 (SFLOAT 2 bytes)
+          let systolic = BloodPressureEngine.parseSFLOAT(value.getUint16(1, true));
+          let diastolic = BloodPressureEngine.parseSFLOAT(value.getUint16(3, true));
+          // MAP @ offset 5 (SFLOAT 2 bytes) — available but not consumed here
 
           if (isKPa) {
             // Konversi kPa ke mmHg (1 kPa = 7.50062 mmHg)
@@ -320,9 +346,14 @@ export class BloodPressureEngine {
             diastolic = Math.round(diastolic);
           }
 
+          // Pulse Rate offset: after flags(1) + sys(2) + dia(2) + map(2) = 7
+          // If Timestamp present (7 bytes): offset shifts by 7
+          let pulseOffset = 7;
+          if (hasTimestamp) pulseOffset += 7;
+
           let pulseBpm: number | undefined;
-          if (hasPulseRate && value.byteLength >= 9) {
-            pulseBpm = Math.round(value.getFloat32(7, true));
+          if (hasPulseRate && value.byteLength >= pulseOffset + 2) {
+            pulseBpm = Math.round(BloodPressureEngine.parseSFLOAT(value.getUint16(pulseOffset, true)));
           }
 
           characteristic.removeEventListener('characteristicvaluechanged', handleValueChange);

@@ -238,15 +238,26 @@ export default function BloodPressureMonitor({
               ppg.stop();
               setIsCameraActive(false);
 
-              // Calculate final trimmed average
-              const avgSys =
-                sysReadings.length > 0
-                  ? Math.round(sysReadings.reduce((a, b) => a + b, 0) / sysReadings.length)
-                  : liveEstimatedSys || 120;
-              const avgDia =
-                diaReadings.length > 0
-                  ? Math.round(diaReadings.reduce((a, b) => a + b, 0) / diaReadings.length)
-                  : liveEstimatedDia || 80;
+              // Trimmed mean: remove top/bottom 15% outliers for robust averaging
+              const trimmedMean = (arr: number[]): number => {
+                if (arr.length === 0) return NaN;
+                if (arr.length <= 4) return Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+                const sorted = [...arr].sort((a, b) => a - b);
+                const trimCount = Math.max(1, Math.floor(sorted.length * 0.15));
+                const trimmed = sorted.slice(trimCount, sorted.length - trimCount);
+                return Math.round(trimmed.reduce((a, b) => a + b, 0) / trimmed.length);
+              };
+
+              const avgSys = sysReadings.length > 0 ? trimmedMean(sysReadings) : NaN;
+              const avgDia = diaReadings.length > 0 ? trimmedMean(diaReadings) : NaN;
+
+              // No valid readings → show error instead of fake 120/80 fallback
+              if (isNaN(avgSys) || isNaN(avgDia)) {
+                ppgRef.current = null;
+                setCameraProgress(0);
+                alert('Pengukuran gagal: sinyal PPG tidak cukup stabil untuk estimasi tekanan darah. Pastikan ujung jari menutupi lensa kamera sepenuhnya, lalu coba lagi.');
+                return;
+              }
 
               const finalCat = BloodPressureEngine.evaluateCategory(avgSys, avgDia);
               const hasCalib = Boolean(BloodPressureEngine.getCalibration());
@@ -254,7 +265,7 @@ export default function BloodPressureMonitor({
               setResult({
                 systolic: avgSys,
                 diastolic: avgDia,
-                pulseBpm: reading.bpm > 0 ? reading.bpm : 72,
+                pulseBpm: reading.bpm > 0 ? reading.bpm : undefined,
                 category: finalCat,
                 method: 'camera_ppg',
                 confidence: Math.round(Math.min(95, Math.max(68, reading.confidence))),
